@@ -1,0 +1,32 @@
+v1.2.2.470
+- when suspended, time down to unsuspend only on self
+- time down on buttons on self is always a normal click
+- setting: hide unless mouse over (only show corners)
+- setting: alpha blend level
+- setting: ignore 'skip orbit, send L1' switch (for MetaKeys!)
+
+v1.2.1.333
+- don't operate when a mouse button is physically pressed
+- 'orbit' selects by proximity, not by having to move over the labels
+- setting: cross limb length
+
+v1.2.0.328
+- division by zero fixed when showing no buttons
+- 'orbit' feature (enable by setting Return to: orbit)
+- extra cursor tag settings
+
+v1.1.0.290
+- changed name to MetaClick (previously AutoClick)
+- issue with default settings on first run
+- smaller button margin (2 instead of 6 pixels)
+- setting: avoid selected applications
+
+v1.0.8.275
+- cursor tag hides when not in use
+
+v1.0.7.234
+- revised sensitivity on clickmode 'wheel'
+- first mouse movement after click goes ignored (solves issues with automated mouse-cursor move after typing)
+- setting to show/hide cursor tag (default on)
+- added countdown button on main form (default off)
+- play sound on click (default off)

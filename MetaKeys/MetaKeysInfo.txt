@@ -1,0 +1,27 @@
+MetaKeys
+--------
+
+http://yoy.be/MetaKeys
+
+*.kbl (keyboard layout) Syntax
+-------------------
+
+A line starts with a code and a number of fields separated by a single space.
+"i Info": information, is displayed on the settings screen
+"fX Font Name": define a font code <X>, see below
+"k Label code": define a key with caption <Label> and virtual key code <code>, optionally provide 2 labels for when shift is down or not, or 3 labels for normal/Shift/AltGr
+"c code code": define a key with caption character <code> and virtual key code <code>
+"s": leave space for a key
+"l": start a new line of keys
+
+"k" and "c" may be followed by modifiers:
+"2": double width key
+",2": double height key
+"X": use alternative font as defined by code <X>
+
+Virtual key codes
+-----------------
+As defined for Microsoft Windows:
+http://msdn.microsoft.com/en-us/library/windows/desktop/dd375731(v=vs.85).aspx
+Either specify a decinal value or precede a hexadecimal value with "$".
+Define a negative value for 'sticky' keys.

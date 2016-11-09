@@ -1,0 +1,102 @@
+i BE azerty keyboard layout
+i Stijn Sanders 2015 stijn@yoy.be
+i http://yoy.be/metakeys
+fW Wingdings
+fY Symbol
+k Esc 27
+s
+k F1 112
+k F2 113
+k F3 114
+k F4 115
+k F5 116
+k F6 117
+k F7 118
+k F8 119
+k F9 120
+k F10 121
+k F11 122
+k F12 123
+s
+k PSc 44
+k Ins 45
+l
+s
+k ² ³ $DE
+k & 1 | 49
+k é 2 @ 50
+k " 3 # 51
+k ' 4 { 52
+k ( 5 [ 53
+k § 6 ^ 54
+k è 7 55
+k ! 8 56
+k ç 9 { 57
+k à 0 } 48
+k ) ° $DB
+k - _ $BD
+c2W $D5 8
+k Del 46
+l
+c2Y $DB 9
+k a A 65
+k z Z 90
+k e E € 69
+k r R 82
+k t T 84
+k y Y 89
+k u U 85
+k i I 73
+k o O 79
+k p P 80
+k ^ ¨ [ $DD
+k $ * ] $BA
+c,2Y $BF 13
+cY $DC 36
+cY $DD 33
+l
+c2Y $44 20
+k q Q 81
+k s S 83
+k d D 68
+k f F 70
+k g G 71
+k h H 72
+k j J 74
+k k K 75
+k l L 76
+k m M 77
+k ù % ´ $C0
+k µ £ ` $DC
+s
+cY $DE 35
+cY $DF 34
+l
+cW $F1 -16
+k < > \ $E2
+k w W 87
+k x X 88
+k c C 67
+k v V 86
+k b B 66
+k n N 78
+k , ? $BC
+k ; . $BE
+k : / $BF
+k = + ~ $BB
+c2W $F1 -16
+s
+cY $AD 38
+l
+k Ctrl -17
+cW $AB 91
+cW $B5 -91
+k Alt -18
+k6 32
+k AltGr -165
+cW $AB 92
+cW $FC 93
+k Ctrl -17
+cY $AC 37
+cY $AF 40
+cY $AE 39

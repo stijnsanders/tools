@@ -1,0 +1,22 @@
+v1.0.4.466
+- issue changing font with "hide unless mouse over"
+- replaced "Wingdings 3" for "Symbol" in default kbl's
+
+v1.0.3.355
+- code 666 closes MetaClick
+- code 777 opens settings dialog
+- codes 1000..1999 loads "000.kbl".."999.kbl"
+- code XXXYYY resizes to XXX by YYY pixels
+- code KKKXXXYYY loads "KKK.kbl" and resizes to XXX by YYY pixels
+- hide unless mouse over (only show corners)
+
+v1.0.2.335
+- bug: settings mix-up between delay and repeat
+- added numpad.kbl: numpad only layout
+
+v1.0.1.333
+- drag to move not on keys
+- repeat timer settings
+- 'sticky' system key added to be.kbl, us.kbl
+
+v1.0.0.300
