@@ -25,5 +25,7 @@ object frmAView: TfrmAView
     Proportional = True
     Stretch = True
     Transparent = True
+    OnDblClick = Image1DblClick
+    OnMouseDown = Image1MouseDown
   end
 end

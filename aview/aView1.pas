@@ -11,10 +11,14 @@ type
     Image1: TImage;
     procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+    procedure Image1DblClick(Sender: TObject);
+    procedure Image1MouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
   private
     FList:TStringList;
     FIndex:integer;
     procedure LoadImage;
+    procedure LoadClipboard;
   protected
     procedure FormDropFiles(var Msg:TWMDropFiles); message WM_DROPFILES;
     procedure DoShow; override;
@@ -59,7 +63,6 @@ end;
 procedure TfrmAView.DoShow;
 var
   i:integer;
-  b:TBitmapForceHalftone;
 begin
   inherited;
   FList:=TStringList.Create;
@@ -69,16 +72,7 @@ begin
   if FList.Count<>0 then
     LoadImage
   else
-   begin
-    b:=TBitmapForceHalftone.Create;
-    try
-      b.Assign(Clipboard);
-      Image1.Picture.Bitmap:=b;
-    except
-      b.Free;
-      //ignore invalid clipboard format
-    end;
-   end;
+    LoadClipboard;
 end;
 
 procedure TfrmAView.DoDestroy;
@@ -121,6 +115,7 @@ begin
     inc(FIndex);
    end;
   LoadImage;
+  Handled:=true;
 end;
 
 procedure TfrmAView.LoadImage;
@@ -151,6 +146,37 @@ begin
     Caption:=FList[FIndex];
     Application.Title:=FList[FIndex];
    end;
+end;
+
+procedure TfrmAView.LoadClipboard;
+var
+  b:TBitmapForceHalftone;
+begin
+  b:=TBitmapForceHalftone.Create;
+  try
+    b.Assign(Clipboard);
+    Image1.Picture.Bitmap:=b;
+    Caption:='aView';
+    Application.Title:='aView';
+  except
+    b.Free;
+    //ignore invalid clipboard format
+  end;
+end;
+
+procedure TfrmAView.Image1DblClick(Sender: TObject);
+begin
+  LoadClipboard;
+end;
+
+procedure TfrmAView.Image1MouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  case Button of
+    mbLeft:inc(FIndex);
+    mbRight:if FIndex<>0 then dec(FIndex);
+  end;
+  LoadImage;
 end;
 
 end.
