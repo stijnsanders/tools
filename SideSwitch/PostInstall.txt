@@ -1,0 +1,10 @@
+Thank you for installing SideSwitch!
+
+SideSwitch shows a list of applications* when you move the cursor to the edge
+of the screen, not the corners, but the center two quarters of the width or 
+height.
+
+Right-click to change settings or close SideSwitch.
+
+*: on multi-monitor systems, shows applications that have the main window on
+the current monitor.

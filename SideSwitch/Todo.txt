@@ -1,0 +1,8 @@
+mutex (single instance)
+welcome message
+
+WM_GetText with timeout?
+
+shellicon?
+
+idee: accept drag&drop? (doorvragen aan handle van item?)
