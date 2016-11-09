@@ -16,6 +16,10 @@ Got RSI? Or a mouse with buttons behaving badly? Have a click simulated when hol
 
 Looking for a resizable on-screen keyboard? Or one with a custom keyboard layout? MetaKeys should offer what you need.
 
+## SideSwitch
+
+You can set the Windows task-bar to auto-hide, but is it there where you want it? Before other options were available to have a task-bar for each screen on a multi-monitor setup, I created this tool to list the windows on one screen, and switch a window between monitors, maximized or not.
+
 ## other tools
 
 These are a few other tools made by me not contained in this repository:
