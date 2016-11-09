@@ -1,0 +1,40 @@
+This is a little tool I wrote years ago, and use every day. Think for a moment
+about how much time you lose by navigating through folders in an open or save
+dialog to find a file you just had in an explorer window before. Or about how
+many times you came at a point you needed the full path of a file in code or
+script somewhere.
+
+The shexAllSorts.dll registers with all files and folders to show up on their
+context-menu in Windows Explorer. It has five options:
+
+- Copy UNC
+Build the full path of the selected file(s) or folder(s), and put it as text
+on the clipboard. Use this to paste into an open dialog box to avoid
+navigating to the file. Hold the Ctrl button to only copy the file names
+without path.
+
+- Copy content
+Read the content of the selected file(s), and put is as text on the clipboard.
+Be carefull to avoid large or binary files. Hold the Ctrl button to add the
+content of the file(s) to the text currently on the clipboard.
+
+- Set read-only
+Sets the read-only flag on the selected file(s) or folder(s). Hold the Ctrl
+button when selecting this option to clear the read-only flag.
+
+- Touch (set date)
+Sets the last modified date of the selected file(s) or folder(s) to the
+current date and time. Some applications are triggered by changes to files.
+Use this when you need to trigger but don't need to change.
+
+- Open URL...
+Attempts to translate the current disk location into a URL, using a
+translation table stored in the registry. Use this when developing
+server-side-scripted websites. Use regedit to change the translation table
+stored here:
+  HKEY_CURRENT_USER\Software\Double Sigma Programming\AllSorts\URLs
+Create a string key with the folder name, and the URL prefix to replace, e.g.:
+  C:\Inetpub\wwwroot = http://localhost
+
+
+http://yoy.be/AllSorts
