@@ -69,14 +69,16 @@ begin
   if FList.Count<>0 then
     LoadImage
   else
+   begin
+    b:=TBitmapForceHalftone.Create;
     try
-      b:=TBitmapForceHalftone.Create;
       b.Assign(Clipboard);
       Image1.Picture.Bitmap:=b;
     except
       b.Free;
       //ignore invalid clipboard format
     end;
+   end;
 end;
 
 procedure TfrmAView.DoDestroy;
@@ -130,10 +132,10 @@ begin
     while FIndex>FList.Count do dec(FIndex,FList.Count);
   if FIndex<FList.Count then
    begin
+    b:=TBitmapForceHalftone.Create;
     try
-      b:=TBitmapForceHalftone.Create;
+      p:=TPicture.Create;
       try
-        p:=TPicture.Create;
         p.LoadFromFile(FList[FIndex]);
         b.Width:=p.Width;
         b.Height:=p.Height;
