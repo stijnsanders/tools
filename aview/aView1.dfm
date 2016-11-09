@@ -1,0 +1,29 @@
+object frmAView: TfrmAView
+  Left = 212
+  Top = 142
+  Width = 287
+  Height = 199
+  Caption = 'aView'
+  Color = clWindow
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  Position = poDefault
+  OnMouseWheel = FormMouseWheel
+  PixelsPerInch = 96
+  TextHeight = 13
+  object Image1: TImage
+    Left = 0
+    Top = 0
+    Width = 271
+    Height = 160
+    Align = alClient
+    Center = True
+    Proportional = True
+    Stretch = True
+    Transparent = True
+  end
+end
