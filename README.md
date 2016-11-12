@@ -25,7 +25,7 @@ You can set the Windows task-bar to auto-hide, but is it there where you want it
 These are a few other tools made by me not contained in this repository:
 
 * **[RE](https://github.com/stijnsanders/re#re)**: "Regular Expression" might be a bit boldly named, but the point was to provide a rich set of options to connect to the ins and outs of one or more regular expressions.
-* **[tx](http://gitbug.com/stijnsanders/tx#tx)**: an issue tracking tool/website (written in [xxm](http://githib.com/stijnsanders/xxm#xxm)) heavily based on an unlimited layered structure of items/projects/issues/requests...
+* **[tx](http://github.com/stijnsanders/tx#tx)**: an issue tracking tool/website (written in [xxm](http://githib.com/stijnsanders/xxm#xxm)) heavily based on an unlimited layered structure of items/projects/issues/requests...
 
 These are a few other tools, not by me, but which I highly recommend:
 
