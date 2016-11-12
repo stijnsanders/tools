@@ -29,5 +29,10 @@ These are a few other tools made by me not contained in this repository:
 
 These are a few other tools, not by me, but which I highly recommend:
 
+* **[7-Zip](http://www.7-zip.org/)**: my ZIP-archive tool of choice. Supports a wide range of archive file formats.
 * **[Atom](https://atom.io/)**: written by the gentle people over at GitHub, designed to be as versatile as things like Emacs, Sublime; but based on Node.js and Chrome's V8.
 * **[Ditto-CP](http://sourceforge.net/projects/ditto-cp/)**: lost something because you copied something new before pasting that last thing? Don't worry, Ditto-CP kept a copy. Once you get the hang of this you'll even start copying things and paste them in a different order.
+* **[FileZilla](https://filezilla-project.org/)**: my FTP-client of choice. Also has a great FTP server.
+* **[The GIMP](https://www.gimp.org/): my graphics editor of choice.
+
+And there's [much more here](https://www.openhub.net/accounts/develyoy/stacks)
