@@ -1,0 +1,42 @@
+object winHint: TwinHint
+  Left = 343
+  Top = 263
+  BorderStyle = bsNone
+  Caption = 'odo'
+  ClientHeight = 78
+  ClientWidth = 170
+  Color = clInfoBk
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clInfoText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  OnClose = FormClose
+  PixelsPerInch = 96
+  TextHeight = 13
+  object Panel1: TPanel
+    Left = 0
+    Top = 0
+    Width = 170
+    Height = 78
+    Align = alClient
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clInfoText
+    Font.Height = -9
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentColor = True
+    ParentFont = False
+    TabOrder = 0
+    OnMouseMove = Panel1MouseMove
+    object lblHint: TLabel
+      Left = 4
+      Top = 4
+      Width = 26
+      Height = 11
+      Caption = 'lblHint'
+      OnMouseMove = Panel1MouseMove
+    end
+  end
+end

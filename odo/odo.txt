@@ -1,0 +1,38 @@
+odo
+
+What's New
+
+v0.4.0.366
+- replaced OLEDB/ADO with sqlite3.dll
+
+v0.3.1.278
+- added setting: count navigation keys
+
+v0.3.0.277
+- uses SetWindowsHookEx now for more accurate counting
+- extra settings: count controls, count deletes
+
+v0.2.8.274
+- fixed hiding application handle issue (stray taskbar button)
+- added about box on settings dialog (bitcoin address for donations!)
+
+v0.2.7.266
+- added days,hours,minutes difference display to mouse hint when over idle timespans
+
+v0.2.6.264
+- added 'Apps' metric: number of applications switched between ('Switches' counts any switch from one window to another, 'Apps' counts the number of process-id's of the windows that have had focus)
+- when inserting a record, fields are given a value depending on field name, allowing fields to be missing, except for any 'additional values' configured.
+- added 'date time display format' setting
+- added an extra border to the top and bottom pixel
+
+v0.2.4.14
+- fixed "fix102" to not work with non-counted keystrokes
+
+v0.2.3.11
+- fixed bug with data link
+- onmouseover now only pops up when application active (click first)
+
+v0.2.2.10
+- added StayOnTop switch
+- tweaked display on Windows TaskBar and AltTab-list
+- also stays up on Windows-Key+M

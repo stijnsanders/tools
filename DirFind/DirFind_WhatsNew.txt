@@ -1,0 +1,26 @@
+2.0.3.345
+- Multi-line matches show first line when double-click matching file
+- extra lines loaded (by double-clicking matching line) show other icon when adjacent lines also loaded
+- load files with FILE_FLAG_SEQUENTIAL_SCAN
+2.0.2.300
+- issue expanding closest line above for lower indentation-levels over blank lines
+- shell context menu on files/folders items
+- command line parameters support:
+    DirFind [<options>] <search path> [<filter filenames> [<exclude filenames> [<search pattern>]]]
+    options:
+      /i  ignore case
+      /m  multi line
+      /a  count all matches
+	  (/-... to disable, default settings are loaded from previous session)
+2.0.1.290
+- bug reading UTF16/UCS2 files
+- issue updating display on abort
+2.0.0.288
+- revised internals, handles errors better, may perform better
+- option: count all matches, as opposed to only files that match (may take longer on large files)
+- tabs are expanded (default TabSize is 4, change in %APPDATA%\DirFind\DirFind.ini)
+- double click a line-match: shows closest line above for each lower indentation-level
+1.0.1.260
+- push directory up search queue when expanding tree
+- fixed issue with replace on non-unicode files
+1.0.0.80
