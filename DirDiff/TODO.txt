@@ -1,0 +1,8 @@
+DirDiff TODO
+
+- context-menu on folder nodes (right-click)
+- windows system file menu
+- full diff (byte by byte) on sub-diffs
+- select fraction of lines
+- replace this by that, fractions of code files
+- JSON support
