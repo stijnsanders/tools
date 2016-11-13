@@ -5,6 +5,10 @@ These are a few of my personal productivity tools. They have come into existence
 
 A Windows shell extension that can copy the full path and filename of selected file(s) (and directories), sounds simple, but a task I was peacing together before with the location bar and the properties dialog. Use it to paste the full path in a file dialog when you had the folder view open on beforehand.
 
+## DirDiff
+
+Screen real-estate, I like the term, and don't want it wasted, so why show something twice? I wanted a diff that shows what's equal between the two exactly once. Also those that say you can't diff XML's are wrong. Yes you can _create_ XML that's like hell to diff, but in most day-to-day cases a diff based on some or all values does just fine.
+
 ## DirFind
 
 Grep is nice, it shows you the lines that have what you entered, but in general it's something in the vicinity you're looking for. DirFind shows you the files in their folder structure, double-click to show the lines with a match, and double-click those to load the adjacent lines!

@@ -1,0 +1,62 @@
+v2.0.0.460
+Total re-worked version: work is done on (multiple) background threads.
+A new algorithm, based on "An O(ND) Difference Algorithm and Its Variations" by Eugene W. Myers, but extended to take not 2 but n sources.
+
+v1.2.1.333
+Diff: option to select font
+
+v1.2.0.272
+Mini-diff in adjacent lines with difference (only from left, right for now)
+NULL characters are replaced with space.
+XML option: treat CDATA as text
+XML option: detect namespaces, nodes with the same namespace URI may use different prefixes
+
+v1.1.13.270
+Fixed bug reading UTF16 files
+XML issue: attribute differences no longer cause tags to mismatch
+XML option: set one or more 'defining attributes' used for display and matching
+XML option: ignore element sequence (treeview only)
+
+v1.1.12.260
+XML toggle: collapse empty tags
+XML structure: expand/collapse all options
+
+v1.1.11.255
+show XML structure in a tree-view
+XML toggles: attributes, whitespace
+some user interface embellishments (e.g. toolbars) 
+check files last modified date on application (re)activate
+previous/next file on file-diff, either linked to dirdiff or working on the file-system by itself
+single command line parameter opens drag handle with one file/dir opened
+recombine option on directory to combine files side-by-side sorted alphabetically
+issue closing down with compare still running in background
+improved unicode support
+
+v1.0.10.250
+multiline node text in XML documents now shows on multiple lines
+icons on update/delete menu options
+fixed issue with extra char on UTF16 files
+
+v1.0.9.216
+node gets reseleted on refresh
+update all options
+
+v1.0.8.164
+Comparing directies: update or delete files/dirs to/from either side
+Comparing directies: file content is checked in a background process
+
+v1.0.7.153
+Any file extension is checked for "Content Type"="text/xml" in the registry
+
+v1.0.6
+revised drag handle look
+revised Unicode support
+
+v1.0.5
+updates red/green colors
+
+v1.0.4
+minor Unicode support (converted to current codepage)
+faster directory diff
+onshow bug fixed
+

@@ -882,6 +882,15 @@ begin
      end
     else
      begin
+
+      if odSelected in State then
+       begin
+        inc(cx[0],$80);
+        inc(cx[1],$80);
+        inc(cx[2],$80);
+        inc(cn);
+       end;
+
       if cn=0 then
         dc:=$FFFFFF //?
       else
