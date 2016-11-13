@@ -8,7 +8,6 @@ uses
   ddParams in 'ddParams.pas',
   VBScript_RegExp_55_TLB in 'VBScript_RegExp_55_TLB.pas',
   MSXML2_TLB in 'MSXML2_TLB.pas',
-  ddDict in 'ddDict.pas',
   xxHash in 'xxHash.pas',
   ddGoToLine in 'ddGoToLine.pas' {frmDirDiffGoToLine},
   ddHandle in 'ddHandle.pas' {frmDiffHandle},
