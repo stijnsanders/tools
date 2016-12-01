@@ -1,3 +1,8 @@
+v2.0.1.494
+Update icon according to file or folder view.
+Fixed issue with non-longest-common-subsequence on some complex diffgraphs
+Fixed line height update on font size preference change
+
 v2.0.0.460
 Total re-worked version: work is done on (multiple) background threads.
 A new algorithm, based on "An O(ND) Difference Algorithm and Its Variations" by Eugene W. Myers, but extended to take not 2 but n sources.

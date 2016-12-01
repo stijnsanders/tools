@@ -6,3 +6,5 @@ DirDiff TODO
 - select fraction of lines
 - replace this by that, fractions of code files
 - JSON support
+
+- XML: drag-drop to fix comparing

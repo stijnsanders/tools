@@ -1,5 +1,7 @@
 program DirDiff;
 
+{$R 'DirDiff_ico.res' 'DirDiff_ico.rc'}
+
 uses
   Forms,
   ddMain in 'ddMain.pas' {frmDirDiffMain},

@@ -154,7 +154,7 @@ type
     FDataCount,FFilesSource:integer;
     vp1,vp2,FQueueFlash,FResetToTop,FResetToLine:integer;
     FCompareFile:TTreeNode;
-    FClosing,FSkipXML,FSKipNodeCheck,FAskingUpdate:boolean;
+    FClosing,FSkipXML,FSkipNodeCheck,FSkipAppActivate,FAskingUpdate:boolean;
     procedure CreateSetUI(d: TDiffData);
     procedure ShowPrefs(bXml: boolean);
     procedure UpdateUI;
@@ -211,7 +211,8 @@ begin
   FCompareFile:=nil;
   FSkipXML:=false;
   FFilesSource:=-1;
-  FSKipNodeCheck:=false;
+  FSkipNodeCheck:=false;
+  FSkipAppActivate:=false;
   FAskingUpdate:=false;
 
   sl:=TStringList.Create;
@@ -227,6 +228,7 @@ begin
         lbView.Font.Style:=lbView.Font.Style+[fsBold];
       if sl.Values['FontItalic']='1' then
         lbView.Font.Style:=lbView.Font.Style+[fsItalic];
+      lbView.ItemHeight:=2-lbView.Font.Height;
      end;
     FDataSet.IgnoreDates:=sl.Values['IgnoreDates']='1';
     FDataSet.SkipFiles:=sl.Values['Skip'];
@@ -308,7 +310,8 @@ begin
        end;
 
      end;
-    UpdateUI; 
+    UpdateUI;
+    FSkipAppActivate:=true;
    end;
 
 end;
@@ -467,6 +470,8 @@ begin
      begin
       //apply
       lbView.Font.Assign(f.FontDialog1.Font);
+      lbView.ItemHeight:=2-lbView.Font.Height;
+      FDataSet.LineNrWidth:=0;//force recalculate
       FDataSet.SkipFiles:=f.txtSkipFiles.Text;
       FDataSet.IgnoreDates:=f.cbIgnoreDates.Checked;
       FDataSet.IgnoreWhitespace:=f.cbIgnoreWhitespace.Checked;
@@ -632,6 +637,7 @@ procedure TfrmDirDiffMain.UpdateUI;
 var
   s:string;
   i:integer;
+  r:TResourceStream;
 begin
   if FDataSet.AnyDir then
    begin
@@ -639,6 +645,14 @@ begin
     spFolders.Visible:=true;
     tvFolders.Left:=0;
     spFolders.Left:=tvFolders.Width;
+
+    r:=TResourceStream.Create(HInstance,'ICODIR',MakeIntResource(23));
+    try
+      Icon.LoadFromStream(r);
+      Application.Icon.Assign(Icon);
+    finally
+      r.Free;
+    end;
 
     Screen.Cursor:=crHourGlass;
     try
@@ -656,6 +670,14 @@ begin
     spFolders.Visible:=false;
     FCompareFile:=nil;
     tvFolders.Items.Clear;
+
+    r:=TResourceStream.Create(HInstance,'ICODOC',MakeIntResource(23));
+    try
+      Icon.LoadFromStream(r);
+      Application.Icon.Assign(Icon);
+    finally
+      r.Free;
+    end;
 
     LoadFromPaths;
 
@@ -2202,6 +2224,11 @@ var
 begin
   if not(FAskingUpdate) then
    begin
+    if FSkipAppActivate then
+     begin
+      FSkipAppActivate:=false;
+      Exit;
+     end;
     i:=0;
     b:=false;
     while (i<>FDataSet.DataCount) and not(b) do

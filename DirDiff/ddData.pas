@@ -134,6 +134,7 @@ type
     function XmlDisplay(x: IXMLDOMNode): string;
     property DataCount:integer read FDataCount;
     property Data[Idx:integer]:TDiffData read GetData; default;
+    property LineNrWidth: integer read FLineNrWidth write FLineNrWidth;
   end;
 
   TDiffRunner=class(TThread)
@@ -1269,7 +1270,7 @@ const
   qGrowStep=$10;
 type
   tkk=record
-    f,fx,fy,b,bx,by:integer;
+    f,fk,fx,fy,b,bk,bx,by:integer;
   end;
   pkk=^tkk;
 var
@@ -1277,7 +1278,7 @@ var
   ok:boolean;
   s:Utf8String;
   q:array of integer;
-  qi,qx,ql,qStart,qStride,qNext,di,dj,dodd,
+  qi,qx,ql,qStart,qStride,qNext,di,dj,
   aa,ax,ay,bb,bx,by,cx,cy,dx,dy:integer;
   kkk:array of tkk;
   kk:pkk;
@@ -1339,7 +1340,6 @@ begin
       ax:=cy-cx;
       bx:=dy-dx;
       if ax>bx then l:=ax else l:=bx; //assert l<Length(kkk)
-      dodd:=(ax xor bx) and 1;
       ay:=0;//counter warning
       by:=0;//counter warning
       i:=((dy-dx)-(cy-cx)+1) div 2;
@@ -1347,18 +1347,18 @@ begin
       for k:=-i to i do
        begin
         kk:=kx(k);
-        j:=cx-1; kk.f:=j; kk.fx:=j; kk.fy:=j;
-        j:=cy  ; kk.b:=j; kk.bx:=j; kk.by:=j;
+        j:=cx-1; kk.f:=j; kk.fk:=k; kk.fx:=j; kk.fy:=j;
+        j:=cy  ; kk.b:=j; kk.bk:=k; kk.bx:=j; kk.by:=j;
        end;
       k:=i+2;
       while i<>l do
        begin
         kk:=kx(-i-1);
-        j:=cx-1; kk.f:=j; kk.fx:=j; kk.fy:=j;
-        j:=cy  ; kk.b:=j; kk.bx:=j; kk.by:=j;
+        j:=cx-1; kk.f:=j; kk.fk:=k; kk.fx:=j; kk.fy:=j;
+        j:=cy  ; kk.b:=j; kk.bk:=k; kk.bx:=j; kk.by:=j;
         kk:=kx(i+1);
-        j:=cx-1; kk.f:=j; kk.fx:=j; kk.fy:=j;
-        j:=cy  ; kk.b:=j; kk.bx:=j; kk.by:=j;
+        j:=cx-1; kk.f:=j; kk.fk:=k; kk.fx:=j; kk.fy:=j;
+        j:=cy  ; kk.b:=j; kk.bk:=k; kk.bx:=j; kk.by:=j;
         k:=-i;
         while (i<>l) and (k<=i) do
          begin
@@ -1368,7 +1368,20 @@ begin
            begin
             aa:=kx(k+1).f;
             ax:=kx(k-1).f+1;
-            if aa<ax then aa:=ax else ax:=aa;
+            if aa<ax then
+             begin
+              aa:=ax;
+              kk.fk:=kx(k-1).fk;
+              kk.fx:=kx(k-1).fx;
+              kk.fy:=kx(k-1).fy;
+             end
+            else
+             begin
+              ax:=aa;
+              kk.fk:=kx(k+1).fk;
+              kk.fx:=kx(k+1).fx;
+              kk.fy:=kx(k+1).fy;
+             end;
             bb:=q[qi+di*2]-dx+k;//bb:=cx-dx+k;
             bx:=ax-bb;
             if (ax>=cx) and (bx>=dx) then
@@ -1383,38 +1396,32 @@ begin
                end;
              end;
             kk.f:=ax;
-            if aa<>ax then
+            if (aa<>ax) and (ax-aa>=kk.fy-kk.fx) then
              begin
+              kk.fk:=k;
               kk.fx:=aa;
               kk.fy:=ax;
              end;
-            if (dodd=1) and (ax>=kk.b) then
-              if (kk.fx<>kk.fy) and
-                (kk.fy-kk.fx>=kk.by-kk.bx) then
-               begin
-                i:=l;
-                ax:=kk.fx;
-                ay:=kk.fy;
-                bx:=ax-bb;
-                by:=ay-bb;
-               end
-              else
-              if kk.bx<>kk.by then
-               begin
-                i:=l;
-                bb:=q[qi+di*2+1]-dy+k;
-                ax:=kk.bx+1;
-                ay:=kk.by+1;
-                bx:=ax-bb;
-                by:=ay-bb;
-               end;
            end;
           //backward
           if i<>l then
            begin
             aa:=kx(k-1).b;
             ax:=kx(k+1).b-1;
-            if aa>ax then aa:=ax else ax:=aa;
+            if aa>ax then
+             begin
+              aa:=ax;
+              kk.bk:=kx(k+1).bk;
+              kk.bx:=kx(k+1).bx;
+              kk.by:=kx(k+1).by;
+             end
+            else
+             begin
+              ax:=aa;
+              kk.bk:=kx(k-1).bk;
+              kk.bx:=kx(k-1).bx;
+              kk.by:=kx(k-1).by;
+             end;
             bb:=q[qi+di*2+1]-dy+k;//bb:=cy-dy+k;
             bx:=ax-bb;
             if (ax<cy) and (bx<dy) then
@@ -1429,32 +1436,34 @@ begin
                end;
              end;
             kk.b:=ax;
-            if aa<>ax then
+            if (aa<>ax) and (aa-ax>kk.by-kk.bx) then
              begin
+              kk.bk:=k;
               kk.bx:=ax;
               kk.by:=aa;
              end;
-            if (dodd=0) and (kk.f>=ax) then
-              if (kk.bx<>kk.by) and
-                (kk.by-kk.bx>=kk.fy-kk.fx) then
-               begin
-                i:=l;
-                ax:=kk.bx+1;
-                ay:=kk.by+1;
-                bx:=ax-bb;
-                by:=ay-bb;
-               end
-              else
-              if kk.fx<>kk.fy then
-               begin
-                i:=l;
-                bb:=q[qi+di*2]-dx+k;
-                ax:=kk.fx;
-                ay:=kk.fy;
-                bx:=ax-bb;
-                by:=ay-bb;
-               end;
            end;
+          //meet in the middle?
+          if (kk.f>=kk.b) then
+            if (kk.fx<>kk.fy) and (kk.fy-kk.fx>=kk.by-kk.bx) then
+             begin
+              i:=l;
+              bb:=q[qi+di*2]-dx+kk.fk;
+              ax:=kk.fx;
+              ay:=kk.fy;
+              bx:=ax-bb;
+              by:=ay-bb;
+             end
+            else
+            if kk.bx<>kk.by then
+             begin
+              i:=l;
+              bb:=q[qi+di*2+1]-dy+kk.bk;
+              ax:=kk.bx+1;
+              ay:=kk.by+1;
+              bx:=ax-bb;
+              by:=ay-bb;
+             end;
           //next
           if i<>l then inc(k,2);
           if lx<>FLoadIndex then Exit;
@@ -1464,15 +1473,6 @@ begin
       //next source
       if k>i then
        begin
-{
-        if ff[di*2]-q[qi+di*2]<q[qi+di*2+1]-ff[di*2+1] then
-          j:=q[qi+dj*2]
-        else
-          j:=q[qi+dj*2+1];
-
-        ff[dj*2  ]:=j;
-        ff[dj*2+1]:=j;
-}
         ff[dj*2  ]:=-1;
         ff[dj*2+1]:=-1;
 
@@ -1793,23 +1793,22 @@ begin
   bb.Height:=OverviewHeight;
   if FContentMapCount<>0 then
    begin
-    a:=FContentMap[FContentMapCount]+1;
+    a:=FContentMap[FContentMapCount];
     b:=OverviewHeight;
     k:=0;
+    if b<>1 then
     for i:=0 to b-1 do
      begin
-      d:=(i+1)*a div b;
+      d:=(i*a div (b-1))+1;
       p:=0;
       px[0]:=0;
       px[1]:=0;
       px[2]:=0;
-      while (k<>FContentMapCount) and (FContentMap[k+FContentMapStride]<d) do
-        inc(k,FContentMapStride);
       l:=k;
       while (l<>FContentMapCount) and ((l=k) or (FContentMap[l]<d)) do
        begin
         for j:=0 to FDataCount-1 do
-         if ((1 shl j) and FContentMap[l+cmBitMask])<>0 then
+          if ((1 shl j) and FContentMap[l+cmBitMask])<>0 then
            begin
             inc(p);
             c:=DiffColors[j];
@@ -1817,6 +1816,7 @@ begin
             inc(px[1],cx[1]);
             inc(px[2],cx[2]);
            end;
+        if FContentMap[l]<d then k:=l;
         inc(l,FContentMapStride);
        end;
       if (p=FDataCount) or (p=0) then
@@ -1832,7 +1832,7 @@ begin
       if ((i and $F)=0) and (FLoadIndex<>lx) then Exit;
      end;
    end;
-   
+
   SendMessage(FParent,WM_PREVIEW,integer(bb),0);
 end;
 
@@ -2509,7 +2509,9 @@ begin
         WaitForSingleObject(FEvent,INFINITE);
        end;
     except
-      //TODO: on e:Exception do...
+      on e:Exception do
+        MessageBox(GetDesktopWindow,PChar(e.Message),'DirDiff worker thread',
+          MB_OK or MB_ICONERROR or MB_SYSTEMMODAL);
     end;
 end;
 
