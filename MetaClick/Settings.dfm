@@ -309,7 +309,7 @@ object frmSettings: TfrmSettings
     Top = 8
     Width = 417
     Height = 337
-    ActivePage = tsCursorTag
+    ActivePage = TabSheet1
     TabOrder = 2
     object TabSheet1: TTabSheet
       BorderWidth = 4
@@ -317,7 +317,7 @@ object frmSettings: TfrmSettings
       object Label1: TLabel
         Left = 0
         Top = 0
-        Width = 92
+        Width = 91
         Height = 23
         Caption = '&Wait time'
         FocusControl = txtInterval
@@ -400,7 +400,7 @@ object frmSettings: TfrmSettings
       object Label34: TLabel
         Left = 176
         Top = 178
-        Width = 137
+        Width = 135
         Height = 23
         Caption = 'Transparency:'
       end
@@ -688,7 +688,7 @@ object frmSettings: TfrmSettings
       object Label35: TLabel
         Left = 24
         Top = 226
-        Width = 137
+        Width = 135
         Height = 23
         Caption = 'Transparency:'
       end

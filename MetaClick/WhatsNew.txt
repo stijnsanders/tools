@@ -1,3 +1,6 @@
+v1.2.3.494
+- fixed division by zero issue
+
 v1.2.2.470
 - when suspended, time down to unsuspend only on self
 - time down on buttons on self is always a normal click

@@ -1034,6 +1034,7 @@ begin
   if p<>0 then
    begin
     p1:=(p div 2)+(p mod 2);
+    if p1=0 then p1:=1;//?
     sx:=Width;
     sy:=Height;
     if sx>=sy then

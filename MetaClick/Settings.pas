@@ -359,6 +359,7 @@ var
   y,sy,ty:integer;
 begin
   ty:=udInterval.Position div 10;//Timer1.Interval;
+  if ty=0 then ty:=1;
   sy:=panDemo1.ClientHeight-4;
   inc(FDemoY);
   y:=FDemoY*sy div ty;
