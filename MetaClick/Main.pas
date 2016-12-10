@@ -176,7 +176,7 @@ procedure TfrmMetaClick.FormCreate(Sender: TObject);
 var
   r:TRegistry;
   f:TFont;
-  x,y,sx,sy,b1,ms1,ms2,omx,omy,oms,ablCT,smo:integer;
+  x,y,sx,sy,b1,ms1,ms2,omx,omy,oms,ablCT,smo,r1,c1,c2:integer;
   dr:TRect;
   p:TPoint;
   spf:string;
@@ -229,12 +229,16 @@ begin
   Corners:=0;
   smo:=0;
   ablCT:=1;
+  r1:=0;
+  c1:=$00CCFF;
+  c2:=$0000FF;
 
   ClickMode:=cmLeftSingle;//uses BoolColor!
 
   //load settings (excessive silent try/except's here are for easy upgradability)
   sl:=TStringList.Create;
   f:=TFont.Create;
+  f.Assign(Font);
   r:=TRegistry.Create;
   r.OpenKey('\Software\Double Sigma Programming\MetaClick',true);
   try
@@ -285,24 +289,26 @@ begin
     FAlphaLevel:=r.ReadInteger('AlphaLevel');
     ablCT:=r.ReadInteger('CursorTagAlphaLevel');
     FStartSus:=r.ReadBool('StartSuspended');
+    r1:=r.ReadInteger('ReturnTo');
+    c1:=r.ReadInteger('ColorBG1');
+    c2:=r.ReadInteger('ColorBG2');
   except
     //silent use defaults
     y:=0;
   end;
+  r.CloseKey;
+  r.Free;
+  //Don't use r past this line!!!
   try
     UpdateSettings(
-      ms1,ms2,b1,FOrbit,FOrbitSize,FOrbitCrossSize,omx,omy,oms,
-      r.ReadInteger('ReturnTo'),
+      ms1,ms2,b1,FOrbit,FOrbitSize,FOrbitCrossSize,omx,omy,oms,r1,
       FCursorTagPosX,FCursorTagPosY,FCursorTagWidth,FCursorTagHeight,
       FAlphaLevel,ablCT,smo,ct,FCursorTagKeepOnScreen,
-      r.ReadInteger('ColorBG1'),r.ReadInteger('ColorBG2'),
-      f,p,spf,sl);
+      c1,c2,f,p,spf,sl);
   except
     //silently, use defaults, force first arrange
     ArrangeButtons;
   end;
-  r.CloseKey;
-  r.Free;
   f.Free;
   sl.Free;
 

@@ -1,4 +1,4 @@
-v1.2.3.494
+v1.2.3.497
 - fixed division by zero issue
 
 v1.2.2.470
