@@ -48,11 +48,13 @@ type
     Removeall1: TMenuItem;
     cbCountMatches: TCheckBox;
     Expand1: TMenuItem;
+    cbRegExp: TCheckBox;
     procedure btnSelectFolderClick(Sender: TObject);
     procedure btnStartClick(Sender: TObject);
     procedure tvMatchesCreateNodeClass(Sender: TCustomTreeView;
       var NodeClass: TTreeNodeClass);
-    procedure tvMatchesContextPopup(Sender: TObject; MousePos: TPoint; var Handled: Boolean);
+    procedure tvMatchesContextPopup(Sender: TObject; MousePos: TPoint;
+      var Handled: Boolean);
     procedure aSuspendResumeExecute(Sender: TObject);
     procedure aRefreshExecute(Sender: TObject);
     procedure aTerminateExecute(Sender: TObject);
@@ -73,7 +75,7 @@ type
     FFinderProgress:TDirFinderNode;
     cm2:IContextMenu2;
     function PopupFinder: TDirFinderNode;
-    procedure DoFinderProgress(Sender: TObject; PrgTxt: string);
+    procedure DoFinderProgress(Sender: TObject; const PrgTxt: string);
   protected
     procedure DoCreate; override;
     procedure DoClose(var Action: TCloseAction); override;
@@ -136,6 +138,7 @@ begin
   cbFiles.Text:=IniStr('Files','',d);
   cbNotFiles.Text:=IniStr('FilesNot','',d);
   cbPattern.Text:=IniStr('Pattern','',d);
+  cbRegExp.Checked:=IniStr('RegExp','0',d)='1';
   cbIgnoreCase.Checked:=IniStr('IgnoreCase','1',d)='1';
   cbMultiLine.Checked:=IniStr('MultiLine','0',d)='1';
   cbCountMatches.Checked:=IniStr('CountMatches','0',d)='1';
@@ -165,6 +168,7 @@ begin
   SetIniStr('Files',cbFiles.Text,d);
   SetIniStr('FilesNot',cbNotFiles.Text,d);
   SetIniStr('Pattern',cbPattern.Text,d);
+  SetIniStr('RegExp',BoolStr[cbRegExp.Checked],d);
   SetIniStr('IgnoreCase',BoolStr[cbIgnoreCase.Checked],d);
   SetIniStr('MultiLine',BoolStr[cbMultiLine.Checked],d);
   SetIniStr('CountMatches',BoolStr[cbCountMatches.Checked],d);
@@ -190,20 +194,50 @@ begin
   //assert cb.Sorted:=true;
 end;
 
+function RegExSafe(const x:string):string;
+var
+  i,j,l:integer;
+begin
+  l:=Length(x);
+  SetLength(Result,l*2);
+  i:=0;
+  j:=0;
+  while i<l do
+   begin
+    inc(i);
+    inc(j);
+    if x[i] in ['\','.','*','+','?','$','^','[',']','(',')','{','}'] then
+     begin
+      Result[j]:='\';
+      inc(j);
+     end;
+    Result[j]:=x[i];
+   end;
+  SetLength(Result,j);
+end;
+
 procedure TfDirFindMain.btnStartClick(Sender: TObject);
 var
   n:TDirFinderNode;
+  p:string;
 begin
   if txtProgress.Focused and (txtProgress.SelLength<>0) then
-    cbPattern.Text:=txtProgress.SelText;
+    if cbRegExp.Checked then
+      cbPattern.Text:=RegExSafe(txtProgress.SelText)
+    else
+      cbPattern.Text:=txtProgress.SelText;
   cbPattern.SelectAll;
+  if cbRegExp.Checked then
+    p:=cbPattern.Text
+  else
+    p:=RegExSafe(cbPattern.Text);
   DirFindNextNodeClass:=TDirFinderNode;
   n:=tvMatches.Items.Add(nil,'') as TDirFinderNode;
   n.Start(
     cbFolder.Text,
     cbFiles.Text,
     cbNotFiles.Text,
-    cbPattern.Text,
+    p,
     cbIgnoreCase.Checked,
     cbMultiLine.Checked,
     cbCountMatches.Checked);
@@ -368,6 +402,9 @@ end;
 procedure TfDirFindMain.aCopyExecute(Sender: TObject);
 begin
   if FPopupNode<>nil then
+    if FPopupNode is TDirFinderNode then
+      Clipboard.AsText:=(FPopupNode as TDirFinderNode).AllFilePaths
+    else
     if FPopupNode is TDirFindTreeNode then
       Clipboard.AsText:=(FPopupNode as TDirFindTreeNode).ProgressText//?
     else
@@ -424,7 +461,7 @@ begin
    end;
 end;
 
-procedure TfDirFindMain.DoFinderProgress(Sender: TObject; PrgTxt: string);
+procedure TfDirFindMain.DoFinderProgress(Sender:TObject;const PrgTxt:string);
 begin
   txtProgress.Text:=PrgTxt;
 end;
@@ -514,6 +551,7 @@ begin
         case s[j] of
           '-':b:=false;
           '+':b:=true;
+          'r','R':cbRegExp.Checked:=b;
           'c','C':cbIgnoreCase.Checked:=b;
           'm','M':cbMultiLine.Checked:=b;
           'a','A':cbCountMatches.Checked:=b;

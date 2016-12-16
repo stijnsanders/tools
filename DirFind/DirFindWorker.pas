@@ -7,7 +7,8 @@ uses Classes;
 type
   TDirFinderNotifyMessage=(nmError,nmDone,nmFolderFound,nmProgress,nmFolderDone,nmMatchFound);
 
-  TDirFinderNotifyEvent=procedure(nm:TDirFinderNotifyMessage;msg:string;val:integer) of object;
+  TDirFinderNotifyEvent=procedure(nm:TDirFinderNotifyMessage;
+    const msg:string;val:integer) of object;
 
   TDirFinder=class(TThread)
   private
@@ -17,26 +18,27 @@ type
     FOnNotify_nm:TDirFinderNotifyMessage;
     FOnNotify_msg:string;
     FOnNotify_val:integer;
-    procedure Notify(nm:TDirFinderNotifyMessage;msg:string;val:integer);
+    procedure Notify(nm:TDirFinderNotifyMessage;const msg:string;val:integer);
     procedure DoNotify;
   protected
     procedure Execute; override;
   public
     PrioFolder:string;
-    constructor Create(Folder,Files,NotFiles,Pattern:string;
-      IgnoreCase,MultiLine,CountMatches:boolean;OnNotify:TDirFinderNotifyEvent);
+    constructor Create(const Folder,Files,NotFiles,Pattern:string;
+      IgnoreCase,MultiLine,CountMatches:boolean;
+      OnNotify:TDirFinderNotifyEvent);
     destructor Destroy; override;
   end;
 
   TFileEncoding=(feUtf16,feUtf8,feUnknown);
 
-function FileAsWideString(fn:string;var enc:TFileEncoding):WideString;
+function FileAsWideString(const fn:string;var enc:TFileEncoding):WideString;
 
 implementation
 
 uses Windows, SysUtils, ActiveX, VBScript_RegExp_55_TLB;
 
-function FileAsWideString(fn:string;var enc:TFileEncoding):WideString;
+function FileAsWideString(const fn:string;var enc:TFileEncoding):WideString;
 var
   i:integer;
   fh:THandle;
@@ -93,7 +95,7 @@ end;
 
 { TDirFinder }
 
-constructor TDirFinder.Create(Folder, Files, NotFiles, Pattern: string;
+constructor TDirFinder.Create(const Folder, Files, NotFiles, Pattern: string;
   IgnoreCase, MultiLine, CountMatches: boolean; OnNotify: TDirFinderNotifyEvent);
 begin
   inherited Create(false);
@@ -204,7 +206,8 @@ begin
   folders.Free;
 end;
 
-procedure TDirFinder.Notify(nm: TDirFinderNotifyMessage; msg: string; val: integer);
+procedure TDirFinder.Notify(nm: TDirFinderNotifyMessage;
+  const msg: string; val: integer);
 begin
   if not(Terminated) then
    begin

@@ -1,3 +1,8 @@
+2.0.4.494
+- Noob-mode: RegExp checkbox (default not checked)
+  (To all non-noobs: just check "RegExp" once and you're set.)
+- Pressing Start with text selected in the match box: regex-sensitive chars prefixed with backslash
+- "Copy Location" on root node lists all match file names (EOL separated)
 2.0.3.345
 - Multi-line matches show first line when double-click matching file
 - extra lines loaded (by double-clicking matching line) show other icon when adjacent lines also loaded

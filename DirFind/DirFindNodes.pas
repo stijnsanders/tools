@@ -11,7 +11,8 @@ type
     procedure DoDblClick; virtual;
   end;
 
-  TDirFinderNodeProgress=procedure(Sender:TObject;PrgTxt:string) of object;
+  TDirFinderNodeProgress=procedure(Sender:TObject;
+    const PrgTxt:string) of object;
 
   TDirFinderNode=class(TDirFindTreeNode)
   private
@@ -21,19 +22,22 @@ type
     FTotalFilesFound,FTotalFinds:integer;
     FOnProgress:TDirFinderNodeProgress;
   public
-    procedure Start(Folder,Files,NotFiles,Pattern:string;
+    procedure Start(const Folder,Files,NotFiles,Pattern:string;
       IgnoreCase,MultiLine,CountMatches:boolean);
-    procedure FinderNotify(nm:TDirFinderNotifyMessage;msg:string;val:integer);
+    procedure FinderNotify(nm:TDirFinderNotifyMessage;
+      const msg:string;val:integer);
     destructor Destroy; override;
     procedure Abort;
     procedure SuspendResume;
     procedure Refresh;
-    function ReplaceAll(ReplaceWith:WideString):integer;
-    property OnProgress:TDirFinderNodeProgress read FOnProgress write FOnProgress;
+    function ReplaceAll(const ReplaceWith:WideString):integer;
+    property OnProgress:TDirFinderNodeProgress
+      read FOnProgress write FOnProgress;
     property Pattern:string read FPattern;
     property RootPath:string read FRootPath;
     function ProgressText:string; override;
     function IsFinding:boolean;
+    function AllFilePaths:string;
   end;
 
   TDirFindFolderNode=class(TDirFindTreeNode)
@@ -161,7 +165,8 @@ begin
   inherited;
 end;
 
-procedure TDirFinderNode.FinderNotify(nm: TDirFinderNotifyMessage; msg: string; val: integer);
+procedure TDirFinderNode.FinderNotify(nm: TDirFinderNotifyMessage;
+  const msg: string; val: integer);
 var
   tn:TTreeNode;
   procedure FindNode(IsFile:boolean);
@@ -180,8 +185,10 @@ var
        begin
         s:=Copy(msg,i,j-i);
         tn1:=tn.getFirstChild;
-        while (tn1<>nil) and (tn1 is TDirFindFolderNode) do tn1:=tn1.getNextSibling;
-        while (tn1<>nil) and (CompareText(tn1.Text,s)<0) do tn1:=tn1.getNextSibling;
+        while (tn1<>nil) and (tn1 is TDirFindFolderNode) do
+          tn1:=tn1.getNextSibling;
+        while (tn1<>nil) and (CompareText(tn1.Text,s)<0) do
+          tn1:=tn1.getNextSibling;
         //assert doesn't exist already, only one FindNode(true) call
         if FCountMatches then s:=s+NodeTextSeparator+IntToStr(val);
         DirFindNextNodeClass:=TDirFindMatchNode;
@@ -221,8 +228,11 @@ begin
     nmDone:
      begin
       FDirFinder:=nil;
-      ImageIndex:=iiFolder;
-      SelectedIndex:=iiFolder;
+      if ImageIndex<>iiFolderGray then //see nmError below
+       begin
+        ImageIndex:=iiFolder;
+        SelectedIndex:=iiFolder;
+       end;
       if FCountMatches then
         s1:=IntToStr(FTotalFilesFound)+NodeTextMatchCount+IntToStr(FTotalFinds)
       else
@@ -235,6 +245,8 @@ begin
     nmError:
      begin
       DirFindNextNodeClass:=TTreeNode;//TDirFindErrorNode?
+      ImageIndex:=iiFolderGray;
+      SelectedIndex:=iiFolderGray;
       tn:=Owner.AddChild(Self,msg);
       tn.ImageIndex:=iiError;
       tn.SelectedIndex:=iiError;
@@ -290,7 +302,7 @@ begin
   end;
 end;
 
-procedure TDirFinderNode.Start(Folder, Files, NotFiles, Pattern: string;
+procedure TDirFinderNode.Start(const Folder, Files, NotFiles, Pattern: string;
   IgnoreCase, MultiLine, CountMatches: boolean);
 var
   i:integer;
@@ -351,7 +363,7 @@ begin
   Result:=FDirFinder<>nil;
 end;
 
-function TDirFinderNode.ReplaceAll(ReplaceWith: WideString): integer;
+function TDirFinderNode.ReplaceAll(const ReplaceWith: WideString): integer;
 var
   re:RegExp;
   tn,tnLast:TTreeNode;
@@ -414,6 +426,21 @@ begin
   finally
     Owner.EndUpdate;
   end;
+end;
+
+function TDirFinderNode.AllFilePaths: string;
+var
+  n,n1:TTreeNode;
+begin
+  Result:='';
+  n1:=getNextSibling;
+  n:=Self;
+  while n<>n1 do
+   begin
+    if n is TDirFindMatchNode then
+      Result:=Result+(n as TDirFindMatchNode).FilePath+#13#10;
+    n:=n.GetNext;
+   end;
 end;
 
 { TDirFindFolderNode }
