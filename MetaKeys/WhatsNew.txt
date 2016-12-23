@@ -1,3 +1,6 @@
+v1.0.5.500
+- fixed select text not working with numlock enabled
+
 v1.0.4.466
 - issue changing font with "hide unless mouse over"
 - replaced "Wingdings 3" for "Symbol" in default kbl's

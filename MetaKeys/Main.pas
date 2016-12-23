@@ -59,6 +59,7 @@ type
     KeyDefHot:TPanel;
     KeyDefHotTC:cardinal;
     KeyDefMod:array[0..KeyDefModMax] of integer;
+    KeyDefModNLFix:boolean;
     KeyDefCount,KeyRows,KeyCols,KeyV:integer;
     KeyDefs:array of record
       s1,s2,s3:string;
@@ -138,6 +139,7 @@ begin
   KeyDefHot:=nil;
   KeyV:=0;//see also LoadKeys
   for x:=0 to KeyDefModMax do KeyDefMod[KeyDefModMax]:=0;
+  KeyDefModNLFix:=false;
 
   //default values
   Clr1:=$00CCFF;//yellow
@@ -778,11 +780,26 @@ begin
    begin
     if KeyDefMod[0]<>0 then
      begin
+      //detect arrow+shift+numlock
+      if (Mods and $1)<>0 then
+       begin
+        if KeyDefs[i].vk in [VK_PRIOR..VK_DOWN] then
+         begin
+          j:=0;
+          while (j<=KeyDefModMax) and (KeyDefMod[j]<>VK_SHIFT) do inc(j);
+          if (j<=KeyDefModMax) and (GetKeyState(VK_NUMLOCK)=1) then
+           begin
+            KeyDefModNLFix:=true;    
+            SetK(inputcount,VK_NUMLOCK,true);
+            SetK(inputcount,VK_NUMLOCK,false);
+           end;
+         end;
+       end;
       //modified event
       j:=0;
       while (j<=KeyDefModMax) and (KeyDefMod[j]<>0) do
        begin
-        if (Mods and $1)<>0 then SetK(j,KeyDefMod[j],true);
+        if (Mods and $1)<>0 then SetK(inputcount,KeyDefMod[j],true);
         inc(j);
        end;
       if (Mods and $2)<>0 then
@@ -790,17 +807,23 @@ begin
         SetK(inputcount,KeyDefs[i].vk,true);
         SetK(inputcount,KeyDefs[i].vk,false);
        end;
-      while (j<>0) do
+      if (Mods and $4)<>0 then
        begin
-        dec(j);
-        vk:=KeyDefMod[j];
-        if (Mods and $4)<>0 then
+        while (j<>0) do
          begin
+          dec(j);
+          vk:=KeyDefMod[j];
           SetK(inputcount,vk,false);
           for k:=0 to KeyDefCount-1 do
             if KeyDefs[k].vk=-vk then
               KeyDefs[k].p.Color:=Clr1;
           KeyDefMod[j]:=0;
+         end;
+        if KeyDefModNLFix then
+         begin
+          KeyDefModNLFix:=false;
+          SetK(inputcount,VK_NUMLOCK,true);
+          SetK(inputcount,VK_NUMLOCK,false);
          end;
        end;
       SetKeyV(0);
@@ -827,7 +850,7 @@ begin
            end;
         end;
        end;
-   end;
+   end;                            
   if inputcount<>0 then
    begin
     SendInput(inputcount,inputs[0],sizeof(TInput));
