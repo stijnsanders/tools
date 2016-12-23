@@ -188,7 +188,7 @@ implementation
 
 uses
   FileCtrl, ddPrefs, ClipBrd, ActiveX, ddGoToLine, ddHandle, MSXML2_TLB,
-  ddDiff, ddXmlTools, ShellAPI;
+  ddDiff, ddXmlTools, ShellAPI, ShlObj;
 
 {$R *.dfm}
 
@@ -335,13 +335,68 @@ begin
    end;
 end;
 
+function SelectDirCB(Wnd: HWND; uMsg: UINT; lParam, lpData: LPARAM): Integer stdcall;
+begin
+  if (uMsg=BFFM_INITIALIZED) and (lpData<>0) then
+    SendMessage(Wnd,BFFM_SETSELECTION,Integer(True),lpdata);
+  Result:=0;
+end;
+
+function SelectDirectory2(const Caption: string;
+  var Directory: string): Boolean;
+var
+  WindowList: Pointer;
+  BrowseInfo: TBrowseInfo;
+  Buffer: PChar;
+  OldErrorMode: Cardinal;
+  ItemIDList: PItemIDList;
+  ShellMalloc: IMalloc;
+begin
+  FillChar(BrowseInfo, SizeOf(BrowseInfo), 0);
+  if (ShGetMalloc(ShellMalloc)<>S_OK) or (ShellMalloc=nil) then
+    RaiseLastOSError;
+  Buffer:=ShellMalloc.Alloc(MAX_PATH);
+  try
+    with BrowseInfo do
+    begin
+      hwndOwner:=Application.Handle;
+      //pidlRoot:=RootItemIDList;
+      //pszDisplayName:=Buffer;
+      lpszTitle:=PChar(Caption);
+      ulFlags:=BIF_RETURNONLYFSDIRS or BIF_EDITBOX;
+      if Directory <> '' then
+      begin
+        lpfn := SelectDirCB;
+        lParam := Integer(PChar(Directory));
+      end;
+    end;
+    WindowList:=DisableTaskWindows(0);
+    OldErrorMode:=SetErrorMode(SEM_FAILCRITICALERRORS);
+    try
+      ItemIDList:=ShBrowseForFolder(BrowseInfo);
+    finally
+      SetErrorMode(OldErrorMode);
+      EnableTaskWindows(WindowList);
+    end;
+    Result:=ItemIDList<>nil;
+    if Result then
+    begin
+      ShGetPathFromIDList(ItemIDList,Buffer);
+      ShellMalloc.Free(ItemIDList);
+      Directory:=Buffer;
+    end;
+  finally
+    ShellMalloc.Free(Buffer);
+  end;
+end;
+
 procedure TfrmDirDiffMain.miAddFolderClick(Sender: TObject);
 var
   s:string;
   d:TDiffData;
 begin
   s:='';
-  if SelectDirectory('Select Folder','',s) then
+  if SelectDirectory2('Select Folder',s) then
    begin
     d:=TDiffData.Create;
     d.Path:=s;
@@ -552,7 +607,7 @@ var
 begin
   d:=FDataSet[(Sender as TComponent).Tag-1];
   s:=d.Path;
-  if SelectDirectory('Select Folder','',s) then
+  if SelectDirectory2('Select Folder',s) then
    begin
     d.Path:=s;
     UpdateUI;
@@ -587,12 +642,12 @@ var
   n:TTreeNode;
   s:string;
 begin
+  FResetToTop:=lbView.TopIndex;
+  FResetToLine:=lbView.ItemIndex;
   if tvFolders.Visible then
    begin
     sl:=TStringList.Create;
     try
-      FResetToTop:=lbView.TopIndex;
-      FResetToLine:=lbView.ItemIndex;
       n:=tvFolders.Selected;
       while n<>nil do
        begin

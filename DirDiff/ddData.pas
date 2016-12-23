@@ -893,20 +893,23 @@ begin
        end;
 
       if cn=0 then
-        dc:=$FFFFFF //?
+       begin
+        dc:=$FFFFFF; //?
+        tc:=dc;
+       end
       else
        begin
         dx[0]:=cx[0] div cn;
         dx[1]:=cx[1] div cn;
         dx[2]:=cx[2] div cn;
+        tc:=dc;
+        inc(cx[0],$FF*cn);
+        inc(cx[1],$FF*cn);
+        inc(cx[2],$FF*cn);
+        dx[0]:=cx[0] div (cn*2);
+        dx[1]:=cx[1] div (cn*2);
+        dx[2]:=cx[2] div (cn*2);
        end;
-      tc:=dc;
-      inc(cx[0],$FF*cn);
-      inc(cx[1],$FF*cn);
-      inc(cx[2],$FF*cn);
-      dx[0]:=cx[0] div (cn*2);
-      dx[1]:=cx[1] div (cn*2);
-      dx[2]:=cx[2] div (cn*2);
       ec:=dc;
      end;
     Canvas.Font.Color:=$000000;
@@ -1757,13 +1760,13 @@ begin
    begin
     l:=(1 shl FDataCount)-1;
     //exit current block
-    while (c<>0) and (c<FContentMapCount) and (FContentMap[c+cmBitMask]<>l) do
+    while (c>=0) and (c<FContentMapCount) and (FContentMap[c+cmBitMask]<>l) do
       inc(c,FContentMapStride*Direction);
     //skip block of equals
-    while (c<>0) and (c<FContentMapCount) and (FContentMap[c+cmBitMask]=l) do
+    while (c>=0) and (c<FContentMapCount) and (FContentMap[c+cmBitMask]=l) do
       inc(c,FContentMapStride*Direction);
     //done
-    if (c<>0) and (c<FContentMapCount) then Result:=FContentMap[c];
+    if (c>=0) and (c<FContentMapCount) then Result:=FContentMap[c];
    end;
 end;
 

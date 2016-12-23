@@ -1,7 +1,12 @@
+v2.0.2.499
+Input box on 'add folder' dialog
+
 v2.0.1.494
 Update icon according to file or folder view.
 Fixed issue with non-longest-common-subsequence on some complex diffgraphs
 Fixed line height update on font size preference change
+Fixed issue with refresh not restoring selected line view without folder view
+Fixed issue with Ctrl+Down not working before first different line
 
 v2.0.0.460
 Total re-worked version: work is done on (multiple) background threads.
