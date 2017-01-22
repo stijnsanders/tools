@@ -559,10 +559,14 @@ var
   s:string;
 begin
   if cbSkipOrbit.Checked then s:='°:' else s:=':';
-  if rbIgnClass.Checked then lbIgnores.Items.Add('Class'+s+txtIgnClass.Text);
-  if rbIgnText.Checked then lbIgnores.Items.Add('Text'+s+txtIgnText.Text);
-  if rbIgnPath.Checked then lbIgnores.Items.Add('Path'+s+txtIgnPath.Text);
-  if rbIgnFile.Checked then lbIgnores.Items.Add('File'+s+txtIgnFile.Text);
+  if rbIgnClass.Checked then
+    lbIgnores.ItemIndex:=lbIgnores.Items.Add('Class'+s+txtIgnClass.Text);
+  if rbIgnText.Checked then 
+    lbIgnores.ItemIndex:=lbIgnores.Items.Add('Text'+s+txtIgnText.Text);
+  if rbIgnPath.Checked then 
+    lbIgnores.ItemIndex:=lbIgnores.Items.Add('Path'+s+txtIgnPath.Text);
+  if rbIgnFile.Checked then 
+    lbIgnores.ItemIndex:=lbIgnores.Items.Add('File'+s+txtIgnFile.Text);
   PageControl1.ActivePage:=tsIgn;
 end;
 

@@ -172,6 +172,16 @@ begin
   if a>b then a:=b;
 end;
 
+function i2ABV(i:integer):integer;
+begin
+  Result:=(4-i)*64-1;
+end;
+
+function ABV2i(a:integer):integer;
+begin
+  Result:=4-((a+1) div 64);
+end;
+
 procedure TfrmMetaClick.FormCreate(Sender: TObject);
 var
   r:TRegistry;
@@ -378,7 +388,7 @@ const
 procedure TfrmMetaClick.FormShow(Sender: TObject);
 begin
   frmCursorTag.Color:=Color;
-  frmCursorTag.AlphaBlendValue:=(4-FCursorTagABL)*64-1;
+  frmCursorTag.AlphaBlendValue:=i2ABV(FCursorTagABL);
   frmCursorTag.AlphaBlend:=FCursorTagABL>0;
   if FShowCursorTag then frmCursorTag.Show;
   ShowWindow(Application.Handle,SW_HIDE);
@@ -576,7 +586,7 @@ begin
                   OrbitConfig.Color1:=BoolColor[true];
                   OrbitConfig.Color2:=BoolColor[false];
                   frmOrbit.Font.Assign(Font);
-                  frmOrbit.AlphaBlendValue:=(4-FAlphaLevel)*64-1;
+                  frmOrbit.AlphaBlendValue:=i2ABV(FAlphaLevel);
                   frmOrbit.AlphaBlend:=FAlphaLevel>0;
                   OrbitConfig.Center:=cp;
                   frmOrbit.ShowOrbit;
@@ -701,13 +711,13 @@ var
 begin
   if frmSettings=nil then frmSettings:=TfrmSettings.Create(nil);
   if frmCursorTag=nil then
-    ablCT:=4-((AlphaBlendValue+1) div 64)
+    ablCT:=ABV2i(AlphaBlendValue)
   else
-    ablCT:=4-((frmCursorTag.AlphaBlendValue+1) div 64);
+    ablCT:=ABV2i(frmCursorTag.AlphaBlendValue);
   frmSettings.ShowSettings(
     ClickMS,
     HideMS,
-    4-((AlphaBlendValue+1) div 64),
+    FAlphaLevel,
     ablCT,
     panLeftSingle.Visible,
     panLeftDouble.Visible,
@@ -850,7 +860,7 @@ begin
   //LastTC:=GetTickCount;
   Clicked:=csFirst;
   FAlphaLevel:=AlphaBlendLevel1;
-  AlphaBlendValue:=(4-FAlphaLevel)*64-1;
+  AlphaBlendValue:=i2ABV(FAlphaLevel);
   AlphaBlend:=FAlphaLevel>0;
   FCursorTagABL:=AlphaBlendLevelCT;
   CursorTagConfig.MSTotal:=ClickMS;
@@ -861,11 +871,12 @@ begin
     frmCursorTag.Color:=ColorBG1;
     if ShowCursorTag and not(Suspend1.Checked) then
       frmCursorTag.Show else frmCursorTag.Hide;
-    frmCursorTag.AlphaBlendValue:=(4-FCursorTagABL)*64-1;
+    frmCursorTag.AlphaBlendValue:=i2ABV(FCursorTagABL);
     frmCursorTag.AlphaBlend:=FCursorTagABL>0;
    end;
   FShowOnMouseOver:=ShowOnMouseOver;
   tiMouseOver.Enabled:=ShowOnMouseOver>0;
+  IsMOver:=not(IsMOver);
   FCursorTagPosX:=CursorTagPosX;
   FCursorTagPosY:=CursorTagPosY;
   FCursorTagWidth:=CursorTagWidth;
@@ -1329,7 +1340,7 @@ begin
          begin
           if b<>IsMOver then
            begin
-            sx:=(4-FAlphaLevel)*64-1;
+            sx:=i2ABV(FAlphaLevel);
             if not b then sx:=(sx+1) div 2;
             AlphaBlendValue:=sx;
             AlphaBlend:=sx<255;
