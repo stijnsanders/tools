@@ -66,7 +66,7 @@ var
 
 implementation
 
-uses Main, Registry, MMSystem, Clipbrd;
+uses Main, MMSystem, Clipbrd;
 
 {$R *.dfm}
 
@@ -77,9 +77,11 @@ end;
 
 procedure TfrmSettings.btnOkClick(Sender: TObject);
 var
-  r:TRegistry;
-  s:string;
+  sl:TStringList;
+  s,fn:string;
   i,l:integer;
+const
+  bstr:array[boolean] of string=('0','1');
 begin
   if lbKbl.ItemIndex<0 then
     raise Exception.Create('Please select a keyboard layout');
@@ -91,28 +93,33 @@ begin
     while (i<l) and (s[i]<>':') do inc(i);
     Fkbl:=Copy(s,1,i-1)+'.kbl';
    end;
-  r:=TRegistry.Create;
-  r.OpenKey('\Software\Double Sigma Programming\MetaKeys',true);
+  fn:=ChangeFileExt(ParamStr(0),'.ini');
+  sl:=TStringList.Create;
   try
-    r.WriteInteger('ColorFG',panFont.Font.Color);
-    r.WriteInteger('ColorBG1',panBackground1.Color);
-    r.WriteInteger('ColorBG2',panBackground2.Color);
-    r.WriteString('FontName',panFont.Font.Name);
-    r.WriteInteger('FontSize',panFont.Font.Size);
-    r.WriteBool('FontBold',fsBold in panFont.Font.Style);
-    r.WriteBool('FontUnderline',fsUnderline in panFont.Font.Style);
-    r.WriteBool('FontItalic',fsItalic in panFont.Font.Style);
-    r.WriteInteger('AlphaLevel',4-((AlphaBlendValue+1) div 64));
-    r.WriteString('KeyboardLayout',Fkbl);
-    r.WriteBool('Repeat',cbRepeat.Checked);
-    r.WriteInteger('DelayMS',udDelay.Position);
-    r.WriteInteger('RepeatMS',udRepeat.Position);
-    r.WriteInteger('ShowOnMouseOver',cbShow.ItemIndex);
+    try
+      sl.LoadFromFile(fn);
+    except
+      on EFOpenError do ;//ignore
+    end;
+    sl.Values['ColorFG']:=IntToHex(panFont.Font.Color,6);
+    sl.Values['ColorBG1']:=IntToHex(panBackground1.Color,6);
+    sl.Values['ColorBG2']:=IntToHex(panBackground2.Color,6);
+    sl.Values['FontName']:=panFont.Font.Name;
+    sl.Values['FontSize']:=IntToStr(panFont.Font.Size);
+    sl.Values['FontBold']:=bstr[fsBold in panFont.Font.Style];
+    sl.Values['FontUnderline']:=bstr[fsUnderline in panFont.Font.Style];
+    sl.Values['FontItalic']:=bstr[fsItalic in panFont.Font.Style];
+    sl.Values['AlphaLevel']:=IntToStr(rbAlphaBlend.ItemIndex);
+    sl.Values['KeyboardLayout']:=Fkbl;
+    sl.Values['Repeat']:=bstr[cbRepeat.Checked];
+    sl.Values['DelayMS']:=IntToStr(udDelay.Position);
+    sl.Values['RepeatMS']:=IntToStr(udRepeat.Position);
+    sl.Values['ShowOnMouseOver']:=IntToStr(cbShow.ItemIndex);
+    sl.SaveToFile(fn);
   except
     //silently, use defaults
   end;
-  r.CloseKey;
-  r.Free;
+  sl.Free;
   frmMetaKeys.UpdateSettings(
     panBackground1.Color,
     panBackground2.Color,

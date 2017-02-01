@@ -1,4 +1,7 @@
-v1.0.5.500
+v1.1.0.500
+- settings are now loaded from/stored to a file in the folder where MetaClick.exe is
+  (in preperation to make it portable) (sorry no convert/export utility)
+- default colours now two neutral tones of grey/blue
 - fixed select text not working with numlock enabled
 
 v1.0.4.466

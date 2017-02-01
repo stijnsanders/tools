@@ -1,10 +1,9 @@
 object frmSettings: TfrmSettings
   Left = 438
   Top = 106
-  BorderStyle = bsSingle
+  Width = 417
+  Height = 432
   Caption = 'MetaKeys Settings'
-  ClientHeight = 393
-  ClientWidth = 401
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -359,6 +358,12 @@ object frmSettings: TfrmSettings
         Width = 89
         Height = 33
         Caption = 'Aa12'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = -19
+        Font.Name = 'Verdana'
+        Font.Style = []
+        ParentFont = False
         TabOrder = 2
         TabStop = True
         OnClick = panFontClick

@@ -85,7 +85,7 @@ var
 
 implementation
 
-uses Registry, Settings, Math, MMSystem, Types;
+uses Settings, Math, MMSystem, Types;
 
 const
   SysDragHoldX=4;//GetSystemMetrics(SM_CXDRAG)
@@ -95,16 +95,25 @@ const
 
 procedure TfrmMetaKeys.FormClose(Sender: TObject; var Action: TCloseAction);
 var
-  r:TRegistry;
+  sl:TStringList;
+  fn:string;
 begin
-  r:=TRegistry.Create;
-  r.OpenKey('\Software\Double Sigma Programming\MetaKeys',true);
-  r.WriteInteger('Top',Top);
-  r.WriteInteger('Left',Left);
-  r.WriteInteger('Width',Width);
-  r.WriteInteger('Height',Height);
-  r.CloseKey;
-  r.Free;
+  fn:=ChangeFileExt(ParamStr(0),'.ini');
+  sl:=TStringList.Create;
+  try
+    try
+      sl.LoadFromFile(fn);
+    except
+      on EFOpenError do ; //ignore
+    end;
+    sl.Values['Top']:=IntToStr(Top);
+    sl.Values['Left']:=IntToStr(Left);
+    sl.Values['Width']:=IntToStr(Width);
+    sl.Values['Height']:=IntToStr(Height);
+    sl.SaveToFile(fn);
+  finally
+    sl.Free;
+  end;
   //if Corners<>0 then DeleteObject(Corners);
 end;
 
@@ -120,12 +129,12 @@ end;
 
 procedure TfrmMetaKeys.FormCreate(Sender: TObject);
 var
-  r:TRegistry;
+  sl:TStringList;
   f:TFont;
   r0:boolean;
   x,y,sx,sy,abl,r1,r2:integer;
   dr:TRect;
-  kbl,s:string;
+  kbl,s,fn:string;
 const
   MinimalShowMargin=16;
 begin
@@ -142,8 +151,8 @@ begin
   KeyDefModNLFix:=false;
 
   //default values
-  Clr1:=$00CCFF;//yellow
-  Clr2:=$0000CC;//red
+  Clr1:=$DDCCBB;//$00CCFF;//yellow
+  Clr2:=$CC6666;//$0000CC;//red
   dr:=Screen.DesktopRect;
   x:=dr.Right-440;//Left;
   y:=dr.Bottom-220;//Top;
@@ -158,13 +167,14 @@ begin
 
   //load settings (excessive silent try/except's here are for easy upgradability)
   f:=TFont.Create;
-  r:=TRegistry.Create;
-  r.OpenKey('\Software\Double Sigma Programming\MetaKeys',true);
+  sl:=TStringList.Create;
+  fn:=ChangeFileExt(ParamStr(0),'.ini');
   try
-    x:=r.ReadInteger('Left');
-    y:=r.ReadInteger('Top');
-    sx:=r.ReadInteger('Width');
-    sy:=r.ReadInteger('Height');
+    sl.LoadFromFile(fn);
+    x:=StrToInt(sl.Values['Left']);
+    y:=StrToInt(sl.Values['Top']);
+    sx:=StrToInt(sl.Values['Width']);
+    sy:=StrToInt(sl.Values['Height']);
     CheckMin(sx,Constraints.MinWidth);
     CheckMax(sx,dr.Right-dr.Left);
     CheckMin(sy,Constraints.MinHeight);
@@ -173,35 +183,35 @@ begin
     CheckMax(x,dr.Right-MinimalShowMargin);
     CheckMin(y,dr.Top-sy+MinimalShowMargin);
     CheckMax(y,dr.Bottom-MinimalShowMargin);
-    r0:=r.readBool('Repeat');
-    r1:=r.ReadInteger('DelayMS');
-    r2:=r.ReadInteger('RepeatMS');
+    r0:=sl.Values['Repeat']='1';
+    r1:=StrToInt(sl.Values['DelayMS']);
+    r2:=StrToInt(sl.Values['RepeatMS']);
   except
     //silent use defaults
   end;
   try
-    f.Color:=r.ReadInteger('ColorFG');
-    f.Name:=r.ReadString('FontName');
-    f.Size:=r.ReadInteger('FontSize');
-    if r.ReadBool('FontBold') then f.Style:=f.Style+[fsBold];
-    if r.ReadBool('FontUnderline') then f.Style:=f.Style+[fsUnderline];
-    if r.ReadBool('FontItalic') then f.Style:=f.Style+[fsItalic];
-    abl:=r.ReadInteger('AlphaLevel');
-    kbl:=r.ReadString('KeyboardLayout');
-    FShowOnMouseOver:=r.ReadInteger('ShowOnMouseOver');
+    f.Color:=StrToInt('$'+sl.Values['ColorFG']);
+    f.Name:=sl.Values['FontName'];
+    f.Size:=StrToInt(sl.Values['FontSize']);
+    if sl.Values['FontBold']='1' then f.Style:=f.Style+[fsBold];
+    if sl.Values['FontUnderline']='1' then f.Style:=f.Style+[fsUnderline];
+    if sl.Values['FontItalic']='1' then f.Style:=f.Style+[fsItalic];
+    abl:=StrToInt(sl.Values['AlphaLevel']);
+    kbl:=sl.Values['KeyboardLayout'];
+    FShowOnMouseOver:=StrToInt(sl.Values['ShowOnMouseOver']);
   except
     //silent use defaults
   end;
   try
     UpdateSettings(
-      r.ReadInteger('ColorBG1'),r.ReadInteger('ColorBG2'),
+      StrToInt('$'+sl.Values['ColorBG1']),
+      StrToInt('$'+sl.Values['ColorBG2']),
       f,abl,FShowOnMouseOver,r0,r1,r2);
   except
     //silently, use defaults, force first arrange
     ArrangeButtons;
   end;
-  r.CloseKey;
-  r.Free;
+  sl.Free;
   f.Free;
   if kbl='' then
     Settings1Click(nil)

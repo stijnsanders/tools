@@ -1,7 +1,7 @@
 [Setup]
 AppID={{01FD81F1-45F6-4243-80FA-30C03818ACA8}
 AppName=MetaKeys
-AppVerName=MetaKeys 1.0.5.500
+AppVerName=MetaKeys 1.1.0.500
 AppPublisher=Double Sigma Programming
 AppPublisherURL=http://yoy.be/metakeys
 AppSupportURL=http://yoy.be/metakeys
