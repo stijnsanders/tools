@@ -134,7 +134,7 @@ var
 
 implementation
 
-uses CursorTag, Registry, Settings, Math, MMSystem, Orbit;
+uses CursorTag, Settings, Math, MMSystem, Orbit;
 
 const
   SysDragHoldX=4;//GetSystemMetrics(SM_CXDRAG)
@@ -150,16 +150,25 @@ end;
 
 procedure TfrmMetaClick.StoreBounds;
 var
-  r:TRegistry;
+  sl:TStringList;
+  fn:string;
 begin
-  r:=TRegistry.Create;
-  r.OpenKey('\Software\Double Sigma Programming\MetaClick',true);
-  r.WriteInteger('Top',Top);
-  r.WriteInteger('Left',Left);
-  r.WriteInteger('Width',Width);
-  r.WriteInteger('Height',Height);
-  r.CloseKey;
-  r.Free;
+  sl:=TStringList.Create;
+  try
+    fn:=ChangeFileExt(ParamStr(0),'.ini');
+    try
+      sl.LoadFromFile(fn);
+    except
+      on EFOpenError do ; //ignore
+    end;
+    sl.Values['Top']:=IntToStr(Top);
+    sl.Values['Left']:=IntToStr(Left);
+    sl.Values['Width']:=IntToStr(Width);
+    sl.Values['Height']:=IntToStr(Height);
+    sl.SaveToFile(fn);
+  finally
+    sl.Free;
+  end;
 end;
 
 procedure CheckMin(var a:integer;b:integer);
@@ -184,31 +193,33 @@ end;
 
 procedure TfrmMetaClick.FormCreate(Sender: TObject);
 var
-  r:TRegistry;
+  sl,sl1:TStringList;
   f:TFont;
   x,y,sx,sy,b1,ms1,ms2,omx,omy,oms,ablCT,smo,r1,c1,c2:integer;
   dr:TRect;
   p:TPoint;
-  spf:string;
+  spf,fn:string;
   ct:boolean;
-  sl:TStringList;
 const
-  MinimalShowMargin=16;
+  MinimalShowMargin=4;
 begin
   IsMoving:=false;
   IsResizing:=false;
   IsPopUp:=false;
   IsMOver:=false;
-  LastPos:=Mouse.CursorPos;
+  try
+    LastPos:=Mouse.CursorPos;
+  except
+    LastPos:=Point(0,0);//access denied?
+  end;
   FIgnores:=TStringList.Create;
-
   //default values
   ClickMS:=1000;
   HideMS:=ClickMS*3;
   FReturnTo:=1;//return to L1
   FShowCursorTag:=true;
-  BoolColor[false]:=$00CCFF;//yellow
-  BoolColor[true]:=$0000CC;//red
+  BoolColor[false]:=$DDCCBB;//$00CCFF;//yellow
+  BoolColor[true]:=$CC6666;//$0000CC;//red
   p.X:=16;//GetSystemMetrics(SM_CXDRAG);
   p.Y:=16;//GetSystemMetrics(SM_CYDRAG);
   DragHold:=p;
@@ -240,22 +251,23 @@ begin
   smo:=0;
   ablCT:=1;
   r1:=0;
-  c1:=$00CCFF;
-  c2:=$0000FF;
+  c1:=BoolColor[false];
+  c2:=BoolColor[true];
 
   ClickMode:=cmLeftSingle;//uses BoolColor!
 
   //load settings (excessive silent try/except's here are for easy upgradability)
+  fn:=ChangeFileExt(ParamStr(0),'.ini');
   sl:=TStringList.Create;
+  sl1:=TStringList.Create;
   f:=TFont.Create;
   f.Assign(Font);
-  r:=TRegistry.Create;
-  r.OpenKey('\Software\Double Sigma Programming\MetaClick',true);
   try
-    x:=r.ReadInteger('Left');
-    y:=r.ReadInteger('Top');
-    sx:=r.ReadInteger('Width');
-    sy:=r.ReadInteger('Height');
+    sl.LoadFromFile(fn);
+    x:=StrToInt(sl.Values['Left']);
+    y:=StrToInt(sl.Values['Top']);
+    sx:=StrToInt(sl.Values['Width']);
+    sy:=StrToInt(sl.Values['Height']);
     CheckMin(sx,Constraints.MinWidth);
     CheckMax(sx,dr.Right-dr.Left);
     CheckMin(sy,Constraints.MinHeight);
@@ -269,58 +281,57 @@ begin
   end;
   SetBounds(x,y,sx,sy);
   try
-    f.Color:=r.ReadInteger('ColorFG');
-    f.Name:=r.ReadString('FontName');
-    f.Size:=r.ReadInteger('FontSize');
-    if r.ReadBool('FontBold') then f.Style:=f.Style+[fsBold];
-    if r.ReadBool('FontUnderline') then f.Style:=f.Style+[fsUnderline];
-    if r.ReadBool('FontItalic') then f.Style:=f.Style+[fsItalic];
-    p.X:=r.ReadInteger('DragHoldX');
-    p.Y:=r.ReadInteger('DragHoldY');
-    spf:=r.ReadString('PlaySound');
-    ct:=r.ReadBool('CursorTag');
-    y:=r.ReadInteger('IgnoreRules');
-    for x:=1 to y do sl.Add(r.ReadString('IgnoreRule'+IntToStr(x)));
-    b1:=r.ReadInteger('Buttons');
-    FOrbit:=r.ReadInteger('Orbit');
-    FOrbitSize:=r.ReadInteger('OrbitSize');
-    ms1:=r.ReadInteger('Interval');
-    ms2:=r.ReadInteger('HideAfter');
-    FCursorTagPosX:=r.ReadInteger('CursorTagPosX');
-    FCursorTagPosY:=r.ReadInteger('CursorTagPosY');
-    FCursorTagWidth:=r.ReadInteger('CursorTagWidth');
-    FCursorTagHeight:=r.ReadInteger('CursorTagHeight');
-    FCursorTagKeepOnScreen:=r.ReadBool('CursorTagKeepOnScreen');
-    omx:=r.ReadInteger('OrbitMarginX');
-    omy:=r.ReadInteger('OrbitMarginY');
-    oms:=r.ReadInteger('OrbitShape');
-    FOrbitCrossSize:=r.ReadInteger('OrbitCrossSize');
-    smo:=r.ReadInteger('ShowOnMouseOver');
-    FAlphaLevel:=r.ReadInteger('AlphaLevel');
-    ablCT:=r.ReadInteger('CursorTagAlphaLevel');
-    FStartSus:=r.ReadBool('StartSuspended');
-    r1:=r.ReadInteger('ReturnTo');
-    c1:=r.ReadInteger('ColorBG1');
-    c2:=r.ReadInteger('ColorBG2');
+    f.Color:=StrToInt('$'+sl.Values['ColorFG']);
+    f.Name:=sl.Values['FontName'];
+    f.Size:=StrToInt(sl.Values['FontSize']);
+    if sl.Values['FontBold']='1' then f.Style:=f.Style+[fsBold];
+    if sl.Values['FontUnderline']='1' then f.Style:=f.Style+[fsUnderline];
+    if sl.Values['FontItalic']='1' then f.Style:=f.Style+[fsItalic];
+    p.X:=StrToInt(sl.Values['DragHoldX']);
+    p.Y:=StrToInt(sl.Values['DragHoldY']);
+    spf:=sl.Values['PlaySound'];
+    ct:=sl.Values['CursorTag']='1';
+    y:=StrToInt(sl.Values['IgnoreRules']);
+    for x:=1 to y do sl1.Add(sl.Values['IgnoreRule'+IntToStr(x)]);
+    b1:=StrToInt(sl.Values['Buttons']);
+    FOrbit:=StrToInt(sl.Values['Orbit']);
+    FOrbitSize:=StrToInt(sl.Values['OrbitSize']);
+    ms1:=StrToInt(sl.Values['Interval']);
+    ms2:=StrToInt(sl.Values['HideAfter']);
+    FCursorTagPosX:=StrToInt(sl.Values['CursorTagPosX']);
+    FCursorTagPosY:=StrToInt(sl.Values['CursorTagPosY']);
+    FCursorTagWidth:=StrToInt(sl.Values['CursorTagWidth']);
+    FCursorTagHeight:=StrToInt(sl.Values['CursorTagHeight']);
+    FCursorTagKeepOnScreen:=sl.Values['CursorTagKeepOnScreen']='1';
+    omx:=StrToInt(sl.Values['OrbitMarginX']);
+    omy:=StrToInt(sl.Values['OrbitMarginY']);
+    oms:=StrToInt(sl.Values['OrbitShape']);
+    FOrbitCrossSize:=StrToInt(sl.Values['OrbitCrossSize']);
+    smo:=StrToInt(sl.Values['ShowOnMouseOver']);
+    FAlphaLevel:=StrToInt(sl.Values['AlphaLevel']);
+    ablCT:=StrToInt(sl.Values['CursorTagAlphaLevel']);
+    FStartSus:=sl.Values['StartSuspended']='1';
+    r1:=StrToInt(sl.Values['ReturnTo']);
+    c1:=StrToInt('$'+sl.Values['ColorBG1']);
+    c2:=StrToInt('$'+sl.Values['ColorBG2']);
   except
     //silent use defaults
     y:=0;
   end;
-  r.CloseKey;
-  r.Free;
+  sl.Free;
   //Don't use r past this line!!!
   try
     UpdateSettings(
       ms1,ms2,b1,FOrbit,FOrbitSize,FOrbitCrossSize,omx,omy,oms,r1,
       FCursorTagPosX,FCursorTagPosY,FCursorTagWidth,FCursorTagHeight,
       FAlphaLevel,ablCT,smo,ct,FCursorTagKeepOnScreen,
-      c1,c2,f,p,spf,sl);
+      c1,c2,f,p,spf,sl1);
   except
     //silently, use defaults, force first arrange
     ArrangeButtons;
   end;
   f.Free;
-  sl.Free;
+  sl1.Free;
 
   LastTC:=GetTickCount-cardinal(ClickMS);
   Clicked:=csAllDone;
@@ -355,21 +366,23 @@ procedure TfrmMetaClick.AllMouseMove(Sender: TObject; Shift: TShiftState;
   X, Y: Integer);
 var
   dx,dy:integer;
+  p:TPoint;
 begin
   if IsMoving then
    begin
+    p:=Mouse.CursorPos;
     if IsMovingStarted then
      begin
       SetBounds(
-        StartPos.X-StartDrag.X+Mouse.CursorPos.X,
-        StartPos.Y-StartDrag.Y+Mouse.CursorPos.Y,
+        StartPos.X-StartDrag.X+p.X,
+        StartPos.Y-StartDrag.Y+p.Y,
         Width,Height);
      end
     else
      begin
-      dx:=Mouse.CursorPos.X-StartDrag.X;
+      dx:=p.X-StartDrag.X;
       if dx<0 then dx:=-dx;
-      dy:=Mouse.CursorPos.Y-StartDrag.Y;
+      dy:=p.Y-StartDrag.Y;
       if dy<0 then dy:=-dy;
       if (dx>SysDragHoldX) or (dy>SysDragHoldY) then IsMovingStarted:=true;
      end;
@@ -416,29 +429,30 @@ var
   end;
 begin
   try
+    cp:=Mouse.CursorPos;
+    ct:=GetTickCount;
+
     if FShowCursorTag then
      begin
-      dx:=Mouse.CursorPos.X+FCursorTagPosX;
-      dy:=Mouse.CursorPos.Y+FCursorTagPosY;
+      dx:=cp.X+FCursorTagPosX;
+      dy:=cp.Y+FCursorTagPosY;
       ax:=dx+FCursorTagWidth;
       ay:=dy+FCursorTagHeight;
       if FCursorTagKeepOnScreen then
        begin
         r:=Screen.DesktopRect;
         if dx<r.Left then
-          dx:=Mouse.CursorPos.X-FCursorTagPosX-FCursorTagWidth;
+          dx:=cp.X-FCursorTagPosX-FCursorTagWidth;
         if dy<r.Top  then
-          dy:=Mouse.CursorPos.Y-FCursorTagPosY-FCursorTagHeight;
+          dy:=cp.Y-FCursorTagPosY-FCursorTagHeight;
         if ax>r.Right  then
-          dx:=Mouse.CursorPos.X-FCursorTagPosX-FCursorTagWidth;
+          dx:=cp.X-FCursorTagPosX-FCursorTagWidth;
         if ay>r.Bottom then
-          dy:=Mouse.CursorPos.Y-FCursorTagPosY-FCursorTagHeight;
+          dy:=cp.Y-FCursorTagPosY-FCursorTagHeight;
        end;
       frmCursorTag.SetBounds(dx,dy,FCursorTagWidth,FCursorTagHeight);
      end;
 
-    cp:=Mouse.CursorPos;
-    ct:=GetTickCount;
 
     //if debug then panLeftSingle.Caption:=
     //  IntToStr(integer(Clicked))+IntToStr(integer(ClickMode));
@@ -667,6 +681,7 @@ begin
         case FReturnTo of
           1:ClickMode:=cmLeftSingle;
           2:ClickMode:=cmOrbit;
+          3:ClickMode:=cmRightSingle;
         end;
         if Suspend1.Checked then Timer1.Enabled:=false;
        end;
@@ -837,6 +852,8 @@ procedure TfrmMetaClick.UpdateSettings(SetClickMS, HideAfterMS, Buttons, Orbit,
   ShowCursorTag, CursorTagKeepOnScreen: boolean;
   ColorBG1, ColorBG2: TColor; Font1: TFont;
   SetDragHold: TPoint; SoundFilePath: string; Ignores: TStrings);
+var
+  cm:TClickMode;
 begin
   if Corners<>0 then
    begin
@@ -844,7 +861,6 @@ begin
     DeleteObject(Corners);
     Corners:=0;
    end;
-  FReturnTo:=ReturnTo;
   Color:=ColorBG1;
   BoolColor[false]:=ColorBG1;
   BoolColor[true]:=ColorBG2;
@@ -852,11 +868,17 @@ begin
   DragHold:=SetDragHold;
   ClickMS:=SetClickMS;
   HideMS:=HideAfterMS;
-  case FReturnTo of
-    1:if FClickMode=cmOrbit then FClickMode:=cmLeftSingle;
-    2:if FClickMode=cmLeftSingle then FClickMode:=cmOrbit;
-  end;
-  ClickMode:=FClickMode;//update display
+  FReturnTo:=ReturnTo;
+  if ReturnTo<>0 then
+   begin
+    case ReturnTo of
+      1:cm:=cmLeftSingle;
+      2:cm:=cmOrbit;
+      3:cm:=cmRightSingle;
+      else cm:=cmLeftSingle;//default;
+    end;
+    ClickMode:=cm;//update display
+   end;
   //LastTC:=GetTickCount;
   Clicked:=csFirst;
   FAlphaLevel:=AlphaBlendLevel1;
@@ -955,21 +977,23 @@ procedure TfrmMetaClick.imgResizeMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 var
   dx,dy:integer;
+  p:TPoint;
 begin
   if IsResizing then
    begin
+    p:=Mouse.CursorPos;
     if IsMovingStarted then
      begin
       SetBounds(
         Left,Top,
-        StartPos.X-StartDrag.X+Mouse.CursorPos.X,
-        StartPos.Y-StartDrag.Y+Mouse.CursorPos.Y);
+        StartPos.X-StartDrag.X+p.X,
+        StartPos.Y-StartDrag.Y+p.Y);
      end
     else
      begin
-      dx:=Mouse.CursorPos.X-StartDrag.X;
+      dx:=p.X-StartDrag.X;
       if dx<0 then dx:=-dx;
-      dy:=Mouse.CursorPos.Y-StartDrag.Y;
+      dy:=p.Y-StartDrag.Y;
       if dy<0 then dy:=-dy;
       if (dx>SysDragHoldX) or (dy>SysDragHoldY) then
         IsMovingStarted:=true;

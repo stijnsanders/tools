@@ -384,7 +384,7 @@ object frmSettings: TfrmSettings
       end
       object Label33: TLabel
         Left = 120
-        Top = 218
+        Top = 222
         Width = 36
         Height = 23
         Hint = 
@@ -507,14 +507,15 @@ object frmSettings: TfrmSettings
       end
       object rbReturnTo: TRadioGroup
         Left = 0
-        Top = 136
+        Top = 128
         Width = 113
-        Height = 113
+        Height = 121
         Caption = '&Return to'
         ItemIndex = 1
         Items.Strings = (
           '(off)'
           'L1'
+          'R1'
           'Orbit')
         TabOrder = 9
       end

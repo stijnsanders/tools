@@ -53,11 +53,18 @@ begin
 end;
 
 procedure TfrmCursorTag.FormCreate(Sender: TObject);
+var
+  p:TPoint;
 begin
-  SetBounds(
-    Mouse.CursorPos.X+CursorTagPadX_Default,
-    Mouse.CursorPos.Y+CursorTagPadY_Default,
-    CursorTagWidth_Default,CursorTagHeight_Default);
+  try
+    p:=Mouse.CursorPos;
+    SetBounds(
+      p.X+CursorTagPadX_Default,
+      p.Y+CursorTagPadY_Default,
+      CursorTagWidth_Default,CursorTagHeight_Default);
+  except
+    //silent
+  end;
 end;
 
 procedure TfrmCursorTag.FormPaint(Sender: TObject);

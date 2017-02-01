@@ -1,7 +1,7 @@
 [Setup]
 AppId={{3ECE8FE0-DF65-4984-A7C5-0DB62C587FA5}
 AppName=MetaClick
-AppVerName=MetaClick 1.2.3.497
+AppVerName=MetaClick 1.3.0.500
 AppPublisher=Double Sigma Programming
 AppPublisherURL=http://yoy.be/metaclick
 AppSupportURL=http://yoy.be/metaclick

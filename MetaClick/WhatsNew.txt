@@ -1,3 +1,9 @@
+v1.3.0.500
+- settings are now loaded from/stored to a file in the folder where MetaClick.exe is
+  (in preperation to make it portable) (sorry no convert/export utility)
+- default colours now two neutral tones of grey/blue
+- setting: 'return to' now has option 'R1'
+
 v1.2.3.497
 - fixed division by zero issue
 

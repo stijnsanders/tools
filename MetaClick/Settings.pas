@@ -180,7 +180,7 @@ var
 
 implementation
 
-uses Main, Registry, MMSystem, Clipbrd;
+uses Main, MMSystem, Clipbrd;
 
 {$R *.dfm}
 
@@ -191,9 +191,11 @@ end;
 
 procedure TfrmSettings.btnOkClick(Sender: TObject);
 var
-  r:TRegistry;
+  sl:TStringList;
   p:TPoint;
-  b1,b2,bs,bc,i:integer;
+  b1,b2,bs,bc,i,rt:integer;
+const
+  bstr:array[boolean] of string=('0','1');
 begin
   if cbPlaySound.Checked and (FSoundFilePath='') then
     raise Exception.Create('Play sound selected, but no sound file is selected.');
@@ -222,56 +224,65 @@ begin
   if not(cbPlaySound.Checked) then FSoundFilePath:='';
   bs:=udOrbitSize.Position;
   bc:=udOrbitCrossSize.Position;
-  r:=TRegistry.Create;
+  sl:=TStringList.Create;
   try
-    r.OpenKey('\Software\Double Sigma Programming\MetaClick',true);
+    {
     try
-      r.WriteInteger('Interval',udInterval.Position);
-      r.WriteInteger('HideAfter',udHideAfter.Position);
-      r.WriteInteger('ReturnTo',rbReturnTo.ItemIndex);
-      r.WriteInteger('ColorFG',panFont.Font.Color);
-      r.WriteInteger('ColorBG1',panBackground1.Color);
-      r.WriteInteger('ColorBG2',panBackground2.Color);
-      r.WriteString('FontName',panFont.Font.Name);
-      r.WriteInteger('FontSize',panFont.Font.Size);
-      r.WriteBool('FontBold',fsBold in panFont.Font.Style);
-      r.WriteBool('FontUnderline',fsUnderline in panFont.Font.Style);
-      r.WriteBool('FontItalic',fsItalic in panFont.Font.Style);
-      r.WriteInteger('AlphaLevel',cbAlpha.ItemIndex);
-      r.WriteInteger('DragHoldX',p.X);
-      r.WriteInteger('DragHoldY',p.Y);
-      r.WriteInteger('Buttons',b1);
-      r.WriteInteger('Orbit',b2);
-      r.WriteInteger('OrbitSize',bs);
-      r.WriteInteger('OrbitCrossSize',bc);
-      r.WriteInteger('OrbitMarginX',udOrbitMarginX.Position);
-      r.WriteInteger('OrbitMarginY',udOrbitMarginY.Position);
-      r.WriteInteger('OrbitShape',rbOrbitShape.ItemIndex);
-      r.WriteString('PlaySound',FSoundFilePath);
-      r.WriteBool('CursorTag',cbCursorTag.Checked);
-      r.WriteInteger('CursorTagPosX',udCursorTagPosX.Position);
-      r.WriteInteger('CursorTagPosY',udCursorTagPosY.Position);
-      r.WriteInteger('CursorTagWidth',udCursorTagWidth.Position);
-      r.WriteInteger('CursorTagHeight',udCursorTagHeight.Position);
-      r.WriteBool('CursorTagKeepOnScreen',cbCursorTagKeepOnScreen.Checked);
-      r.WriteInteger('CursorTagAlphaLevel',cbAlphaCT.ItemIndex);
-      r.WriteInteger('IgnoreRules',lbIgnores.Items.Count);
-      for i:=0 to lbIgnores.Items.Count-1 do
-        r.WriteString('IgnoreRule'+IntToStr(i+1),lbIgnores.Items[i]);
-      r.WriteString('CustomColors',ColorDialog1.CustomColors.CommaText);
-      r.WriteInteger('ShowOnMouseOver',cbShow.ItemIndex);
-      r.WriteBool('StartSuspended',cbStartSuspended.Checked);
+      sl.LoadFromFile(ChangeFileExt(ParamStr(0),'.ini'));
     except
-      //silently, use defaults
+      on EFOpenError do ;
     end;
-    r.CloseKey;
+    }
+    sl.Values['Interval']:=IntToStr(udInterval.Position);
+    sl.Values['HideAfter']:=IntToStr(udHideAfter.Position);
+    case rbReturnTo.ItemIndex of
+      0:rt:=0;//none
+      1:rt:=1;//L1
+      2:rt:=3;//R1
+      3:rt:=2;//Orbit
+      else rt:=0;//raise?
+    end;
+    sl.Values['ReturnTo']:=IntToStr(rt);
+    sl.Values['ColorFG']:=IntToHex(panFont.Font.Color,6);
+    sl.Values['ColorBG1']:=IntToHex(panBackground1.Color,6);
+    sl.Values['ColorBG2']:=IntToHex(panBackground2.Color,6);
+    sl.Values['FontName']:=panFont.Font.Name;
+    sl.Values['FontSize']:=IntToStr(panFont.Font.Size);
+    sl.Values['FontBold']:=bstr[fsBold in panFont.Font.Style];
+    sl.Values['FontUnderline']:=bstr[fsUnderline in panFont.Font.Style];
+    sl.Values['FontItalic']:=bstr[fsItalic in panFont.Font.Style];
+    sl.Values['AlphaLevel']:=IntToStr(cbAlpha.ItemIndex);
+    sl.Values['DragHoldX']:=IntToStr(p.X);
+    sl.Values['DragHoldY']:=IntToStr(p.Y);
+    sl.Values['Buttons']:=IntToStr(b1);
+    sl.Values['Orbit']:=IntToStr(b2);
+    sl.Values['OrbitSize']:=IntToStr(bs);
+    sl.Values['OrbitCrossSize']:=IntToStr(bc);
+    sl.Values['OrbitMarginX']:=IntToStr(udOrbitMarginX.Position);
+    sl.Values['OrbitMarginY']:=IntToStr(udOrbitMarginY.Position);
+    sl.Values['OrbitShape']:=IntToStr(rbOrbitShape.ItemIndex);
+    sl.Values['PlaySound']:=FSoundFilePath;
+    sl.Values['CursorTag']:=bstr[cbCursorTag.Checked];
+    sl.Values['CursorTagPosX']:=IntToStr(udCursorTagPosX.Position);
+    sl.Values['CursorTagPosY']:=IntToStr(udCursorTagPosY.Position);
+    sl.Values['CursorTagWidth']:=IntToStr(udCursorTagWidth.Position);
+    sl.Values['CursorTagHeight']:=IntToStr(udCursorTagHeight.Position);
+    sl.Values['CursorTagKeepOnScreen']:=bstr[cbCursorTagKeepOnScreen.Checked];
+    sl.Values['CursorTagAlphaLevel']:=IntToStr(cbAlphaCT.ItemIndex);
+    sl.Values['IgnoreRules']:=IntToStr(lbIgnores.Items.Count);
+    for i:=0 to lbIgnores.Items.Count-1 do
+      sl.Values['IgnoreRule'+IntToStr(i+1)]:=lbIgnores.Items[i];
+    sl.Values['CustomColors']:=ColorDialog1.CustomColors.CommaText;
+    sl.Values['ShowOnMouseOver']:=IntToStr(cbShow.ItemIndex);
+    sl.Values['StartSuspended']:=bstr[cbStartSuspended.Checked];
+    sl.SaveToFile(ChangeFileExt(ParamStr(0),'.ini'));
   finally
-    r.Free;
+    sl.Free;
   end;
   frmMetaClick.UpdateSettings(
     udInterval.Position,udHideAfter.Position,b1,b2,bs,bc,
     udOrbitMarginX.Position,udOrbitMarginY.Position,rbOrbitShape.ItemIndex,
-    rbReturnTo.ItemIndex,
+    rt,
     udCursorTagPosX.Position,udCursorTagPosY.Position,
     udCursorTagWidth.Position,udCursorTagHeight.Position,
     cbAlpha.ItemIndex,cbAlphaCT.ItemIndex,cbShow.ItemIndex,
@@ -279,7 +290,7 @@ begin
     panBackground1.Color,panBackground2.Color,panFont.Font,
     p,FSoundFilePath,lbIgnores.Items);
   Close;
-end;
+end;                                  
 
 procedure TfrmSettings.ShowSettings(SetClickMS, HideAfterMS,
   AlphaBlendLvl, AlphaBlendLvlCT: integer;
@@ -316,7 +327,12 @@ begin
   udOrbitMarginX.Position:=OrbitMarginX;
   udOrbitMarginY.Position:=OrbitMarginY;
   rbOrbitShape.ItemIndex:=OrbitShape;
-  rbReturnTo.ItemIndex:=ReturnTo;
+  case ReturnTo of
+    0:rbReturnTo.ItemIndex:=0;//none
+    1:rbReturnTo.ItemIndex:=1;//L1
+    2:rbReturnTo.ItemIndex:=3;//Orbit
+    3:rbReturnTo.ItemIndex:=2;//R1
+  end;
   panBackground1.Color:=ColorBG1;
   panBackground2.Color:=ColorBG2;
   panDemo1.Color:=ColorBG1;
@@ -527,20 +543,22 @@ end;
 
 procedure TfrmSettings.FormShow(Sender: TObject);
 var
-  r:TRegistry;
+  sl:TStringList;
 begin
+  {
   Constraints.MinWidth:=Width;
   Constraints.MinHeight:=Height;
   Constraints.MaxWidth:=Width;
   Constraints.MaxHeight:=Height;
-  r:=TRegistry.Create;
+  }
+  sl:=TStringList.Create;
   try
-    if r.OpenKeyReadOnly('\Software\Double Sigma Programming\MetaClick') then
-      ColorDialog1.CustomColors.CommaText:=r.ReadString('CustomColors');
+    sl.LoadFromFile(ChangeFileExt(ParamStr(0),'.ini'));
+    ColorDialog1.CustomColors.CommaText:=sl.Values['CustomColors'];
   except
     //silently, use defaults
   end;
-  r.Free;
+  sl.Free;
 end;
 
 procedure TfrmSettings.btnIgnDelClick(Sender: TObject);

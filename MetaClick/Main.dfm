@@ -36,7 +36,7 @@ object frmMetaClick: TfrmMetaClick
     Cursor = crSizeAll
     Align = alClient
     BevelWidth = 2
-    ParentColor = True
+    Color = 14535867
     PopupMenu = PopupMenu1
     TabOrder = 0
     OnMouseDown = AllMouseDown
