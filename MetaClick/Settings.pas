@@ -496,7 +496,7 @@ end;
 procedure TfrmSettings.Timer2Timer(Sender: TObject);
 var
   h,h1:THandle;
-  pid:cardinal;
+  pid,l:cardinal;
   s:string;
 begin
   dec(FIgnTD);
@@ -512,15 +512,31 @@ begin
     SetLength(s,$400);
     SetLength(s,GetWindowText(h,PChar(s),$400));
     txtIgnText.Text:=s;
-    SetLength(s,$400);
-    if @GetModuleFileNameEx=nil then
-      SetLength(s,GetWindowModuleFileName(h,PChar(s),$400))
-    else
+    s:='';
+    if (s='') and (@QueryFullProcessImageName<>nil) then
      begin
       GetWindowThreadProcessId(h,pid);
-      h1:=OpenProcess(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ,false,pid);
+      h1:=OpenProcess(PROCESS_QUERY_INFORMATION,
+        false,pid);
+      l:=$400;
+      SetLength(s,l);
+      if QueryFullProcessImageName(h1,0,PChar(s),@l)=0 then l:=0;
+      SetLength(s,l);
+        CloseHandle(h1);
+     end;
+    if (s='') and (@GetModuleFileNameEx<>nil) then
+     begin
+      GetWindowThreadProcessId(h,pid);
+      h1:=OpenProcess(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ,
+        false,pid);
+      SetLength(s,$400);
       SetLength(s,GetModuleFileNameEx(h1,0,PChar(s),$400));
       CloseHandle(h1);
+     end;
+    if s='' then
+     begin
+      SetLength(s,$400);
+      SetLength(s,GetWindowModuleFileName(h,PChar(s),$400))
      end;
     if s='' then
      begin

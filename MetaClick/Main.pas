@@ -127,10 +127,12 @@ type
   end;
 
   PGetModuleFileNameEx=function(hProcess,hModule:THandle;lpFileName:PAnsiChar;cchFileNameMax:UINT):UINT; stdcall;
+  PQueryFullProcessImageName=function(hProcess:THandle;dwFlags:UINT;lpFileName:PAnsiChar;lpdwSize:PUINT):UINT; stdcall;
 
 var
   frmMetaClick: TfrmMetaClick;
   GetModuleFileNameEx: PGetModuleFileNameEx;
+  QueryFullProcessImageName: PQueryFullProcessImageName;
 
 implementation
 
@@ -1195,7 +1197,7 @@ var
   c1,t1,p1:boolean;
   c,t,p,f,s:string;
   h,h1:THandle;
-  pid:cardinal;
+  pid,ll:cardinal;
 begin
   Result:=true;//default
   if FIgnores.Count<>0 then
@@ -1238,16 +1240,31 @@ begin
          begin
           if p1 then
            begin
-            SetLength(p,$400);
-            if @GetModuleFileNameEx=nil then
-              SetLength(p,GetWindowModuleFileName(h,PChar(p),$400))
-            else
+            p:='';
+            if (p='') and (@QueryFullProcessImageName<>nil) then
              begin
               GetWindowThreadProcessId(h,pid);
               h1:=OpenProcess(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ,
                 false,pid);
+              ll:=$400;
+              SetLength(p,ll);
+              if QueryFullProcessImageName(h1,0,PChar(p),@ll)=0 then ll:=0;
+              SetLength(p,ll);
+              CloseHandle(h1);
+             end;
+            if (p='') and (@GetModuleFileNameEx<>nil) then
+             begin
+              GetWindowThreadProcessId(h,pid);
+              h1:=OpenProcess(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ,
+                false,pid);
+              SetLength(p,$400);
               SetLength(p,GetModuleFileNameEx(h1,0,PChar(p),$400));
               CloseHandle(h1);
+             end;
+            if p='' then
+             begin
+              SetLength(p,$400);
+              SetLength(p,GetWindowModuleFileName(h,PChar(p),$400))
              end;
             p1:=false;
            end;
@@ -1378,8 +1395,15 @@ begin
   end;
 end;
 
+procedure LoadPSAPI;
+begin
+  GetModuleFileNameEx:=GetProcAddress(
+    LoadLibrary('psapi.dll'),'GetModuleFileNameExA');
+  QueryFullProcessImageName:=GetProcAddress(
+    LoadLibrary('kernel32.dll'),'QueryFullProcessImageNameA');
+end;
+
 initialization
-  GetModuleFileNameEx:=GetProcAddress(LoadLibrary('psapi.dll'),
-    'GetModuleFileNameExA');
+  LoadPSAPI;
 
 end.

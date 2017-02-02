@@ -3,6 +3,9 @@ v1.3.0.500
   (in preperation to make it portable) (sorry no convert/export utility)
 - default colours now two neutral tones of grey/blue
 - setting: 'return to' now has option 'R1'
+- ignore now uses QueryFullProcessImageName (if available) instead of
+  GetModuleFileNameEx or GetWindowModuleFileName, and may be able to get the
+  executable path of more applications now.
 
 v1.2.3.497
 - fixed division by zero issue
