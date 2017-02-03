@@ -6,6 +6,8 @@ v1.3.0.500
 - ignore now uses QueryFullProcessImageName (if available) instead of
   GetModuleFileNameEx or GetWindowModuleFileName, and may be able to get the
   executable path of more applications now.
+- smaller margins with smaller window sizes
+- fixed issue with 'ignore: skip orbit' and anything else than L1
 
 v1.2.3.497
 - fixed division by zero issue

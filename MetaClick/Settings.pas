@@ -413,8 +413,14 @@ end;
 procedure TfrmSettings.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
-  frmSettings:=nil;
   Action:=caFree;
+  if PageControl1.ActivePage=tsIgnNew then
+    case MessageBox(Handle,'Update changes to ignore rule first?',
+      'MetaClick',MB_YESNOCANCEL or MB_ICONQUESTION) of
+      idYes:btnIgnApply.Click;
+      idCancel:Action:=caNone;
+    end;
+  if Action=caFree then frmSettings:=nil;
 end;
 
 procedure TfrmSettings.panBackground1Enter(Sender: TObject);

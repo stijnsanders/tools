@@ -394,10 +394,14 @@ begin
     Timer1.Enabled:=true;
 end;
 
+type
+  TButtonDim=(bdLimit,bdMarginLarge,bdMarginSmall,bdSpacing);
 const
-  ButtonMarginLarge=16;
-  ButtonMarginSmall=8;
-  ButtonSpacing=2;
+  ButtonDimsMax=2;
+  ButtonDims:array[0..ButtonDimsMax,TButtonDim] of integer=
+   ((40, 4,2,1),
+    (80,10,6,2),
+    ( 0,16,8,2));
 
 
 procedure TfrmMetaClick.FormShow(Sender: TObject);
@@ -576,13 +580,19 @@ begin
       case Clicked of
         csFirst,csOrbitCross:
          begin
+          ax:=Width;
+          ay:=Height;
+          i:=0;
+          while (i<ButtonDimsMax) and (ax>ButtonDims[i,bdLimit]) and
+            (ay>ButtonDims[i,bdLimit]) do inc(i);
           if ((GetKeyState(VK_LBUTTON) and $80)<>0) or
              ((GetKeyState(VK_RBUTTON) and $80)<>0) then
             Clicked:=csAllDone
           else
-          if (cp.X>=Left+ButtonMarginLarge) and (cp.Y>=Top+ButtonMarginLarge) and
-            (cp.X<=Left+Width-ButtonMarginLarge) and
-            (cp.Y<=Top+Height-ButtonMarginLarge) then
+          if (cp.X>=Left+ButtonDims[i,bdMarginLarge]) and
+            (cp.Y>=Top+ButtonDims[i,bdMarginLarge]) and
+            (cp.X<=Left+Width-ButtonDims[i,bdMarginLarge]) and
+            (cp.Y<=Top+Height-ButtonDims[i,bdMarginLarge]) then
            begin
             //Self.Perform?
             SetM(0,MOUSEEVENTF_LEFTDOWN);
@@ -1052,7 +1062,7 @@ end;
 procedure TfrmMetaClick.ArrangeButtons;
 var
   panels:array[0..10] of TPanel;
-  sx,sy,tx,ty,p,p1,i:integer;
+  sx,sy,tx,ty,p,p1,i,b:integer;
   procedure setp(pp:TPanel);
   begin
     if pp.Visible then
@@ -1080,65 +1090,70 @@ begin
     if p1=0 then p1:=1;//?
     sx:=Width;
     sy:=Height;
+    b:=0;
+    while (b<ButtonDimsMax) and (sx>ButtonDims[b,bdLimit]) and
+      (sy>ButtonDims[b,bdLimit]) do inc(b);
+    for i:=0 to p-1 do
+      panels[i].BevelWidth:=ButtonDims[b,bdSpacing];
     if sx>=sy then
      begin
-      dec(sx,ButtonMarginLarge);
-      dec(sy,ButtonMarginSmall);
-      tx:=sx-ButtonMarginLarge;
-      ty:=sy-ButtonMarginSmall;
-      sx:=tx+ButtonSpacing;
-      sy:=ty+ButtonSpacing;
+      dec(sx,ButtonDims[b,bdMarginLarge]);
+      dec(sy,ButtonDims[b,bdMarginSmall]);
+      tx:=sx-ButtonDims[b,bdMarginLarge];
+      ty:=sy-ButtonDims[b,bdMarginSmall];
+      sx:=tx+ButtonDims[b,bdSpacing];
+      sy:=ty+ButtonDims[b,bdSpacing];
       if tx>=ty*p1 then
        begin
         //single line horizontal
-        bx:=(tx-ButtonSpacing*(p-1)) div p;
+        bx:=(tx-ButtonDims[b,bdSpacing]*(p-1)) div p;
         by:=ty;
         for i:=0 to p-1 do
           panels[i].SetBounds(
-            ButtonMarginLarge+(sx*i div p),
-            ButtonMarginSmall,
+            ButtonDims[b,bdMarginLarge]+(sx*i div p),
+            ButtonDims[b,bdMarginSmall],
             bx,by);
        end
       else
        begin
         //two lines horizontal
-        bx:=(tx-ButtonSpacing*(p1-1)) div p1;
-        by:=(ty-ButtonSpacing) div 2;
+        bx:=(tx-ButtonDims[b,bdSpacing]*(p1-1)) div p1;
+        by:=(ty-ButtonDims[b,bdSpacing]) div 2;
         for i:=0 to p-1 do
           panels[i].SetBounds(
-            ButtonMarginLarge+(sx*(i div 2) div p1),
-            ButtonMarginSmall+(sy*(i mod 2) div 2),
+            ButtonDims[b,bdMarginLarge]+(sx*(i div 2) div p1),
+            ButtonDims[b,bdMarginSmall]+(sy*(i mod 2) div 2),
             bx,by);
        end;
      end
     else
      begin
-      dec(sx,ButtonMarginSmall);
-      dec(sy,ButtonMarginLarge);
-      tx:=sx-ButtonMarginSmall;
-      ty:=sy-ButtonMarginLarge;
-      sx:=tx+ButtonSpacing;
-      sy:=ty+ButtonSpacing;
+      dec(sx,ButtonDims[b,bdMarginSmall]);
+      dec(sy,ButtonDims[b,bdMarginLarge]);
+      tx:=sx-ButtonDims[b,bdMarginSmall];
+      ty:=sy-ButtonDims[b,bdMarginLarge];
+      sx:=tx+ButtonDims[b,bdSpacing];
+      sy:=ty+ButtonDims[b,bdSpacing];
       if tx*p1>=ty then
        begin
         //two columns vertical
-        bx:=(tx-ButtonSpacing) div 2;
-        by:=(ty-ButtonSpacing*(p1-1)) div p1;
+        bx:=(tx-ButtonDims[b,bdSpacing]) div 2;
+        by:=(ty-ButtonDims[b,bdSpacing]*(p1-1)) div p1;
         for i:=0 to p-1 do
           panels[i].SetBounds(
-            ButtonMarginSmall+(sx*(i mod 2) div 2),
-            ButtonMarginLarge+(sy*(i div 2) div p1),
+            ButtonDims[b,bdMarginSmall]+(sx*(i mod 2) div 2),
+            ButtonDims[b,bdMarginLarge]+(sy*(i div 2) div p1),
             bx,by);
        end
       else
        begin
         //single line vertical
         bx:=tx;
-        by:=(ty-ButtonSpacing*(p-1)) div p;
+        by:=(ty-ButtonDims[b,bdSpacing]*(p-1)) div p;
         for i:=0 to p-1 do
           panels[i].SetBounds(
-            ButtonMarginSmall,
-            ButtonMarginLarge+(sy*i div p),
+            ButtonDims[b,bdMarginSmall],
+            ButtonDims[b,bdMarginLarge]+(sy*i div p),
             bx,by);
        end;
      end;
@@ -1214,65 +1229,67 @@ begin
       l:=Length(s);
       j:=1;
       while (j<=l) and (s[j]<>':') do inc(j);
-      inc(j);
-      case s[1] of
-        'C'://class
-         begin
-          if c1 then
+      if SkipOrbit xor (s[j-1]<>'°') then
+       begin
+        inc(j);
+        case s[1] of
+          'C'://class
            begin
-            SetLength(c,$400);
-            SetLength(c,GetClassName(h,PChar(c),$400));
-            c1:=false;
+            if c1 then
+             begin
+              SetLength(c,$400);
+              SetLength(c,GetClassName(h,PChar(c),$400));
+              c1:=false;
+             end;
+            if (c<>'') and (Copy(s,j,l-j+1)=c) then Result:=false;
            end;
-          if (c<>'') and (Copy(s,j,l-j+1)=c) then Result:=false;
-         end;
-        'T'://text
-         begin
-          if t1 then
+          'T'://text
            begin
-            SetLength(t,$400);
-            SetLength(t,GetWindowText(h,PChar(t),$400));
-            t1:=false;
+            if t1 then
+             begin
+              SetLength(t,$400);
+              SetLength(t,GetWindowText(h,PChar(t),$400));
+              t1:=false;
+             end;
+            if (t<>'') and (Copy(s,j,l-j+1)=t) then Result:=false;
            end;
-          if (t<>'') and (Copy(s,j,l-j+1)=t) then Result:=false;
-         end;
-        'P','F'://path,file
-         begin
-          if p1 then
+          'P','F'://path,file
            begin
-            p:='';
-            if (p='') and (@QueryFullProcessImageName<>nil) then
+            if p1 then
              begin
-              GetWindowThreadProcessId(h,pid);
-              h1:=OpenProcess(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ,
-                false,pid);
-              ll:=$400;
-              SetLength(p,ll);
-              if QueryFullProcessImageName(h1,0,PChar(p),@ll)=0 then ll:=0;
-              SetLength(p,ll);
-              CloseHandle(h1);
+              p:='';
+              if (p='') and (@QueryFullProcessImageName<>nil) then
+               begin
+                GetWindowThreadProcessId(h,pid);
+                h1:=OpenProcess(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ,
+                  false,pid);
+                ll:=$400;
+                SetLength(p,ll);
+                if QueryFullProcessImageName(h1,0,PChar(p),@ll)=0 then ll:=0;
+                SetLength(p,ll);
+                CloseHandle(h1);
+               end;
+              if (p='') and (@GetModuleFileNameEx<>nil) then
+               begin
+                GetWindowThreadProcessId(h,pid);
+                h1:=OpenProcess(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ,
+                  false,pid);
+                SetLength(p,$400);
+                SetLength(p,GetModuleFileNameEx(h1,0,PChar(p),$400));
+                CloseHandle(h1);
+               end;
+              if p='' then
+               begin
+                SetLength(p,$400);
+                SetLength(p,GetWindowModuleFileName(h,PChar(p),$400))
+               end;
+              p1:=false;
              end;
-            if (p='') and (@GetModuleFileNameEx<>nil) then
-             begin
-              GetWindowThreadProcessId(h,pid);
-              h1:=OpenProcess(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ,
-                false,pid);
-              SetLength(p,$400);
-              SetLength(p,GetModuleFileNameEx(h1,0,PChar(p),$400));
-              CloseHandle(h1);
-             end;
-            if p='' then
-             begin
-              SetLength(p,$400);
-              SetLength(p,GetWindowModuleFileName(h,PChar(p),$400))
-             end;
-            p1:=false;
+            if s[1]='F' then f:=ExtractFileName(p) else f:=p;
+            if (f<>'') and (Copy(s,j,l-j+1)=f) then Result:=false;
            end;
-          if s[1]='F' then f:=ExtractFileName(p) else f:=p;
-          if (f<>'') and (Copy(s,j,l-j+1)=f) then Result:=false;
-         end;
-      end;
-      if SkipOrbit and not(Result) and (s[j-2]<>'°') then Result:=true;
+        end;
+       end;
       inc(i);
      end;
    end;

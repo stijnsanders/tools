@@ -7,7 +7,7 @@ object frmMetaKeys: TfrmMetaKeys
   Caption = 'MetaKeys'
   ClientHeight = 162
   ClientWidth = 384
-  Color = 52479
+  Color = 14535867
   Constraints.MinHeight = 24
   Constraints.MinWidth = 24
   Font.Charset = DEFAULT_CHARSET
@@ -34,7 +34,7 @@ object frmMetaKeys: TfrmMetaKeys
     Cursor = crSizeAll
     Align = alClient
     BevelWidth = 2
-    Color = 14535867
+    ParentColor = True
     PopupMenu = PopupMenu1
     TabOrder = 0
     OnMouseDown = AllMouseDown

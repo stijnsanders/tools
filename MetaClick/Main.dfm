@@ -7,7 +7,7 @@ object frmMetaClick: TfrmMetaClick
   Caption = 'MetaClick'
   ClientHeight = 106
   ClientWidth = 260
-  Color = 52479
+  Color = 14535867
   Constraints.MinHeight = 24
   Constraints.MinWidth = 24
   Font.Charset = DEFAULT_CHARSET
@@ -36,7 +36,7 @@ object frmMetaClick: TfrmMetaClick
     Cursor = crSizeAll
     Align = alClient
     BevelWidth = 2
-    Color = 14535867
+    ParentColor = True
     PopupMenu = PopupMenu1
     TabOrder = 0
     OnMouseDown = AllMouseDown
