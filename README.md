@@ -31,6 +31,10 @@ Looking for a resizable on-screen keyboard? Or one with a custom keyboard layout
 
 You can set the Windows task-bar to auto-hide, but is it there where you want it? Before other options were available to have a task-bar for each screen on a multi-monitor setup, I created this tool to list the windows on one screen, and switch a window between monitors, maximized or not.
 
+## Boxer
+
+If you, when at work, typically have too much windows open to be able to count, and tried several desktop management tools but don't quite find your fit, then try if Boxer can help. Use Boxer to select several windows and move them into a single window. **Attention:** apparently doesn't play nice with Windows 10...
+
 ## other tools
 
 These are a few other tools made by me not contained in this repository:
