@@ -12,6 +12,7 @@ object frmBoxerMain: TfrmBoxerMain
   Font.Style = []
   OldCreateOrder = False
   Position = poDefault
+  OnActivate = AppActivate
   PixelsPerInch = 96
   TextHeight = 14
   object Panel1: TPanel
@@ -25,6 +26,7 @@ object frmBoxerMain: TfrmBoxerMain
     PopupMenu = PopupMenu2
     TabOrder = 0
     OnClick = Panel1Click
+    OnEnter = AppActivate
     OnResize = Panel1Resize
     object Label2: TLabel
       Left = 8
@@ -47,6 +49,10 @@ object frmBoxerMain: TfrmBoxerMain
     Align = alClient
     BorderStyle = bsNone
     TabOrder = 1
+    OnEnter = AppActivate
+    OnMouseDown = ScrollBox1MouseDown
+    OnMouseMove = ScrollBox1MouseMove
+    OnMouseUp = ScrollBox1MouseUp
     OnResize = ScrollBox1Resize
     object Label1: TLabel
       Left = 0

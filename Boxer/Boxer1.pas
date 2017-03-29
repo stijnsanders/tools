@@ -37,6 +37,12 @@ type
     procedure TabMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure Timer2Timer(Sender: TObject);
+    procedure ScrollBox1MouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure ScrollBox1MouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure ScrollBox1MouseMove(Sender: TObject; Shift: TShiftState; X,
+      Y: Integer);
   private
     FBoxed:array of record
       h:THandle;
@@ -48,7 +54,8 @@ type
     FBoxedLength,FTabWidth:integer;
     FLastHWND,FLastMaxed:THandle;
     FPrefix:string;
-    FTagOffset,FDraggingTab,FTabDragStart:integer;
+    FTagOffset,FDraggingTab,FDragStartX,FDragStartY,
+    FDraggingWorkspace:integer;
     FFirstShow,FTabDragging:boolean;
     FMutex:THandle;
     procedure CleanBox(i:integer);
@@ -98,16 +105,17 @@ begin
     FLastHWND:=0;
     f:=SWP_NOACTIVATE or SWP_NOSIZE or SWP_NOMOVE or SWP_NOZORDER or SWP_HIDEWINDOW;
     if (h<>0) and (h<>Handle) and (h<>h1) and (GetWindowRect(h,r)) then
-     begin
-      SetLength(s,1023);
-      SetLength(s,GetClassNameW(h,PWideChar(s),1023));
-      if s<>'TfrmBoxerMain' then //if s<>ClassName then
+      if (r.Left<>r.Right) and (r.Top<>r.Bottom) then
        begin
-        frmSwitchHandle.SetBounds(r.Right-FTagOffset,r.Top+SysBorder+2,16,16);
-        f:=f xor SWP_NOZORDER xor SWP_HIDEWINDOW or SWP_SHOWWINDOW;
-        FLastHWND:=h;
+        SetLength(s,1023);
+        SetLength(s,GetClassNameW(h,PWideChar(s),1023));
+        if s<>'TfrmBoxerMain' then //if s<>ClassName then
+         begin
+          frmSwitchHandle.SetBounds(r.Right-FTagOffset,r.Top+SysBorder+2,16,16);
+          f:=f xor SWP_NOZORDER xor SWP_HIDEWINDOW or SWP_SHOWWINDOW;
+          FLastHWND:=h;
+         end;
        end;
-     end;
     SetWindowPos(frmSwitchHandle.Handle,HWND_TOPMOST,0,0,0,0,f);
    end;
 end;
@@ -122,8 +130,8 @@ var
   i,x,y,ax,ay,bx,by:integer;
   p:TWindowPlacement;
 begin
-  x:=0;
-  y:=0;
+  x:=12;
+  y:=12;
   bx:=ScrollBox1.ClientWidth;
   by:=ScrollBox1.ClientHeight;
 
@@ -143,7 +151,7 @@ begin
         //SW_SHOWMINIMIZED://align along bottom?
      end;
 
-  Label1.SetBounds(x,y,16,16);
+  Label1.SetBounds(x-12,y-12,16,16);
 end;
 
 procedure TfrmBoxerMain.DoCreate;
@@ -152,7 +160,8 @@ begin
   FBoxedLength:=0;
   Application.OnActivate:=AppActivate;
   FFirstShow:=true;
-  FDraggingTab:=-1
+  FDraggingTab:=-1;
+  FDraggingWorkspace:=0;
 end;
 
 procedure TfrmBoxerMain.DoShow;
@@ -506,7 +515,7 @@ begin
   if FindTab(Sender as TControl,FDraggingTab) then
    begin
     FTabDragging:=false;
-    FTabDragStart:=FBoxed[FDraggingTab].p1.Left-Mouse.CursorPos.X;
+    FDragStartX:=FBoxed[FDraggingTab].p1.Left-Mouse.CursorPos.X;
    end
   else
     FDraggingTab:=-1;
@@ -521,7 +530,7 @@ begin
     try
       if not(FTabDragging) then
        begin
-        i:=FTabDragStart+Mouse.CursorPos.X-FBoxed[FDraggingTab].p1.Left;
+        i:=FDragStartX+Mouse.CursorPos.X-FBoxed[FDraggingTab].p1.Left;
         if i<0 then i:=-i;
         if i>GetSystemMetrics(SM_CXDRAG) then
          begin
@@ -531,7 +540,7 @@ begin
       end;
       if FTabDragging then
        begin
-        i:=FTabDragStart+Mouse.CursorPos.X;//TODO: use argument X;
+        i:=FDragStartX+Mouse.CursorPos.X;//TODO: use argument X;
         FBoxed[FDraggingTab].p1.Left:=i;
         i:=((2*i) div FTabWidth+1) div 2;
         if i<0 then i:=0;
@@ -577,6 +586,48 @@ begin
   Timer1.Enabled:=false;
   UpdateTabs;
   CheckForms;
+end;
+
+procedure TfrmBoxerMain.ScrollBox1MouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  p:TPoint;
+begin
+  FDraggingWorkspace:=1;
+  p:=Mouse.CursorPos;
+  FDragStartX:=ScrollBox1.HorzScrollBar.Position+p.X;
+  FDragStartY:=ScrollBox1.VertScrollBar.Position+p.Y;
+end;
+
+procedure TfrmBoxerMain.ScrollBox1MouseMove(Sender: TObject;
+  Shift: TShiftState; X, Y: Integer);
+var
+  p,q:TPoint;
+begin
+  case FDraggingWorkspace of
+    1:
+     begin
+      p:=Mouse.CursorPos;
+      q.X:=GetSystemMetrics(SM_CXDRAG);
+      q.Y:=GetSystemMetrics(SM_CYDRAG);
+      p.X:=FDragStartX-p.X-ScrollBox1.HorzScrollBar.Position;
+      p.Y:=FDragStartY-p.Y-ScrollBox1.VertScrollBar.Position;
+      if (p.X<-q.X) or (p.X>q.X) or (p.Y<-q.Y) or (p.Y>q.Y) then
+        FDraggingWorkspace:=2;
+     end;
+    2:
+     begin
+      p:=Mouse.CursorPos;
+      ScrollBox1.HorzScrollBar.Position:=FDragStartX-p.X;
+      ScrollBox1.VertScrollBar.Position:=FDragStartY-p.Y;
+     end;
+  end;
+end;
+
+procedure TfrmBoxerMain.ScrollBox1MouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  FDraggingWorkspace:=0;
 end;
 
 end.
