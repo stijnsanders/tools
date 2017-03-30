@@ -18,9 +18,10 @@ type
     N1: TMenuItem;
     Close1: TMenuItem;
     PopupMenu2: TPopupMenu;
-    Boxinghandle1: TMenuItem;
+    BoxHandle1: TMenuItem;
     Label2: TLabel;
-    Timer2: TTimer;
+    ListBox1: TListBox;
+    BoxHandleOnce1: TMenuItem;
     procedure Timer1Timer(Sender: TObject);
     procedure ScrollBox1Resize(Sender: TObject);
     procedure Panel1Resize(Sender: TObject);
@@ -29,20 +30,21 @@ type
     procedure Unbox1Click(Sender: TObject);
     procedure Close1Click(Sender: TObject);
     procedure AppActivate(Sender: TObject);
-    procedure Boxinghandle1Click(Sender: TObject);
+    procedure BoxHandle1Click(Sender: TObject);
     procedure TabMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure TabMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
     procedure TabMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-    procedure Timer2Timer(Sender: TObject);
     procedure ScrollBox1MouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure ScrollBox1MouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure ScrollBox1MouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
+    procedure ListMsg(var Msg: TMsg; var Handled: Boolean);
+    procedure BoxHandleOnce1Click(Sender: TObject);
   private
     FBoxed:array of record
       h:THandle;
@@ -98,24 +100,34 @@ var
   f:cardinal;
   s:WideString;
 begin
-  h:=GetAncestor(GetForegroundWindow,GA_ROOT);
-  h1:=GetAncestor(GetShellWindow,GA_ROOT);
+  h1:=GetForegroundWindow;
+  h:=GetAncestor(h1,GA_ROOT);
   if h<>FLastHWND then
    begin
     FLastHWND:=0;
     f:=SWP_NOACTIVATE or SWP_NOSIZE or SWP_NOMOVE or SWP_NOZORDER or SWP_HIDEWINDOW;
-    if (h<>0) and (h<>Handle) and (h<>h1) and (GetWindowRect(h,r)) then
-      if (r.Left<>r.Right) and (r.Top<>r.Bottom) then
-       begin
-        SetLength(s,1023);
-        SetLength(s,GetClassNameW(h,PWideChar(s),1023));
-        if s<>'TfrmBoxerMain' then //if s<>ClassName then
+    if h=Handle then
+     begin
+      if FLastHWND<>h1 then UpdateTabs;
+      FLastHWND:=h1;
+     end
+    else
+     begin
+      h1:=GetAncestor(GetShellWindow,GA_ROOT);
+      if (h<>0) and (h<>h1) and (GetWindow(h,GW_OWNER)<>Handle) and
+        (GetWindowRect(h,r)) then
+        if (r.Left<>r.Right) and (r.Top<>r.Bottom) then
          begin
-          frmSwitchHandle.SetBounds(r.Right-FTagOffset,r.Top+SysBorder+2,16,16);
-          f:=f xor SWP_NOZORDER xor SWP_HIDEWINDOW or SWP_SHOWWINDOW;
-          FLastHWND:=h;
+          SetLength(s,1023);
+          SetLength(s,GetClassNameW(h,PWideChar(s),1023));
+          if s<>'TfrmBoxerMain' then //if s<>ClassName then
+           begin
+            frmSwitchHandle.SetBounds(r.Right-FTagOffset,r.Top+SysBorder+2,16,16);
+            f:=f xor SWP_NOZORDER xor SWP_HIDEWINDOW or SWP_SHOWWINDOW;
+            FLastHWND:=h;
+           end;
          end;
-       end;
+     end;
     SetWindowPos(frmSwitchHandle.Handle,HWND_TOPMOST,0,0,0,0,f);
    end;
 end;
@@ -159,6 +171,7 @@ begin
   inherited;
   FBoxedLength:=0;
   Application.OnActivate:=AppActivate;
+  Application.OnMessage:=ListMsg;
   FFirstShow:=true;
   FDraggingTab:=-1;
   FDraggingWorkspace:=0;
@@ -279,6 +292,14 @@ begin
     FBoxed[i].l1.OnMouseMove:=TabMouseMove;
     FBoxed[i].l1.OnMouseUp:=TabMouseUp;
     ReOrderTabs(i);
+
+    if BoxHandleOnce1.Checked then
+     begin
+      Timer1.Enabled:=false;
+      BoxHandleOnce1.Checked:=false;
+      ShowWindow(frmSwitchHandle.Handle,SW_HIDE);
+     end;
+
    end;
   UpdateTabs;
   CheckForms;
@@ -500,13 +521,26 @@ begin
   UpdateTabs;
 end;
 
-procedure TfrmBoxerMain.Boxinghandle1Click(Sender: TObject);
+procedure TfrmBoxerMain.BoxHandle1Click(Sender: TObject);
 var
   b:boolean;
 begin
-  b:=not(Boxinghandle1.Checked);
-  Boxinghandle1.Checked:=b;
+  b:=not(BoxHandle1.Checked);
+  BoxHandle1.Checked:=b;
   Timer1.Enabled:=b;
+  ShowWindow(frmSwitchHandle.Handle,SW_HIDE);
+  BoxHandleOnce1.Enabled:=not(b);
+  BoxHandleOnce1.Checked:=false;
+end;
+
+procedure TfrmBoxerMain.BoxHandleOnce1Click(Sender: TObject);
+var
+  b:boolean;
+begin
+  b:=not(BoxHandleOnce1.Checked);
+  BoxHandleOnce1.Checked:=b;
+  Timer1.Enabled:=b;
+  ShowWindow(frmSwitchHandle.Handle,SW_HIDE);
 end;
 
 procedure TfrmBoxerMain.TabMouseDown(Sender: TObject;
@@ -581,13 +615,6 @@ begin
     end;
 end;
 
-procedure TfrmBoxerMain.Timer2Timer(Sender: TObject);
-begin
-  Timer1.Enabled:=false;
-  UpdateTabs;
-  CheckForms;
-end;
-
 procedure TfrmBoxerMain.ScrollBox1MouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
@@ -597,6 +624,7 @@ begin
   p:=Mouse.CursorPos;
   FDragStartX:=ScrollBox1.HorzScrollBar.Position+p.X;
   FDragStartY:=ScrollBox1.VertScrollBar.Position+p.Y;
+  CheckForms;
 end;
 
 procedure TfrmBoxerMain.ScrollBox1MouseMove(Sender: TObject;
@@ -628,6 +656,27 @@ procedure TfrmBoxerMain.ScrollBox1MouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   FDraggingWorkspace:=0;
+end;
+
+procedure TfrmBoxerMain.ListMsg(var Msg: TMsg; var Handled: Boolean);
+var
+  i,l:integer;
+  s:string;
+begin
+  l:=ListBox1.Items.Count;
+  i:=0;
+  while (i<l) and (StrToInt('$'+Copy(ListBox1.Items[i],1,4))<integer(Msg.message)) do
+    inc(i);
+  s:=Format('%.4x %s %.8x %d %d',[Msg.message,
+    FormatDateTime('hh:nn:ss.zzz',Now),
+    Msg.hwnd,Msg.lParam,Msg.wParam]);
+  if i<l then
+    if Copy(ListBox1.Items[i],1,4)=Copy(s,1,4) then
+      ListBox1.Items[i]:=s
+    else
+      ListBox1.Items.Insert(i,s)
+  else
+    ListBox1.Items.Add(s);
 end;
 
 end.
