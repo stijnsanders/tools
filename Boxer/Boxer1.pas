@@ -20,7 +20,6 @@ type
     PopupMenu2: TPopupMenu;
     BoxHandle1: TMenuItem;
     Label2: TLabel;
-    ListBox1: TListBox;
     BoxHandleOnce1: TMenuItem;
     procedure Timer1Timer(Sender: TObject);
     procedure ScrollBox1Resize(Sender: TObject);
@@ -30,6 +29,7 @@ type
     procedure Unbox1Click(Sender: TObject);
     procedure Close1Click(Sender: TObject);
     procedure AppActivate(Sender: TObject);
+    procedure AppDeactivate(Sender: TObject);
     procedure BoxHandle1Click(Sender: TObject);
     procedure TabMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -43,8 +43,8 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure ScrollBox1MouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
-    procedure ListMsg(var Msg: TMsg; var Handled: Boolean);
     procedure BoxHandleOnce1Click(Sender: TObject);
+    procedure DoUpdateTabs(Sender: TObject);
   private
     FBoxed:array of record
       h:THandle;
@@ -102,17 +102,17 @@ var
 begin
   h1:=GetForegroundWindow;
   h:=GetAncestor(h1,GA_ROOT);
-  if h<>FLastHWND then
+  if h=Handle then
    begin
-    FLastHWND:=0;
+    if FLastHWND<>h1 then UpdateTabs;
+    FLastHWND:=h1;
+   end
+  else
+   begin
     f:=SWP_NOACTIVATE or SWP_NOSIZE or SWP_NOMOVE or SWP_NOZORDER or SWP_HIDEWINDOW;
-    if h=Handle then
+    if h<>FLastHWND then
      begin
-      if FLastHWND<>h1 then UpdateTabs;
-      FLastHWND:=h1;
-     end
-    else
-     begin
+      FLastHWND:=0;
       h1:=GetAncestor(GetShellWindow,GA_ROOT);
       if (h<>0) and (h<>h1) and (GetWindow(h,GW_OWNER)<>Handle) and
         (GetWindowRect(h,r)) then
@@ -171,7 +171,6 @@ begin
   inherited;
   FBoxedLength:=0;
   Application.OnActivate:=AppActivate;
-  Application.OnMessage:=ListMsg;
   FFirstShow:=true;
   FDraggingTab:=-1;
   FDraggingWorkspace:=0;
@@ -262,6 +261,10 @@ begin
      end;
 
     if Windows.SetParent(FLastHWND,ScrollBox1.Handle)=0 then RaiseLastOSError;
+
+    SetWindowLong(FLastHWND,GWL_EXSTYLE,
+      GetWindowLong(FLastHWND,GWL_EXSTYLE) or WS_EX_MDICHILD);
+
     if not SetWindowPos(FLastHWND,HWND_TOP,0,0,0,0,SWP_ASYNCWINDOWPOS or SWP_NOSIZE) then RaiseLastOSError;
 
     FBoxed[i].h:=FLastHWND;
@@ -362,6 +365,8 @@ var
 begin
   GetWindowRect(FBoxed[i].h,r);
   Windows.SetParent(FBoxed[i].h,GetDesktopWindow);
+  SetWindowLong(FLastHWND,GWL_EXSTYLE,
+    GetWindowLong(FLastHWND,GWL_EXSTYLE) and not(WS_EX_MDICHILD));
   SetWindowPos(FBoxed[i].h,0,r.Left,r.Top,0,0,SWP_NOSIZE or SWP_NOZORDER or SWP_NOACTIVATE);
 end;
 
@@ -518,7 +523,14 @@ end;
 
 procedure TfrmBoxerMain.AppActivate(Sender: TObject);
 begin
+  Timer1.Enabled:=true;
   UpdateTabs;
+end;
+
+procedure TfrmBoxerMain.AppDeactivate(Sender: TObject);
+begin
+  if not(BoxHandle1.Checked) and not(BoxHandleOnce1.Checked) then
+    Timer1.Enabled:=false;
 end;
 
 procedure TfrmBoxerMain.BoxHandle1Click(Sender: TObject);
@@ -658,25 +670,9 @@ begin
   FDraggingWorkspace:=0;
 end;
 
-procedure TfrmBoxerMain.ListMsg(var Msg: TMsg; var Handled: Boolean);
-var
-  i,l:integer;
-  s:string;
+procedure TfrmBoxerMain.DoUpdateTabs(Sender: TObject);
 begin
-  l:=ListBox1.Items.Count;
-  i:=0;
-  while (i<l) and (StrToInt('$'+Copy(ListBox1.Items[i],1,4))<integer(Msg.message)) do
-    inc(i);
-  s:=Format('%.4x %s %.8x %d %d',[Msg.message,
-    FormatDateTime('hh:nn:ss.zzz',Now),
-    Msg.hwnd,Msg.lParam,Msg.wParam]);
-  if i<l then
-    if Copy(ListBox1.Items[i],1,4)=Copy(s,1,4) then
-      ListBox1.Items[i]:=s
-    else
-      ListBox1.Items.Insert(i,s)
-  else
-    ListBox1.Items.Add(s);
+  UpdateTabs;
 end;
 
 end.

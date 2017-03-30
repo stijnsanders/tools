@@ -12,7 +12,7 @@ object frmBoxerMain: TfrmBoxerMain
   Font.Style = []
   OldCreateOrder = False
   Position = poDefault
-  OnActivate = AppActivate
+  OnActivate = DoUpdateTabs
   PixelsPerInch = 96
   TextHeight = 14
   object Panel1: TPanel
@@ -26,7 +26,7 @@ object frmBoxerMain: TfrmBoxerMain
     PopupMenu = PopupMenu2
     TabOrder = 0
     OnClick = Panel1Click
-    OnEnter = AppActivate
+    OnEnter = DoUpdateTabs
     OnResize = Panel1Resize
     object Label2: TLabel
       Left = 8
@@ -42,14 +42,14 @@ object frmBoxerMain: TfrmBoxerMain
   object ScrollBox1: TScrollBox
     Left = 0
     Top = 25
-    Width = 872
+    Width = 1210
     Height = 442
     HorzScrollBar.Tracking = True
     VertScrollBar.Tracking = True
     Align = alClient
     BorderStyle = bsNone
     TabOrder = 1
-    OnEnter = AppActivate
+    OnEnter = DoUpdateTabs
     OnMouseDown = ScrollBox1MouseDown
     OnMouseMove = ScrollBox1MouseMove
     OnMouseUp = ScrollBox1MouseUp
@@ -63,15 +63,6 @@ object frmBoxerMain: TfrmBoxerMain
       AutoSize = False
       Caption = '.:'
     end
-  end
-  object ListBox1: TListBox
-    Left = 872
-    Top = 25
-    Width = 338
-    Height = 442
-    Align = alRight
-    ItemHeight = 14
-    TabOrder = 2
   end
   object Timer1: TTimer
     OnTimer = Timer1Timer
