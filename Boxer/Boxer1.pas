@@ -21,6 +21,8 @@ type
     BoxHandle1: TMenuItem;
     Label2: TLabel;
     BoxHandleOnce1: TMenuItem;
+    ListBox1: TListBox;
+    DebugMessages1: TMenuItem;
     procedure Timer1Timer(Sender: TObject);
     procedure ScrollBox1Resize(Sender: TObject);
     procedure Panel1Resize(Sender: TObject);
@@ -45,6 +47,9 @@ type
       Y: Integer);
     procedure BoxHandleOnce1Click(Sender: TObject);
     procedure DoUpdateTabs(Sender: TObject);
+    procedure PopupMenu2Popup(Sender: TObject);
+    procedure DebugMessages1Click(Sender: TObject);
+    procedure ListMsg(var Msg: TMsg; var Handled: Boolean);
   private
     FBoxed:array of record
       h:THandle;
@@ -127,8 +132,8 @@ begin
             FLastHWND:=h;
            end;
          end;
+      SetWindowPos(frmSwitchHandle.Handle,HWND_TOPMOST,0,0,0,0,f);
      end;
-    SetWindowPos(frmSwitchHandle.Handle,HWND_TOPMOST,0,0,0,0,f);
    end;
 end;
 
@@ -673,6 +678,38 @@ end;
 procedure TfrmBoxerMain.DoUpdateTabs(Sender: TObject);
 begin
   UpdateTabs;
+end;
+
+procedure TfrmBoxerMain.PopupMenu2Popup(Sender: TObject);
+begin
+  DebugMessages1.Visible:=(GetKeyState(VK_CONTROL) and 1)<>0;
+end;
+
+procedure TfrmBoxerMain.DebugMessages1Click(Sender: TObject);
+begin
+  ListBox1.Visible:=true;
+  Application.OnMessage:=ListMsg;
+end;
+
+procedure TfrmBoxerMain.ListMsg(var Msg: TMsg; var Handled: Boolean);
+var
+  i,l:integer;
+  s:string;
+begin
+  l:=ListBox1.Items.Count;
+  i:=0;
+  while (i<l) and (StrToInt('$'+Copy(ListBox1.Items[i],1,4))<integer(Msg.message)) do
+    inc(i);
+  s:=Format('%.4x %s %.8x %d %d',[Msg.message,
+    FormatDateTime('hh:nn:ss.zzz',Now),
+    Msg.hwnd,Msg.lParam,Msg.wParam]);
+  if i<l then
+    if Copy(ListBox1.Items[i],1,4)=Copy(s,1,4) then
+      ListBox1.Items[i]:=s
+    else
+      ListBox1.Items.Insert(i,s)
+  else
+    ListBox1.Items.Add(s);
 end;
 
 end.

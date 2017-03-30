@@ -42,7 +42,7 @@ object frmBoxerMain: TfrmBoxerMain
   object ScrollBox1: TScrollBox
     Left = 0
     Top = 25
-    Width = 1210
+    Width = 824
     Height = 442
     HorzScrollBar.Tracking = True
     VertScrollBar.Tracking = True
@@ -63,6 +63,16 @@ object frmBoxerMain: TfrmBoxerMain
       AutoSize = False
       Caption = '.:'
     end
+  end
+  object ListBox1: TListBox
+    Left = 824
+    Top = 25
+    Width = 386
+    Height = 442
+    Align = alRight
+    ItemHeight = 14
+    TabOrder = 2
+    Visible = False
   end
   object Timer1: TTimer
     OnTimer = Timer1Timer
@@ -90,6 +100,7 @@ object frmBoxerMain: TfrmBoxerMain
     end
   end
   object PopupMenu2: TPopupMenu
+    OnPopup = PopupMenu2Popup
     Left = 72
     Top = 56
     object BoxHandle1: TMenuItem
@@ -101,6 +112,11 @@ object frmBoxerMain: TfrmBoxerMain
       Caption = 'Box handle &once'
       Enabled = False
       OnClick = BoxHandleOnce1Click
+    end
+    object DebugMessages1: TMenuItem
+      Caption = 'Debug Messages'
+      Visible = False
+      OnClick = DebugMessages1Click
     end
   end
 end
