@@ -481,8 +481,13 @@ end;
 procedure TfrmBoxerMain.TabClick(Sender: TObject);
 var
   i:integer;
+  c:TControl;
 begin
-  if FindTab(Sender as TControl,i) then
+  if Sender is TMenuItem then
+    c:=PopupMenu1.PopupComponent as TControl
+  else
+    c:=Sender as TControl;
+  if FindTab(c,i) then
    begin
    
     if FLastMaxed<>0 then
