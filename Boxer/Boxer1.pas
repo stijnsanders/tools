@@ -113,6 +113,7 @@ begin
     FLastHWND:=h1;
    end
   else
+  if BoxHandle1.Checked or BoxHandleOnce1.Checked then
    begin
     f:=SWP_NOACTIVATE or SWP_NOSIZE or SWP_NOMOVE or SWP_NOZORDER or SWP_HIDEWINDOW;
     if h<>FLastHWND then
@@ -176,6 +177,7 @@ begin
   inherited;
   FBoxedLength:=0;
   Application.OnActivate:=AppActivate;
+  Application.OnDeactivate:=AppDeactivate;
   FFirstShow:=true;
   FDraggingTab:=-1;
   FDraggingWorkspace:=0;
@@ -251,7 +253,8 @@ end;
 
 procedure TfrmBoxerMain.TakeHWND;
 var
-  i,j:integer;
+  i,j,x,y:integer;
+  r,r1,r2:TRect;
 begin
   if FLastHWND<>0 then
    begin
@@ -265,12 +268,11 @@ begin
       for j:=i to FBoxedLength-1 do FBoxed[j].h:=0;
      end;
 
+    x:=0;//default
+    y:=0;//default
+    if not GetWindowRect(FLastHWND,r) then r.Bottom:=0;
+
     if Windows.SetParent(FLastHWND,ScrollBox1.Handle)=0 then RaiseLastOSError;
-
-    SetWindowLong(FLastHWND,GWL_EXSTYLE,
-      GetWindowLong(FLastHWND,GWL_EXSTYLE) or WS_EX_MDICHILD);
-
-    if not SetWindowPos(FLastHWND,HWND_TOP,0,0,0,0,SWP_ASYNCWINDOWPOS or SWP_NOSIZE) then RaiseLastOSError;
 
     FBoxed[i].h:=FLastHWND;
     FBoxed[i].p1:=TPanel.Create(Self);
@@ -299,16 +301,31 @@ begin
     FBoxed[i].l1.OnMouseDown:=TabMouseDown;
     FBoxed[i].l1.OnMouseMove:=TabMouseMove;
     FBoxed[i].l1.OnMouseUp:=TabMouseUp;
-    ReOrderTabs(i);
 
-    if BoxHandleOnce1.Checked then
+    SetWindowLong(FLastHWND,GWL_EXSTYLE,
+      GetWindowLong(FLastHWND,GWL_EXSTYLE) or WS_EX_MDICHILD);
+
+    //fits client?
+    if r.Bottom<>0 then
      begin
-      Timer1.Enabled:=false;
-      BoxHandleOnce1.Checked:=false;
-      ShowWindow(frmSwitchHandle.Handle,SW_HIDE);
+      r1:=ScrollBox1.ClientRect;
+      r2.TopLeft:=ScrollBox1.ClientToScreen(r1.TopLeft);
+      //r2.BottomRight:=ScrollBox1.ClientToScreen(r1.BottomRight);
+      r2.Right:=r2.Left-r1.Left+r1.Right;
+      r2.Bottom:=r2.Top-r1.Top+r1.Bottom;
+      if (r.Top>=r2.Top) and (r.Left>=r2.Left) and (r.Right<r2.Right) and (r.Bottom<r2.Bottom) then
+       begin
+        x:=r.Left+r1.Left-r2.Left;
+        y:=r.Top+r1.Top-r2.Top;
+       end;
      end;
 
+    if not SetWindowPos(FLastHWND,HWND_TOP,x,y,0,0,SWP_ASYNCWINDOWPOS or SWP_NOSIZE) then RaiseLastOSError;
+
+    ReOrderTabs(i);
    end;
+  if BoxHandleOnce1.Checked then BoxHandleOnce1.Checked:=false;
+  ShowWindow(frmSwitchHandle.Handle,SW_HIDE);
   UpdateTabs;
   CheckForms;
 end;
@@ -528,19 +545,17 @@ begin
    end;
   //UpdateTabs;
   //CheckForms;
-  Timer1.Enabled:=true;
 end;
 
 procedure TfrmBoxerMain.AppActivate(Sender: TObject);
 begin
-  Timer1.Enabled:=true;
+  ShowWindow(frmSwitchHandle.Handle,SW_HIDE);
   UpdateTabs;
 end;
 
 procedure TfrmBoxerMain.AppDeactivate(Sender: TObject);
 begin
-  if not(BoxHandle1.Checked) and not(BoxHandleOnce1.Checked) then
-    Timer1.Enabled:=false;
+  //
 end;
 
 procedure TfrmBoxerMain.BoxHandle1Click(Sender: TObject);
@@ -549,10 +564,9 @@ var
 begin
   b:=not(BoxHandle1.Checked);
   BoxHandle1.Checked:=b;
-  Timer1.Enabled:=b;
-  ShowWindow(frmSwitchHandle.Handle,SW_HIDE);
   BoxHandleOnce1.Enabled:=not(b);
   BoxHandleOnce1.Checked:=false;
+  ShowWindow(frmSwitchHandle.Handle,SW_HIDE);
 end;
 
 procedure TfrmBoxerMain.BoxHandleOnce1Click(Sender: TObject);
@@ -561,7 +575,6 @@ var
 begin
   b:=not(BoxHandleOnce1.Checked);
   BoxHandleOnce1.Checked:=b;
-  Timer1.Enabled:=b;
   ShowWindow(frmSwitchHandle.Handle,SW_HIDE);
 end;
 
@@ -687,7 +700,7 @@ end;
 
 procedure TfrmBoxerMain.PopupMenu2Popup(Sender: TObject);
 begin
-  DebugMessages1.Visible:=(GetKeyState(VK_CONTROL) and 1)<>0;
+  DebugMessages1.Visible:=(GetKeyState(VK_CONTROL) and $8000000)<>0;
 end;
 
 procedure TfrmBoxerMain.DebugMessages1Click(Sender: TObject);
