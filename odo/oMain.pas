@@ -814,7 +814,7 @@ begin
       end;
     2,3://mousemove,mousedown
      begin
-      if Msg.WParam=1 then inc(CurrentData.ClickCount);
+      if Msg.WParam=2 then inc(CurrentData.ClickCount);
       i:=Msg.LParamLo-LastMouse.X;
       if i<0 then dec(CurrentData.MouseXCount,i) else inc(CurrentData.MouseXCount,i);
       i:=Msg.LParamHi-LastMouse.Y;
