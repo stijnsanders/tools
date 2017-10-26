@@ -48,6 +48,7 @@ object frmDirDiffMain: TfrmDirDiffMain
     OnDragDrop = tvFoldersDragDrop
     OnDragOver = tvFoldersDragOver
     OnExpanding = tvFoldersExpanding
+    OnKeyPress = tvFoldersKeyPress
     OnMouseDown = tvFoldersMouseDown
   end
   object tvXML: TTreeView

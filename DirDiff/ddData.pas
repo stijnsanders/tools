@@ -374,7 +374,7 @@ begin
         f.Read(s[1],i);
         //detect NULL's
         for j:=1 to i do if s[j]=#0 then s[j]:=' ';//?
-        Result:=s;
+        Result:=AnsiToUtf8(s);
        end;
      end;
 
@@ -657,6 +657,7 @@ begin
   XmlDefiningArributes.Add('ID');
   XmlDefiningArributes.Add('Name');
   //start threads
+
   l:=StrToIntDef(GetEnvironmentVariable('NUMBER_OF_PROCESSORS'),1);
   //multiplier?
   SetLength(FRunners,l);
@@ -870,10 +871,10 @@ begin
      end
     else
      begin
-      s:=ExpandTabs(Copy(Data[j].FContentData
+      s:=Utf8ToAnsi(ExpandTabs(Copy(Data[j].FContentData
         ,Data[j].FContent[jx].Index
         ,Data[j].FContent[jx].Length
-        ));
+        )));
       sl:=Length(s);
      end;
     if all then
@@ -1715,7 +1716,7 @@ begin
     SetLength(w,j-1);
 
     if IgnoreCase then
-      Result:=UTF8Encode(WideUpperCase(UTF8Decode(w)))
+      Result:=UTF8Encode(WideUpperCase(w))
     else
       Result:=UTF8Encode(w);
    end

@@ -1,3 +1,8 @@
+v2.0.3.512
+Fixed issue with UTF-8 sensitive characters in ANSI file.
+Fixed issue with Ctrl+Shift+Up/Down past start/end of files list.
+Enable switching checkboxes on tree view with space key press.
+
 v2.0.2.499
 Input box on 'add folder' dialog
 

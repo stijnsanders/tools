@@ -149,6 +149,7 @@ type
     procedure tvFoldersDragOver(Sender, Source: TObject; X, Y: Integer;
       State: TDragState; var Accept: Boolean);
     procedure tvFoldersDragDrop(Sender, Source: TObject; X, Y: Integer);
+    procedure tvFoldersKeyPress(Sender: TObject; var Key: Char);
   private
     FDataSet:TDiffSet;
     FDataCount,FFilesSource:integer;
@@ -164,7 +165,7 @@ type
     procedure LoadFromPaths;
     procedure UpdateViewPort(Reset:boolean);
     procedure ExpandXmlNodes(n: TTreeNode);
-    function tvFoldersCheck(X, Y: integer):boolean;
+    function tvFoldersCheck(NN: TTreeNode; X, Y: integer):boolean;
     procedure ListSelectedFiles(Index:integer;sl:TStringList);
   protected
     procedure DoCreate; override;
@@ -1336,36 +1337,39 @@ begin
       while (n<>nil) and (n1=nil) do
        begin
         n:=n.Parent;
-        n1:=n.getPrevSibling;
+        if n=nil then n1:=nil else n1:=n.getPrevSibling;
        end;
-      n:=n1;
-      while n.HasChildren or (n.Count<>0) do
+      if n1<>nil then
        begin
-        if n.HasChildren and (n.Count=0) then
+        n:=n1;
+        while n.HasChildren or (n.Count<>0) do
          begin
-          n.HasChildren:=false;
-          LoadFiles(n);
+          if n.HasChildren and (n.Count=0) then
+           begin
+            n.HasChildren:=false;
+            LoadFiles(n);
+           end;
+          n1:=n.GetLastChild;
+          if n1<>nil then n:=n1;
          end;
-        n1:=n.GetLastChild;
-        if n1<>nil then n:=n1;
-       end;
-      //still comparing?
-      i:=0;
-      while n.ImageIndex in [iiFileNone,iiFileComparing] do
-       begin
-        //TODO: check djFileCompare running?
-        Application.ProcessMessages;
-        Sleep(25);
-        inc(i);
-        if i=200 then
-          raise Exception.Create('Timed out waiting for pending file compare');
-       end;
-      //is it non-equal?
-      if (n.ImageIndex>=iiFileNone) and (n.ImageIndex<>iiFileEqual) then
-       begin
-        Screen.Cursor:=crDefault;//see tvFoldersChange
-        tvFolders.Selected:=n;
-        n:=nil;//end loop
+        //still comparing?
+        i:=0;
+        while n.ImageIndex in [iiFileNone,iiFileComparing] do
+         begin
+          //TODO: check djFileCompare running?
+          Application.ProcessMessages;
+          Sleep(25);
+          inc(i);
+          if i=200 then
+            raise Exception.Create('Timed out waiting for pending file compare');
+         end;
+        //is it non-equal?
+        if (n.ImageIndex>=iiFileNone) and (n.ImageIndex<>iiFileEqual) then
+         begin
+          Screen.Cursor:=crDefault;//see tvFoldersChange
+          tvFolders.Selected:=n;
+          n:=nil;//end loop
+         end;
        end;
      end;
   finally
@@ -1397,36 +1401,39 @@ begin
       while (n<>nil) and (n1=nil) do
        begin
         n:=n.Parent;
-        n1:=n.getNextSibling;
+        if n=nil then n1:=nil else n1:=n.getNextSibling;
        end;
-      n:=n1;
-      while n.HasChildren or (n.Count<>0) do
+      if n1<>nil then
        begin
-        if n.HasChildren and (n.Count=0) then
+        n:=n1;
+        while n.HasChildren or (n.Count<>0) do
          begin
-          n.HasChildren:=false;
-          LoadFiles(n);
+          if n.HasChildren and (n.Count=0) then
+           begin
+            n.HasChildren:=false;
+            LoadFiles(n);
+           end;
+          n1:=n.GetFirstChild;
+          if n1<>nil then n:=n1;
          end;
-        n1:=n.GetFirstChild;
-        if n1<>nil then n:=n1;
-       end;
-      //still comparing?
-      i:=0;
-      while n.ImageIndex in [iiFileNone,iiFileComparing] do
-       begin
-        //TODO: check djFileCompare running?
-        Application.ProcessMessages;
-        Sleep(25);
-        inc(i);
-        if i=200 then
-          raise Exception.Create('Timed out waiting for pending file compare');
-       end;
-      //is it non-equal?
-      if (n.ImageIndex>=iiFileNone) and (n.ImageIndex<>iiFileEqual) then
-       begin
-        Screen.Cursor:=crDefault;//see tvFoldersChange
-        tvFolders.Selected:=n;
-        n:=nil;//end loop
+        //still comparing?
+        i:=0;
+        while n.ImageIndex in [iiFileNone,iiFileComparing] do
+         begin
+          //TODO: check djFileCompare running?
+          Application.ProcessMessages;
+          Sleep(25);
+          inc(i);
+          if i=200 then
+            raise Exception.Create('Timed out waiting for pending file compare');
+         end;
+        //is it non-equal?
+        if (n.ImageIndex>=iiFileNone) and (n.ImageIndex<>iiFileEqual) then
+         begin
+          Screen.Cursor:=crDefault;//see tvFoldersChange
+          tvFolders.Selected:=n;
+          n:=nil;//end loop
+         end;
        end;
      end;
   finally
@@ -1855,7 +1862,7 @@ begin
   m1.Parent.Items[i+6].Enabled:=not(m1.Checked);//Delete selected
 end;
 
-function TfrmDirDiffMain.tvFoldersCheck(X,Y:integer):boolean;
+function TfrmDirDiffMain.tvFoldersCheck(NN:TTreeNode;X,Y:integer):boolean;
 var
   n,n0,n1:TTreeNode;
   r:TRect;
@@ -1864,56 +1871,62 @@ begin
   Result:=true;//default
   if tvFolders.StateImages<>nil then
    begin
-    n:=tvFolders.GetNodeAt(X,Y);
+    if NN=nil then
+     begin
+      n:=tvFolders.GetNodeAt(X,Y);
+      if n<>nil then
+       begin
+        r:=n.DisplayRect(true);
+        if not(r.Left-x in [21..34]) then n:=nil;
+       end;
+     end
+    else
+      n:=NN;
     if n<>nil then
      begin
-      r:=n.DisplayRect(true);
-      if r.Left-x in [21..34] then
-       begin
-        case n.StateIndex of
-          1://clear
-            n.StateIndex:=2;
-          2://selected
-            n.StateIndex:=1;
-          3://partial
-           begin
-            n.StateIndex:=1;
-            n0:=n.getNextSibling;
-            n1:=n.GetNext;
-            while n1<>n0 do
-             begin
-              n1.StateIndex:=1;
-              n1:=n1.GetNext;
-             end;
-           end;
-        end;
-        n:=n.Parent;
-        while n<>nil do
+      case n.StateIndex of
+        1://clear
+          n.StateIndex:=2;
+        2://selected
+          n.StateIndex:=1;
+        3://partial
          begin
-          n1:=n.getFirstChild;
-          i:=0;
-          j:=0;
-          while (n1<>nil) and (i=0) do
+          n.StateIndex:=1;
+          n0:=n.getNextSibling;
+          n1:=n.GetNext;
+          while n1<>n0 do
            begin
-            case n1.StateIndex of
-              1://clear
-                if j<>1 then
-                  if j=0 then j:=1 else i:=3;
-              2://selected
-                if j<>2 then
-                  if j=0 then j:=2 else i:=3;
-              3://partial
-                i:=3;
-            end;
-            n1:=n1.getNextSibling;
+            n1.StateIndex:=1;
+            n1:=n1.GetNext;
            end;
-          if i=0 then
-            if j=0 then i:=1 else i:=j;
-          n.StateIndex:=i;
-          n:=n.Parent;
          end;
-        Result:=false;
+      end;
+      n:=n.Parent;
+      while n<>nil do
+       begin
+        n1:=n.getFirstChild;
+        i:=0;
+        j:=0;
+        while (n1<>nil) and (i=0) do
+         begin
+          case n1.StateIndex of
+            1://clear
+              if j<>1 then
+                if j=0 then j:=1 else i:=3;
+            2://selected
+              if j<>2 then
+                if j=0 then j:=2 else i:=3;
+            3://partial
+              i:=3;
+          end;
+          n1:=n1.getNextSibling;
+         end;
+        if i=0 then
+          if j=0 then i:=1 else i:=j;
+        n.StateIndex:=i;
+        n:=n.Parent;
        end;
+      Result:=false;
      end;
    end;
 end;
@@ -1925,7 +1938,7 @@ var
 begin
   //odd! OnChanging occurs before OnMouseDown! reverted to CursorPos here...
   p:=tvFolders.ParentToClient(ScreenToClient(Mouse.CursorPos));
-  AllowChange:=tvFoldersCheck(p.X,p.Y);
+  AllowChange:=tvFoldersCheck(nil,p.X,p.Y);
   FSkipNodeCheck:=not(AllowChange);
 end;
 
@@ -1933,7 +1946,7 @@ procedure TfrmDirDiffMain.tvFoldersMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   if FSkipNodeCheck then FSkipNodeCheck:=false else
-    tvFoldersCheck(X,Y);
+    tvFoldersCheck(nil,X,Y);
 end;
 
 procedure TfrmDirDiffMain.miDeleteClick(Sender: TObject);
@@ -2369,6 +2382,14 @@ begin
     n2.Text:=Copy(s,5,Length(s)-4);
     tvFolders.Selected:=n2;
    end;
+end;
+
+procedure TfrmDirDiffMain.tvFoldersKeyPress(Sender: TObject;
+  var Key: Char);
+begin
+  if (Key=' ') and (tvFolders.StateImages<>nil)
+    and (tvFolders.Selected<>nil) then
+    tvFoldersCheck(tvFolders.Selected,0,0);
 end;
 
 end.
