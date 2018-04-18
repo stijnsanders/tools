@@ -1,3 +1,5 @@
+2.0.5.525
+- focus pattern input box on delete last search results
 2.0.4.494
 - Noob-mode: RegExp checkbox (default not checked)
   (To all non-noobs: just check "RegExp" once and you're set.)
