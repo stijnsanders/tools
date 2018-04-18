@@ -130,6 +130,7 @@ type
     cbSkipOrbit: TCheckBox;
     cbShow: TComboBox;
     cbStartSuspended: TCheckBox;
+    cbIgnTestWildCards: TCheckBox;
     procedure btnCancelClick(Sender: TObject);
     procedure btnOkClick(Sender: TObject);
     procedure panFontClick(Sender: TObject);
@@ -155,6 +156,7 @@ type
     procedure btnIgnDelClick(Sender: TObject);
     procedure btnTryAgainClick(Sender: TObject);
     procedure btnIgnApplyClick(Sender: TObject);
+    procedure cbIgnTestWildCardsClick(Sender: TObject);
   private
     FDemoY,FIgnTD:integer;
     FSoundFilePath:string;
@@ -191,12 +193,16 @@ end;
 
 procedure TfrmSettings.btnOkClick(Sender: TObject);
 var
+  ca:TCloseAction;
   sl:TStringList;
   p:TPoint;
   b1,b2,bs,bc,i,rt:integer;
 const
   bstr:array[boolean] of string=('0','1');
 begin
+  ca:=caFree;
+  FormClose(Self,ca);
+  if ca=caNone then Exit;
   if cbPlaySound.Checked and (FSoundFilePath='') then
     raise Exception.Create('Play sound selected, but no sound file is selected.');
   p.X:=udDragHoldX.Position;
@@ -226,13 +232,11 @@ begin
   bc:=udOrbitCrossSize.Position;
   sl:=TStringList.Create;
   try
-    {
     try
       sl.LoadFromFile(ChangeFileExt(ParamStr(0),'.ini'));
     except
       on EFOpenError do ;
     end;
-    }
     sl.Values['Interval']:=IntToStr(udInterval.Position);
     sl.Values['HideAfter']:=IntToStr(udHideAfter.Position);
     case rbReturnTo.ItemIndex of
@@ -290,7 +294,7 @@ begin
     panBackground1.Color,panBackground2.Color,panFont.Font,
     p,FSoundFilePath,lbIgnores.Items);
   Close;
-end;                                  
+end;
 
 procedure TfrmSettings.ShowSettings(SetClickMS, HideAfterMS,
   AlphaBlendLvl, AlphaBlendLvlCT: integer;
@@ -501,9 +505,9 @@ end;
 
 procedure TfrmSettings.Timer2Timer(Sender: TObject);
 var
-  h,h1:THandle;
+  h,h0,h1:THandle;
   pid,l:cardinal;
-  s:string;
+  s,t:string;
 begin
   dec(FIgnTD);
   if FIgnTD=0 then
@@ -511,13 +515,21 @@ begin
     lblIgnTD.Visible:=false;
     Timer2.Enabled:=false;
     //h:=GetForegroundWindow;
-    h:=GetAncestor(WindowFromPoint(Mouse.CursorPos),GA_ROOT);
+    h1:=WindowFromPoint(Mouse.CursorPos);
+    h0:=GetAncestor(h1,GA_PARENT);
+    h:=GetAncestor(h1,GA_ROOT);
     SetLength(s,$400);
     SetLength(s,GetClassName(h,PChar(s),$400));
     txtIgnClass.Text:=s;
     SetLength(s,$400);
     SetLength(s,GetWindowText(h,PChar(s),$400));
+
+    SetLength(t,$400);
+    SetLength(t,GetWindowText(h0,PChar(t),$400));
+    if (t<>'') and (t<>s) then s:=s+' | '+t;
+
     txtIgnText.Text:=s;
+    txtIgnText.Hint:=s;
     s:='';
     if (s='') and (@QueryFullProcessImageName<>nil) then
      begin
@@ -601,13 +613,32 @@ begin
   if cbSkipOrbit.Checked then s:='°:' else s:=':';
   if rbIgnClass.Checked then
     lbIgnores.ItemIndex:=lbIgnores.Items.Add('Class'+s+txtIgnClass.Text);
-  if rbIgnText.Checked then 
-    lbIgnores.ItemIndex:=lbIgnores.Items.Add('Text'+s+txtIgnText.Text);
-  if rbIgnPath.Checked then 
+  if rbIgnText.Checked then
+    if cbIgnTestWildCards.Checked then
+      lbIgnores.ItemIndex:=lbIgnores.Items.Add('Wild'+s+txtIgnText.Text)
+    else
+      lbIgnores.ItemIndex:=lbIgnores.Items.Add('Text'+s+txtIgnText.Text);
+  if rbIgnPath.Checked then
     lbIgnores.ItemIndex:=lbIgnores.Items.Add('Path'+s+txtIgnPath.Text);
   if rbIgnFile.Checked then 
     lbIgnores.ItemIndex:=lbIgnores.Items.Add('File'+s+txtIgnFile.Text);
   PageControl1.ActivePage:=tsIgn;
+end;
+
+procedure TfrmSettings.cbIgnTestWildCardsClick(Sender: TObject);
+begin
+  if cbIgnTestWildCards.Checked then
+   begin
+    txtIgnText.ReadOnly:=false;
+    txtIgnText.Color:=clWindow;
+    txtIgnText.Text:='*'+txtIgnText.Hint+'*';
+   end
+  else
+   begin
+    txtIgnText.ReadOnly:=true;
+    txtIgnText.ParentColor:=true;
+    txtIgnText.Text:=txtIgnText.Hint;
+   end;
 end;
 
 initialization

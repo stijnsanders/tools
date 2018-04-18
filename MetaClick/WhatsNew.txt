@@ -1,3 +1,6 @@
+v1.4.0.540
+- ignore rule on window title bar text now supports waldcard "*"
+
 v1.3.0.500
 - settings are now loaded from/stored to a file in the folder where MetaClick.exe is
   (in preperation to make it portable) (sorry no convert/export utility)

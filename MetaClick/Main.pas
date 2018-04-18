@@ -1206,19 +1206,47 @@ begin
   FIgnores.Free;
 end;
 
+function MatchWildCards(const filter,value:string):boolean;
+var
+  fl,vl:integer;
+  function MatchPartial(fi,vi:integer): boolean;
+  begin
+    Result:=true;//default
+    while Result and (fi<=fl) do
+      if filter[fi]='*' then
+        Result:=MatchPartial(fi+1,vi)
+      else
+        if (vi<=vl) and (filter[fi]=value[vi]) then
+         begin
+          inc(fi);
+          inc(vi);
+         end
+        else
+          Result:=false;
+  end;
+begin
+  fl:=Length(filter);
+  vl:=Length(value);
+  Result:=MatchPartial(1,1);
+end;
+
 function TfrmMetaClick.CheckIgnores(SkipOrbit:boolean):boolean;
 var
   i,j,l:integer;
   c1,t1,p1:boolean;
-  c,t,p,f,s:string;
-  h,h1:THandle;
+  c,t,p,f,s,u:string;
+  h,h0,h1:THandle;
   pid,ll:cardinal;
 begin
   Result:=true;//default
   if FIgnores.Count<>0 then
    begin
     //h:=GetForegroundWindow;
-    h:=GetAncestor(WindowFromPoint(Mouse.CursorPos),GA_ROOT);
+    //h:=GetAncestor(WindowFromPoint(Mouse.CursorPos),GA_ROOT);
+    h1:=WindowFromPoint(Mouse.CursorPos);
+    h0:=GetAncestor(h1,GA_PARENT);
+    h:=GetAncestor(h1,GA_ROOT);
+
     c1:=true;
     t1:=true;
     p1:=true;
@@ -1252,6 +1280,21 @@ begin
               t1:=false;
              end;
             if (t<>'') and (Copy(s,j,l-j+1)=t) then Result:=false;
+           end;
+          'W'://wildcards
+           begin
+            if t1 then
+             begin
+              SetLength(t,$400);
+              SetLength(t,GetWindowText(h,PChar(t),$400));
+
+              SetLength(u,$400);
+              SetLength(u,GetWindowText(h0,PChar(u),$400));
+              if (u<>'') and (t<>u) then t:=t+' | '+u;
+
+              t1:=false;
+             end;
+            if (t<>'') and MatchWildCards(Copy(s,j,l-j+1),t) then Result:=false;
            end;
           'P','F'://path,file
            begin

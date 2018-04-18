@@ -1226,6 +1226,15 @@ object frmSettings: TfrmSettings
         ParentColor = False
         ParentFont = False
       end
+      object cbIgnTestWildCards: TCheckBox
+        Left = 128
+        Top = 56
+        Width = 233
+        Height = 25
+        Caption = 'Support wildcard "*"'
+        TabOrder = 11
+        OnClick = cbIgnTestWildCardsClick
+      end
       object rbIgnClass: TRadioButton
         Left = 0
         Top = 0
@@ -1239,9 +1248,9 @@ object frmSettings: TfrmSettings
       object rbIgnText: TRadioButton
         Left = 0
         Top = 56
-        Width = 257
+        Width = 121
         Height = 25
-        Caption = 'Windows with title text:'
+        Caption = 'Title text:'
         TabOrder = 2
       end
       object rbIgnPath: TRadioButton
