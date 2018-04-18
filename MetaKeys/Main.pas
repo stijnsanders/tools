@@ -59,7 +59,6 @@ type
     KeyDefHot:TPanel;
     KeyDefHotTC:cardinal;
     KeyDefMod:array[0..KeyDefModMax] of integer;
-    KeyDefModNLFix:boolean;
     KeyDefCount,KeyRows,KeyCols,KeyV:integer;
     KeyDefs:array of record
       s1,s2,s3:string;
@@ -148,7 +147,6 @@ begin
   KeyDefHot:=nil;
   KeyV:=0;//see also LoadKeys
   for x:=0 to KeyDefModMax do KeyDefMod[KeyDefModMax]:=0;
-  KeyDefModNLFix:=false;
 
   //default values
   Clr1:=$DDCCBB;//$00CCFF;//yellow
@@ -731,14 +729,15 @@ var
   inputs:array[0..(KeyDefModMax+2)*2] of TInput;
   inputcount:integer;
   procedure SetK(idx:integer;code:word;dn:boolean);
+  var
+    x:DWORD;
   begin
     inputs[idx].Itype:=INPUT_KEYBOARD;
     inputs[idx].ki.wVk:=code;
     inputs[idx].ki.wScan:=0;
-    if dn then
-      inputs[idx].ki.dwFlags:=0
-    else
-      inputs[idx].ki.dwFlags:=KEYEVENTF_KEYUP;
+    if dn then x:=0 else x:=KEYEVENTF_KEYUP;
+    if code in [VK_PRIOR..VK_HELP] then x:=KEYEVENTF_EXTENDEDKEY;
+    inputs[idx].ki.dwFlags:=x;
     inputs[idx].ki.time:=0;
     inputs[idx].ki.dwExtraInfo:=0;
     inputcount:=idx+1;//assert largest one last!
@@ -790,21 +789,6 @@ begin
    begin
     if KeyDefMod[0]<>0 then
      begin
-      //detect arrow+shift+numlock
-      if (Mods and $1)<>0 then
-       begin
-        if KeyDefs[i].vk in [VK_PRIOR..VK_DOWN] then
-         begin
-          j:=0;
-          while (j<=KeyDefModMax) and (KeyDefMod[j]<>VK_SHIFT) do inc(j);
-          if (j<=KeyDefModMax) and (GetKeyState(VK_NUMLOCK)=1) then
-           begin
-            KeyDefModNLFix:=true;    
-            SetK(inputcount,VK_NUMLOCK,true);
-            SetK(inputcount,VK_NUMLOCK,false);
-           end;
-         end;
-       end;
       //modified event
       j:=0;
       while (j<=KeyDefModMax) and (KeyDefMod[j]<>0) do
@@ -828,12 +812,6 @@ begin
             if KeyDefs[k].vk=-vk then
               KeyDefs[k].p.Color:=Clr1;
           KeyDefMod[j]:=0;
-         end;
-        if KeyDefModNLFix then
-         begin
-          KeyDefModNLFix:=false;
-          SetK(inputcount,VK_NUMLOCK,true);
-          SetK(inputcount,VK_NUMLOCK,false);
          end;
        end;
       SetKeyV(0);

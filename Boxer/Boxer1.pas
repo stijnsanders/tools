@@ -113,28 +113,31 @@ begin
     FLastHWND:=h1;
    end
   else
-  if BoxHandle1.Checked or BoxHandleOnce1.Checked then
    begin
-    f:=SWP_NOACTIVATE or SWP_NOSIZE or SWP_NOMOVE or SWP_NOZORDER or SWP_HIDEWINDOW;
-    if h<>FLastHWND then
+    if BoxHandle1.Checked or BoxHandleOnce1.Checked then
      begin
-      FLastHWND:=0;
-      h1:=GetAncestor(GetShellWindow,GA_ROOT);
-      if (h<>0) and (h<>h1) and (GetWindow(h,GW_OWNER)<>Handle) and
-        (GetWindowRect(h,r)) then
-        if (r.Left<>r.Right) and (r.Top<>r.Bottom) then
-         begin
-          SetLength(s,1023);
-          SetLength(s,GetClassNameW(h,PWideChar(s),1023));
-          if s<>'TfrmBoxerMain' then //if s<>ClassName then
+      f:=SWP_NOACTIVATE or SWP_NOSIZE or SWP_NOMOVE or SWP_NOZORDER or SWP_HIDEWINDOW;
+      if h<>FLastHWND then
+       begin
+        FLastHWND:=0;
+        h1:=GetAncestor(GetShellWindow,GA_ROOT);
+        if (h<>0) and (h<>h1) and (GetWindow(h,GW_OWNER)<>Handle) and
+          (GetWindowRect(h,r)) then
+          if (r.Left<>r.Right) and (r.Top<>r.Bottom) then
            begin
-            frmSwitchHandle.SetBounds(r.Right-FTagOffset,r.Top+SysBorder+2,16,16);
-            f:=f xor SWP_NOZORDER xor SWP_HIDEWINDOW or SWP_SHOWWINDOW;
-            FLastHWND:=h;
+            SetLength(s,1023);
+            SetLength(s,GetClassNameW(h,PWideChar(s),1023));
+            if s<>'TfrmBoxerMain' then //if s<>ClassName then
+             begin
+              frmSwitchHandle.SetBounds(r.Right-FTagOffset,r.Top+SysBorder+2,16,16);
+              f:=f xor SWP_NOZORDER xor SWP_HIDEWINDOW or SWP_SHOWWINDOW;
+              FLastHWND:=h;
+             end;
            end;
-         end;
-      SetWindowPos(frmSwitchHandle.Handle,HWND_TOPMOST,0,0,0,0,f);
+        SetWindowPos(frmSwitchHandle.Handle,HWND_TOPMOST,0,0,0,0,f);
+       end;
      end;
+    Mouse.IsDragging
    end;
 end;
 
@@ -459,11 +462,17 @@ begin
         if (h=hf) or IsChild(h,hf) then
          begin
           FBoxed[i].p1.BevelOuter:=bvLowered;
+          FBoxed[i].p1.Color:=clActiveCaption;
+          FBoxed[i].p1.Font.Color:=clCaptionText;
           t:=s;//display in caption, see below
           if IsZoomed(h) then FLastMaxed:=h else FLastMaxed:=0;
          end
         else
+         begin
           FBoxed[i].p1.BevelOuter:=bvRaised;
+          FBoxed[i].p1.Color:=clBtnFace;
+          FBoxed[i].p1.Font.Color:=clBtnText;
+         end;
        end;
      end;
   if c=0 then
@@ -506,7 +515,7 @@ begin
     c:=Sender as TControl;
   if FindTab(c,i) then
    begin
-   
+
     if FLastMaxed<>0 then
      begin
       //send to back? tried but didn't work...
