@@ -135,7 +135,6 @@ object frmDirDiffMain: TfrmDirDiffMain
       Height = 22
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 0
-      Text = 'txtFind'
       Visible = False
       OnKeyPress = txtFindKeyPress
     end
