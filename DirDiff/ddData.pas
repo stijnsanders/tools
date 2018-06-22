@@ -1313,8 +1313,8 @@ begin
     j:=FData[i].FContentLast;
     l:=j-EqLinesHead;
     if l>aa then aa:=l;
-    q[i*2  ]:=j;//closing entry past last line
-    q[i*2+1]:=j+EqLinesTail;
+    q[   i*2  ]:=j;//closing entry past last line
+    q[   i*2+1]:=j+EqLinesTail;
     q[qi+i*2  ]:=EqLinesHead;//start
     q[qi+i*2+1]:=j;
    end;
@@ -1326,35 +1326,47 @@ begin
   while qi<>qx do
    begin
     //split
-    ff[0]:=q[qi];
-    ff[1]:=q[qi+1];
     di:=0;
-    dj:=1;
+    ff[0]:=q[qi  ];
+    ff[1]:=q[qi+1];
+    while (di<dc-1) and (ff[di*2]=ff[di*2+1]) do
+     begin
+      inc(di);
+      ff[di*2  ]:=q[qi+di*2  ];
+      ff[di*2+1]:=q[qi+di*2+1];
+     end;
+    dj:=di+1;
     while dj<>dc do
      begin
       cx:=ff[di*2];
       cy:=ff[di*2+1];
-      if cx=-1 then
-       begin
-        cx:=q[qi+di*2];
-        cy:=q[qi+di*2+1];
-       end;
       dx:=q[qi+dj*2];
       dy:=q[qi+dj*2+1];
-      ax:=cy-cx;
-      bx:=dy-dx;
-      if ax>bx then l:=ax else l:=bx; //assert l<Length(kkk)
+      if cx=cy then
+       begin
+        i:=0;
+        k:=1;
+        l:=0;
+        ax:=0;
+        bx:=0;
+       end
+      else
+       begin
+        ax:=cy-cx;
+        bx:=dy-dx;
+        if ax>bx then l:=ax else l:=bx; //assert l<Length(kkk)
+        i:=((dy-dx)-(cy-cx)+1) div 2;
+        if i<cy-cx then i:=0;
+        for k:=-i to i do
+         begin
+          kk:=kx(k);
+          j:=cx-1; kk.f:=j; kk.fk:=k; kk.fx:=j; kk.fy:=j;
+          j:=cy  ; kk.b:=j; kk.bk:=k; kk.bx:=j; kk.by:=j;
+         end;
+        k:=i+2;
+       end;
       ay:=0;//counter warning
       by:=0;//counter warning
-      i:=((dy-dx)-(cy-cx)+1) div 2;
-      if i<cy-cx then i:=0;
-      for k:=-i to i do
-       begin
-        kk:=kx(k);
-        j:=cx-1; kk.f:=j; kk.fk:=k; kk.fx:=j; kk.fy:=j;
-        j:=cy  ; kk.b:=j; kk.bk:=k; kk.bx:=j; kk.by:=j;
-       end;
-      k:=i+2;
       while i<>l do
        begin
         kk:=kx(-i-1);
@@ -1477,8 +1489,8 @@ begin
       //next source
       if k>i then
        begin
-        ff[dj*2  ]:=-1;
-        ff[dj*2+1]:=-1;
+        ff[dj*2  ]:=dx;
+        ff[dj*2+1]:=dx;
 
         inc(di);
         if di=dj then
@@ -1507,11 +1519,37 @@ begin
     //if (k>i) or (ff[0]=ff[1]) then
     k:=0;
     for i:=0 to dc-1 do if ff[i*2]<ff[i*2+1] then inc(k);
-    if k<2 then
+    if k=0 then
      begin
       //nothing found, skip (and invalidate for below)
       for i:=0 to dc-1 do q[qi+i*2+1]:=q[qi+i*2];
-      inc(qi,qStride);
+     end
+    else
+    if k=1 then
+     begin
+      //only some lines in 1 set, fragment
+      if qx=ql then
+       begin
+        inc(ql,qGrowStep*qStride);
+        SetLength(q,ql);
+       end;
+      for i:=0 to dc-1 do
+        if ff[i*2]=ff[i*2+1] then
+         begin
+          q[qx+i*2  ]:=q[qi+i*2  ];
+          q[qx+i*2+1]:=q[qi+i*2+1];
+          q[qi+i*2+1]:=q[qi+i*2  ];
+         end
+        else
+         begin
+          q[qx+i*2  ]:=q[qi+i*2+1];
+          q[qx+i*2+1]:=q[qi+i*2+1];
+          //q[qi+i*2  ]:=ff[i*2  ];
+          //q[qi+i*2+1]:=ff[i*2+1];
+         end;
+      q[qx+qNext]:=q[qi+qNext];
+      q[qi+qNext]:=qx;
+      inc(qx,qStride);
      end
     else
      begin
@@ -1570,13 +1608,14 @@ begin
        end;
       //equal part
       for i:=0 to dc-1 do
-       begin
-        q[qi+i*2  ]:=ff[i*2  ];
-        q[qi+i*2+1]:=ff[i*2+1];
-       end;
+        if ff[i*2]<>-1 then
+         begin
+          q[qi+i*2  ]:=ff[i*2  ];
+          q[qi+i*2+1]:=ff[i*2+1];
+         end;
       //q[qi+qNext]:=//see above
-      inc(qi,qStride);
      end;
+    inc(qi,qStride);
    end;
 
   SetLength(kkk,0);

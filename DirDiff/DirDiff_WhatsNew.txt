@@ -1,3 +1,6 @@
+v2.0.4.535
+Fixed issue with more-than-2-way diffs
+
 v2.0.3.512
 Fixed issue with UTF-8 sensitive characters in ANSI file.
 Fixed issue with Ctrl+Shift+Up/Down past start/end of files list.
