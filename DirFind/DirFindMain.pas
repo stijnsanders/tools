@@ -388,6 +388,7 @@ begin
   Caption:=AppName;
   Application.Title:=AppName;
   PopupFinder.Delete;
+  FPopupNode:=nil;
   if tvMatches.Focused and (tvMatches.Selected=nil) then cbPattern.SetFocus;
 end;
 
