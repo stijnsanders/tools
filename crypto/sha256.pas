@@ -3,8 +3,8 @@
   sha256
   by Stijn Sanders
   http://yoy.be/md5
-  2013-2015
-  v1.0.3
+  2013-2018
+  v1.0.4
 
   based on http://en.wikipedia.org/wiki/SHA-2
 
@@ -14,9 +14,6 @@
 unit sha256;
 
 interface
-
-var
-  SHA256Last:array[0..7] of cardinal;
 
 function SHA256Hash(x:UTF8String):UTF8String;
 
@@ -65,7 +62,6 @@ const
     $391c0cb3, $4ed8aa4a, $5b9cca4f, $682e6ff3,
     $748f82ee, $78a5636f, $84c87814, $8cc70208,
     $90befffa, $a4506ceb, $bef9a3f7, $c67178f2);
-  hex:array[0..15] of AnsiChar='0123456789abcdef';
 var
   a,b:cardinal;
   dl,i,j:integer;
@@ -151,10 +147,9 @@ begin
      end;
     for j:=0 to 7 do inc(h[j],g[j]);
    end;
-  for j:=0 to 7 do SHA256Last[j]:=h[j];
-  SetLength(Result,64);
-  for j:=0 to 63 do
-    Result[j+1]:=hex[(h[j shr 3] shr ((63-j) shl 2)) and $F];
+  SetLength(Result,32);
+  for j:=0 to 31 do
+    byte(Result[j+1]):=h[j shr 2] shr ((j xor 3) shl 3);
 end;
 
 end.

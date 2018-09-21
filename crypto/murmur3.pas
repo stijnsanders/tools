@@ -3,8 +3,8 @@
   murmur3
   by Stijn Sanders
   http://yoy.be/md5
-  2017
-  v1.0.0
+  2017-2018
+  v1.0.1
 
   based on https://github.com/aappleby/smhasher/blob/master/src/MurmurHash3.cpp
   (92cf370 on Jan 9 2016)
@@ -76,7 +76,13 @@ begin
   k1:=k1*c1;
   k1:=((k1 shl 15) or (k1 shr 17))*c2;
   h1:=h1 xor k1;
-  Result:=Format('%.8x',[fmix32(h1 xor l)]);
+  //
+  k1:=fmix32(h1 xor l);
+  SetLength(Result,4);
+  byte(Result[1]):=k1 shr 24;
+  byte(Result[2]):=k1 shr 16;
+  byte(Result[3]):=k1 shr 8;
+  byte(Result[4]):=k1;
 end;
 
 function MurMurHash3_x86_128(const x:UTF8String; seed:cardinal):UTF8String;
@@ -179,7 +185,23 @@ begin
   h3:=h3+h1;
   h4:=h4+h1;
 
-  Result:=Format('%.8x%.8x%.8x%.8x',[h1,h2,h3,h4]);
+  SetLength(Result,16);
+  byte(Result[ 1]):=h1 shr 24;
+  byte(Result[ 2]):=h1 shr 16;
+  byte(Result[ 3]):=h1 shr 8;
+  byte(Result[ 4]):=h1;
+  byte(Result[ 5]):=h2 shr 24;
+  byte(Result[ 6]):=h2 shr 16;
+  byte(Result[ 7]):=h2 shr 8;
+  byte(Result[ 8]):=h2;
+  byte(Result[ 9]):=h3 shr 24;
+  byte(Result[10]):=h3 shr 16;
+  byte(Result[11]):=h3 shr 8;
+  byte(Result[12]):=h3;
+  byte(Result[13]):=h4 shr 24;
+  byte(Result[14]):=h4 shr 16;
+  byte(Result[15]):=h4 shr 8;
+  byte(Result[16]):=h4;
 end;
 
 function MurMurHash3_x64_128(const x:UTF8String; seed:cardinal):UTF8String;
@@ -245,7 +267,24 @@ begin
   h2:=fmix32(h2);
   h1:=h1+h2;
   h2:=h2+h1;
-  Result:=Format('%.16x%.16x',[h1,h2]);
+
+  SetLength(Result,16);
+  byte(Result[ 1]):=h1 shr 56;
+  byte(Result[ 2]):=h1 shr 48;
+  byte(Result[ 3]):=h1 shr 40;
+  byte(Result[ 4]):=h1 shr 32;
+  byte(Result[ 5]):=h1 shr 24;
+  byte(Result[ 6]):=h1 shr 16;
+  byte(Result[ 7]):=h1 shr 8;
+  byte(Result[ 8]):=h1;
+  byte(Result[ 9]):=h2 shr 56;
+  byte(Result[10]):=h2 shr 48;
+  byte(Result[11]):=h2 shr 40;
+  byte(Result[12]):=h2 shr 32;
+  byte(Result[13]):=h2 shr 24;
+  byte(Result[14]):=h2 shr 16;
+  byte(Result[15]):=h2 shr 8;
+  byte(Result[16]):=h2;
 end;
 
 end.

@@ -3,8 +3,8 @@
   sha1Stream
   by Stijn Sanders
   http://yoy.be/sha1
-  2012-2013
-  v1.0.1
+  2012-2018
+  v1.0.2
 
   based on http://www.ietf.org/rfc/rfc3174.txt
 
@@ -44,8 +44,6 @@ end;
 }
 
 function SHA1HashFromStream(Stream:TStream;ReadBytes:int64=-1):AnsiString;
-const
-  hex:array[0..15] of AnsiChar='0123456789abcdef';
 var
   dl:int64;
   a,b:cardinal;
@@ -175,9 +173,9 @@ begin
      end;
     for j:=0 to 4 do inc(h[j],g[j]);
    end;
-  SetLength(Result,40);
-  for j:=0 to 39 do
-    Result[j+1]:=hex[h[j shr 3] shr ((47-j) shl 2) and $F];
+  SetLength(Result,20);
+  for j:=0 to 19 do
+    byte(Result[j+1]):=h[j shr 2] shr ((j xor 3) shl 3);
 end;
 
 end.

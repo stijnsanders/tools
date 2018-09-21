@@ -3,8 +3,8 @@
   HashUtils
   by Stijn Sanders
   http://yoy.be/md5
-  2015
-  v1.0.2
+  2015-2018
+  v1.0.3
 
   based on
   https://en.wikipedia.org/wiki/Hmac
@@ -28,9 +28,13 @@ function HMAC(HashFn: THashFunction; BlockSize: integer;
 function PBKDF2(PRF:TPseudoRandomFunction;HashLength:cardinal;
   const Password,Salt:UTF8String;Iterations,KeyLength:cardinal):UTF8String;
 
+function HexEncode(const x:UTF8String):UTF8String;
+function HexEncodeUpperCase(const x:UTF8String):UTF8String;
+function HexDecode(const x:UTF8String):UTF8String;
+
 function Base64Encode(const x:UTF8String):UTF8String;
 function Base64Decode(const x:UTF8String):UTF8String;
-  
+
 implementation
 
 {$D-}
@@ -39,7 +43,37 @@ implementation
 {$WARN UNSAFE_CODE OFF}
 {$WARN UNSAFE_TYPE OFF}
 
-function UnHex(const x:UTF8String):UTF8String;
+function HexEncode(const x:UTF8String):UTF8String;
+var
+  i,l:integer;
+const
+  hex:array[0..15] of AnsiChar='0123456789abcdef';
+begin
+  l:=Length(x);
+  SetLength(Result,l*2);
+  for i:=1 to l do
+   begin
+    Result[i*2-1]:=hex[byte(x[i]) shr $4];
+    Result[i*2  ]:=hex[byte(x[i]) and $F];
+   end;
+end;
+
+function HexEncodeUpperCase(const x:UTF8String):UTF8String;
+var
+  i,l:integer;
+const
+  hex:array[0..15] of AnsiChar='0123456789ABCDEF';
+begin
+  l:=Length(x);
+  SetLength(Result,l*2);
+  for i:=1 to l do
+   begin
+    Result[i*2-1]:=hex[byte(x[i]) shr $4];
+    Result[i*2  ]:=hex[byte(x[i]) and $F];
+   end;
+end;
+
+function HexDecode(const x:UTF8String):UTF8String;
 var
   i,l:integer;
 begin
@@ -66,7 +100,7 @@ var
   i:integer;
 begin
   //assert BlockSize=Length(HashFn('')) div 2
-  if Length(Key)>BlockSize then k:=UnHex(HashFn(Key)) else
+  if Length(Key)>BlockSize then k:=HashFn(Key) else
    begin
     k:=Key;
     i:=Length(k);
@@ -82,7 +116,7 @@ begin
   //TODO: speed-up by doing 32 bits at a time
   for i:=1 to BlockSize do byte(h1[i]):=byte(k[i]) xor $5C;
   for i:=1 to BlockSize do byte(h2[i]):=byte(k[i]) xor $36;
-  Result:=HashFn(h1+UnHex(HashFn(h2+Msg)));
+  Result:=HashFn(h1+HashFn(h2+Msg));
 end;
 
 {
@@ -114,14 +148,14 @@ begin
   while (i<KeyLength) do
    begin
     inc(j);
-    x:=UnHex(PRF(Password,Salt+
+    x:=PRF(Password,Salt+
       AnsiChar(j shr 24)+AnsiChar((j shr 16) and $FF)+
-      AnsiChar((j shr 8) and $FF)+AnsiChar(j and $FF)));
+      AnsiChar((j shr 8) and $FF)+AnsiChar(j and $FF));
     y:=x;
     c:=Iterations-1;
     while c<>0 do
      begin
-      x:=UnHex(PRF(Password,x));
+      x:=PRF(Password,x);
       for k:=1 to Length(x) do
         byte(y[k]):=byte(y[k]) xor byte(x[k]);
       dec(c);

@@ -3,8 +3,8 @@
   md5
   by Stijn Sanders
   http://yoy.be/md5
-  2012 - 2013
-  v1.0.3
+  2012-2018
+  v1.0.4
 
   based on http://www.ietf.org/rfc/rfc1321.txt
 
@@ -51,7 +51,6 @@ const
     $655b59c3,$8f0ccc92,$ffeff47d,$85845dd1,
     $6fa87e4f,$fe2ce6e0,$a3014314,$4e0811a1,
     $f7537e82,$bd3af235,$2ad7d2bb,$eb86d391);
-  hex:array[0..15] of AnsiChar='0123456789abcdef';
 var
   a:cardinal;
   dl,i,j,k,l:integer;
@@ -135,9 +134,9 @@ begin
     for k:=0 to 3 do inc(h[k],g[k]);
     inc(i,16);
    end;
-  SetLength(Result,32);
-  for k:=0 to 31 do
-    Result[k+1]:=hex[h[k shr 3] shr ((k xor 1) shl 2) and $F];
+  SetLength(Result,16);
+  for k:=0 to 15 do
+    byte(Result[k+1]):=h[k shr 2] shr ((k and 3) shl 3);
 end;
 
 end.

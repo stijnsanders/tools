@@ -3,8 +3,8 @@
   sha512
   by Stijn Sanders
   http://yoy.be/md5
-  2015
-  v1.0.0
+  2015-2018
+  v1.0.1
 
   based on https://github.com/bitcoin/bitcoin/blob/master/src/crypto/sha512.cpp
 
@@ -14,9 +14,6 @@
 unit sha512;
 
 interface
-
-var
-  SHA512Last:array[0..7] of UInt64;
 
 function SHA512Hash(x:UTF8String):UTF8String;
 
@@ -91,9 +88,8 @@ const
     UInt64($28db77f523047d84),UInt64($32caab7b40c72493),
     UInt64($3c9ebe0a15c9bebc),UInt64($431d67c49c100d4c),
     UInt64($4cc5d4becb3e42b6),UInt64($597f299cfc657e2a),
-    UInt64($5fcb6fab3ad6faec),UInt64($6c44198c4a475817));
-
-  hex:array[0..15] of AnsiChar='0123456789abcdef';
+    UInt64($5fcb6fab3ad6faec),UInt64($6c44198c4a475817)
+  );
 var
   a,b:UInt64;
   dl,i,j:integer;
@@ -179,10 +175,9 @@ begin
      end;
     for j:=0 to 7 do h[j]:=h[j]+g[j];
    end;
-  for j:=0 to 7 do SHA512Last[j]:=h[j];
-  SetLength(Result,127);
-  for j:=0 to 127 do
-    Result[j+1]:=hex[(h[j shr 4] shr (((127-j) shl 2) mod 64)) and $F];
+  SetLength(Result,64);
+  for j:=0 to 63 do
+    byte(Result[j+1]):=h[j shr 3] shr ((j xor 7) shl 3);
 end;
 
 end.

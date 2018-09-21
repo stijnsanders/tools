@@ -3,8 +3,8 @@
   aes
   by Stijn Sanders
   http://yoy.be/md5
-  2016
-  v1.0.0
+  2016-2018
+  v1.0.1
 
   based on http://csrc.nist.gov/publications/fips/fips197/fips-197.pdf
 
@@ -24,6 +24,7 @@ type
 function AES128Cipher(InBlock:AESBlock;Key:AES128Key):AESBlock;
 function AES128Decipher(InBlock:AESBlock;Key:AES128Key):AESBlock;
 function AES192Cipher(InBlock:AESBlock;Key:AES192Key):AESBlock;
+function AES192Decipher(InBlock:AESBlock;Key:AES192Key):AESBlock;
 function AES256Cipher(InBlock:AESBlock;Key:AES256Key):AESBlock;
 function AES256Decipher(InBlock:AESBlock;Key:AES256Key):AESBlock;
 

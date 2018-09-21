@@ -3,8 +3,8 @@
   ripemd160Stream
   by Stijn Sanders
   http://yoy.be/ripemd160
-  2013
-  v1.0.1
+  2013-2018
+  v1.0.2
 
   based on http://homes.esat.kuleuven.be/~bosselae/ripemd160.html
 
@@ -54,7 +54,6 @@ const
     $00000000,$5a827999,$6ed9eba1,$8f1bbcdc,$a953fd4e);
   add2:array[0..4] of cardinal=(
     $50a28be6,$5c4dd124,$6d703ef3,$7a6d76e9,$00000000);
-  hex:array[0..15] of AnsiChar='0123456789abcdef';
 var
   dl:int64;
   a,r,s,k:cardinal;
@@ -172,9 +171,9 @@ begin
     f[4]:=f[0]+gb+hc;
     f[0]:=a;
    end;
-  SetLength(Result,40);
-  for k:=0 to 39 do
-    Result[k+1]:=hex[f[k shr 3] shr ((k xor 1) shl 2) and $F];
+  SetLength(Result,20);
+  for k:=0 to 19 do
+    byte(Result[k+1]):=f[k shr 2] shr ((k and 3) shl 3);
 end;
 
 end.
