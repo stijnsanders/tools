@@ -56,6 +56,8 @@ function Multiply(const a:TBInt;b:byte):TBInt; overload;
 function Multiply(const a,b:TBInt):TBInt; overload;
 procedure DivMod(const a:TBInt;b:byte;var q:TBInt;var m:byte); overload;
 procedure DivMod(const a,b:TBint;var q,m:TBint); overload;
+function Power(const a,b:TBInt):TBInt;
+//function PowMod(const a,b,n:TBint):TBInt;
 
 implementation
 
@@ -413,7 +415,7 @@ begin
   la:=Length(a);
   lb:=Length(b);
   while (la<>0) and (byte(a[la-1+BIntBase])=0) do dec(la);
-  while (lb<>0) and (byte(a[lb-1+BIntBase])=0) do dec(lb);
+  while (lb<>0) and (byte(b[lb-1+BIntBase])=0) do dec(lb);
   xa:=la+lb;
   SetLength(x,xa);
   if xa<>0 then
@@ -577,5 +579,34 @@ begin
         byte(m[ia+BIntBase]):=byte(ra[ia+BIntBase]);
    end;
 end;
+
+function Power(const a,b:TBInt):TBInt;
+var
+  n,r:TBInt;
+  xb:byte;
+  lb,ib,nb:cardinal;
+begin
+  n:=Clone(a);
+  r:=IntToBInt(1);
+  ib:=0;
+  lb:=Length(b);
+  while ib<lb do
+   begin
+    xb:=byte(b[ib+BIntBase]);
+    inc(ib);
+    nb:=8;
+    while (nb<>0) and (xb<>0) do
+     begin
+      dec(nb);
+      if (xb and 1)<>0 then
+        r:=Multiply(r,n);
+      xb:=xb shr 1;
+      if not((xb=0) and (ib=lb)) then n:=Multiply(n,n);
+     end;
+   end;
+  Result:=Clone(r);
+end;
+
+//function PowMod(const a,b,n:TBint):TBInt;
 
 end.
