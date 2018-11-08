@@ -57,7 +57,7 @@ function Multiply(const a,b:TBInt):TBInt; overload;
 procedure DivMod(const a:TBInt;b:byte;var q:TBInt;var m:byte); overload;
 procedure DivMod(const a,b:TBint;var q,m:TBint); overload;
 function Power(const a,b:TBInt):TBInt;
-//function PowMod(const a,b,n:TBint):TBInt;
+function PowMod(const a,b,n:TBint):TBInt;
 
 implementation
 
@@ -333,7 +333,7 @@ begin
      end
     else
      begin
-      dec(xa,c);
+      if c<>0 then dec(xa);
       c:=0;
      end;
     byte(Result[i+BIntBase]):=xa;
@@ -364,7 +364,7 @@ begin
      end
     else
      begin
-      dec(xa,c);
+      if c<>0 then dec(xa);
       c:=0;
      end;
     byte(Result[i+BintBase]):=byte(xa-xb);
@@ -483,7 +483,7 @@ end;
 
 procedure DivMod(const a,b:TBint;var q,m:TBint);
 var
-  la,lb,lq,ia,ib,xa,xb,xc,xq:cardinal;
+  la,lb,lq,ia,ib,na,xa,xb,xc,xq:cardinal;
   ra,rb,rc:TBInt;//ra,rb just in case (q=a) or (q=b) or (m=a) or (m=b)
   c:boolean;
 begin
@@ -518,59 +518,62 @@ begin
         rb[ib+BIntBase]:=b[ib+BIntBase];
     //rc will hold rb*xq below
     SetLength(rc,la);
-    lq:=lb-la+1;
+    lq:=la-lb;
     SetLength(q,lq);
+    xa:=0;
+    na:=la;
     while lq<>0 do
      begin
-      dec(lq);
-      xq:=byte(ra[la-1+BIntBase]) div byte(rb[lb-1+BIntBase]);
-      c:=true;
-      while c do
+      xa:=(xa shl 8) or byte(ra[na-1+BIntBase]);
+      xq:=xa div byte(rb[lb-1+BIntBase]);
+      if xq=0 then
+        dec(na)
+      else
        begin
-        ib:=0;
-        xc:=0;
-        while ib<la do
+        c:=true;
+        while c do
          begin
-          if ib<lb then inc(xc,byte(rb[ib+BIntBase])*xq);
-          byte(rc[ib+BIntBase]):=byte(xc);
-          xc:=xc shr 8;
-          inc(ib);
-         end;
-        //assert xc=0
-        //c:=IsGreaterThan(rc,ra);
-        ia:=la;
-        while (ia<>0) and (rc[ia-1+BIntBase]=ra[ia-1+BIntBase]) do dec(ia);
-        c:=(ia=0) or (rc[ia-1+BIntBase]>ra[ia-1+BIntBase]);
-        if c then dec(xq);
-       end;
-      byte(q[lq+BIntBase]):=xq;
-      //ra:=Subtract(ra,rc);
-      ia:=0;
-      xc:=0;
-      while ia<la do
-       begin
-        xa:=byte(ra[ia+BIntBase]);
-        xb:=byte(rc[ia+BIntBase]);
-        if (xa<xc) or (xa<xb) then
-         begin
-          inc(xa,$100-xc);
-          xc:=1;
-         end
-        else
-         begin
-          dec(xa,xc);
+          ia:=na-lb;
+          ib:=0;
           xc:=0;
+          while ia<la do
+           begin
+            if ib<lb then inc(xc,byte(rb[ib+BIntBase])*xq);
+            byte(rc[ia+BIntBase]):=byte(xc);
+            xc:=xc shr 8;
+            inc(ia);
+            inc(ib);
+           end;
+          ia:=la;
+          while (ia<>0) and (rc[ia-1+BIntBase]=ra[ia-1+BIntBase]) do dec(ia);
+          c:=(ia=0) or (rc[ia-1+BIntBase]>ra[ia-1+BIntBase]);
+          if c then dec(xq);
          end;
-        byte(ra[ia+BintBase]):=byte(xa-xb);
-        inc(ia);
-       end;
-      while (la<>0) and (ra[la-1+BIntBase]=0) do dec(la);
-      if la=0 then
-        while lq<>0 do
+        dec(lq);
+        byte(q[lq+BIntBase]):=xq;
+        ia:=lq;
+        xc:=0;
+        while ia<la do
          begin
-          dec(lq);
-          byte(q[lq+BIntBase]):=0;
+          xa:=byte(ra[ia+BIntBase]);
+          xb:=byte(rc[ia+BIntBase]);
+          if (xa<xc) or (xa<xb) then
+           begin
+            inc(xa,$100-xc);
+            xc:=1;
+           end
+          else
+           begin
+            if xc<>0 then dec(xa);
+            xc:=0;
+           end;
+          byte(ra[ia+BintBase]):=byte(xa-xb);
+          inc(ia);
          end;
+        if (la<>0) and (ra[la+BIntBase]=0) then dec(la);
+        na:=la;
+        xa:=0;
+       end;
      end;
     while (la<>0) and (byte(ra[la-1+BIntBase])=0) do dec(la);
     SetLength(m,la);
@@ -607,6 +610,31 @@ begin
   Result:=Clone(r);
 end;
 
-//function PowMod(const a,b,n:TBint):TBInt;
+function PowMod(const a,b,n:TBint):TBInt;
+var
+  m,q,r:TBInt;
+  xb:byte;
+  lb,ib,nb:cardinal;
+begin
+  DivMod(a,n,q,m);
+  r:=IntToBInt(1);
+  ib:=0;
+  lb:=Length(b);
+  while ib<lb do
+   begin
+    xb:=byte(b[ib+BIntBase]);
+    inc(ib);
+    nb:=8;
+    while (nb<>0) and (xb<>0) do
+     begin
+      dec(nb);
+      if (xb and 1)<>0 then
+        r:=Multiply(r,m);
+      xb:=xb shr 1;
+      if not((xb=0) and (ib=lb)) then DivMod(Multiply(m,m),n,q,m);
+     end;
+   end;
+  Result:=Clone(r);
+end;
 
 end.
