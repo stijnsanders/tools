@@ -87,7 +87,7 @@ object winSettings: TwinSettings
       object Label6: TLabel
         Left = 0
         Top = 56
-        Width = 121
+        Width = 120
         Height = 16
         Caption = 'http://yoy.be/odo'
         OnClick = Label6Click
@@ -401,7 +401,6 @@ object winSettings: TwinSettings
         Width = 145
         Height = 24
         Style = csDropDownList
-        ItemHeight = 16
         ItemIndex = 2
         TabOrder = 3
         Text = 'Count backwards'
@@ -426,7 +425,7 @@ object winSettings: TwinSettings
       object Label2: TLabel
         Left = 0
         Top = 40
-        Width = 76
+        Width = 74
         Height = 16
         Caption = 'Table name'
       end

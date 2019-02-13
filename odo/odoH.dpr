@@ -2,7 +2,6 @@ library odoH;
 
 uses
   Windows,
-  Registry,
   Messages;
 
 const
@@ -15,15 +14,25 @@ var
 
 procedure odoLoadSettings;
 var
-  r:TRegistry;
+  rr:HKey;
+  dt,ds:integer;
 begin
-  r:=TRegistry.Create;
-  try
-    if r.OpenKeyReadOnly('\Software\Double Sigma Programming\odo') then
-      r.ReadBinaryData('HookInfo',hookinfo,4*3);
-  finally
-    r.Free;
-  end;
+  //default
+  hookinfo.wnd:=0;
+  hookinfo.hook1:=0;
+  hookinfo.hook2:=0;
+  rr:=0;
+  if RegOpenKeyEx(HKEY_CURRENT_USER,'Software\Double Sigma Programming\odo',0,KEY_READ,rr)=0 then
+   begin
+    dt:=REG_NONE;
+    ds:=4*3;
+    if RegQueryValueEx(rr,'HookInfo',nil,@dt,@hookinfo,@ds)<>0 then
+     begin
+      hookinfo.wnd:=0;
+      hookinfo.hook1:=0;
+      hookinfo.hook2:=0;
+     end;
+   end;
 end;
 
 function odoKeybCallback(code,wparam,lparam:integer):HRESULT; stdcall;

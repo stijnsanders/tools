@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{18E85BC3-E149-4422-AE34-7592DAC47454}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="odo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="odoH.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="odo">
+        <MSBuild Projects="odo.dproj"/>
+    </Target>
+    <Target Name="odo:Clean">
+        <MSBuild Projects="odo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="odo:Make">
+        <MSBuild Projects="odo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="odoH">
+        <MSBuild Projects="odoH.dproj"/>
+    </Target>
+    <Target Name="odoH:Clean">
+        <MSBuild Projects="odoH.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="odoH:Make">
+        <MSBuild Projects="odoH.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="odo;odoH"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="odo:Clean;odoH:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="odo:Make;odoH:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

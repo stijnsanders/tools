@@ -153,7 +153,8 @@ begin
 
     dlGetDBData:=ini.ReadBool('DB','GetData',true);
 
-    dtNiceDateFormat:=ini.ReadString('Display','DateTimeFormat','ddd '+ShortDateFormat+' hh:nn');
+    dtNiceDateFormat:=ini.ReadString('Display','DateTimeFormat','ddd '+
+      FormatSettings.ShortDateFormat+' hh:nn');
     CountCtrls:=ini.ReadBool('Count','Ctrls',true);
     CountArrows:=ini.ReadBool('Count','Arrows',true);
     CountDeletes:=ini.ReadInteger('Count','Deletes',2);
@@ -189,7 +190,6 @@ begin
   SetLength(pids,pidl);
 
   //create hooks
-  p:=nil;//counter warning
   r:=TRegistry.Create;
   try
     r.OpenKey('\Software\Double Sigma Programming\odo',true);
@@ -261,8 +261,8 @@ begin
    begin
     //read data from DB
     try
-      qr:=TSQLiteStatement.Create(DataLink,
-        'SELECT * FROM ['+dlTable+'] ORDER BY [TimeStamp] DESC');
+      qr:=TSQLiteStatement.Create(DataLink,UTF8Encode(
+        'SELECT * FROM ['+dlTable+'] ORDER BY [TimeStamp] DESC'));
         //where?
       try
         LastOffMap:=0.0;
@@ -624,9 +624,9 @@ begin
     if DataLink=nil then
      begin
       if FileExists(s+'.db') then
-        DataLink:=TSQLiteConnection.Create(s+'.db')
+        DataLink:=TSQLiteConnection.Create(UTF8Encode(s+'.db'))
       else if dlDBPath<>'' then
-        DataLink:=TSQLiteConnection.Create(dlDBPath)
+        DataLink:=TSQLiteConnection.Create(UTF8Encode(dlDBPath))
       else
         //raise Exception.Create('No DataLink specifications found.');
         Result:=false;
@@ -754,7 +754,7 @@ begin
         s1[Length(s1)]:=')';
         s2[Length(s2)]:=')';
         SetLength(x,i);
-        DataLink.Execute(s1+s2,x);
+        DataLink.Execute(UTF8Encode(s1+s2),x);
       except
         //on e:Exception do //log?
       end;

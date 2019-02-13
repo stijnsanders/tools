@@ -82,9 +82,9 @@ begin
       if vn<>'' then s:=s+',['+vn+'] varchar(50) not null'#13#10;
      end;
     s:=s+')';
-    db:=TSQLiteConnection.Create(fn);
+    db:=TSQLiteConnection.Create(UTF8Encode(fn));
     try
-      db.Execute(s);
+      db.Execute(UTF8Encode(s));
     finally
       db.Free;
     end;
