@@ -84,7 +84,7 @@ var
 
 implementation
 
-uses Settings, Math, MMSystem, Types;
+uses Settings, Math, MMSystem, Types, UITypes;
 
 const
   SysDragHoldX=4;//GetSystemMetrics(SM_CXDRAG)
@@ -333,10 +333,10 @@ begin
               KeyDefs[i].x:=x;
               KeyDefs[i].y:=y;
               //width modifier
-              if (j<=l) and (s[j] in ['0'..'9']) then
+              if (j<=l) and (AnsiChar(s[j]) in ['0'..'9']) then
                begin
                 KeyDefs[i].w:=0;
-                while (j<=l) and (s[j] in ['0'..'9']) do
+                while (j<=l) and (AnsiChar(s[j]) in ['0'..'9']) do
                  begin
                   KeyDefs[i].w:=KeyDefs[i].w*10+(byte(s[j]) and $F);
                   inc(j);
@@ -349,7 +349,7 @@ begin
                begin
                 inc(j);
                 KeyDefs[i].h:=0;
-                while (j<=l) and (s[j] in ['0'..'9']) do
+                while (j<=l) and (AnsiChar(s[j]) in ['0'..'9']) do
                  begin
                   KeyDefs[i].h:=KeyDefs[i].h*10+(byte(s[j]) and $F);
                   inc(j);

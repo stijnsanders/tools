@@ -1,7 +1,7 @@
 [Setup]
 AppID={{01FD81F1-45F6-4243-80FA-30C03818ACA8}
 AppName=MetaKeys
-AppVerName=MetaKeys 1.1.1.514
+AppVerName=MetaKeys 1.1.0.540
 AppPublisher=Double Sigma Programming
 AppPublisherURL=http://yoy.be/metakeys
 AppSupportURL=http://yoy.be/metakeys
@@ -9,10 +9,11 @@ AppUpdatesURL=http://yoy.be/metakeys
 DefaultDirName={pf}\MetaKeys
 DisableDirPage=yes
 DefaultGroupName=MetaKeys
+ArchitecturesInstallIn64BitMode=x64
 AllowNoIcons=yes
-OutputBaseFilename=MetaKeys_setup
+OutputBaseFilename=MetaKeys_setup64
 OutputDir=.
-SetupIconFile=ico_MetaKeys.ico
+SetupIconFile=MetaKeys_Icon.ico
 Compression=lzma
 SolidCompression=yes
 
@@ -20,7 +21,7 @@ SolidCompression=yes
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: "MetaKeys.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\bin64\MetaKeys.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "WhatsNew.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "MetaKeysInfo.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "be.kbl"; DestDir: "{app}"; Flags: ignoreversion

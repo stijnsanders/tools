@@ -1,9 +1,9 @@
 object frmSettings: TfrmSettings
   Left = 438
   Top = 106
-  Width = 417
-  Height = 432
   Caption = 'MetaKeys Settings'
+  ClientHeight = 393
+  ClientWidth = 401
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -314,6 +314,10 @@ object frmSettings: TfrmSettings
     object tbDisplay: TTabSheet
       BorderWidth = 4
       Caption = 'Display'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Label2: TLabel
         Left = 0
         Top = 0
@@ -331,12 +335,13 @@ object frmSettings: TfrmSettings
         FocusControl = panFont
       end
       object panBackground1: TPanel
-        Left = 0
-        Top = 24
+        Left = 1
+        Top = 25
         Width = 33
         Height = 33
         TabOrder = 0
         TabStop = True
+        StyleElements = [seFont, seBorder]
         OnClick = panBackground1Click
         OnEnter = panBackground1Enter
         OnExit = panBackground1Exit
@@ -348,6 +353,7 @@ object frmSettings: TfrmSettings
         Height = 33
         TabOrder = 1
         TabStop = True
+        StyleElements = [seFont, seBorder]
         OnClick = panBackground2Click
         OnEnter = panBackground2Enter
         OnExit = panBackground2Exit
@@ -390,7 +396,6 @@ object frmSettings: TfrmSettings
         Width = 217
         Height = 31
         Style = csDropDownList
-        ItemHeight = 23
         ItemIndex = 0
         TabOrder = 4
         Text = 'Always show'
@@ -404,6 +409,10 @@ object frmSettings: TfrmSettings
       BorderWidth = 4
       Caption = 'Repeat'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lblDelay: TLabel
         Left = 0
         Top = 32
@@ -480,6 +489,10 @@ object frmSettings: TfrmSettings
       BorderWidth = 4
       Caption = 'Keyboard'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lbKbl: TListBox
         Left = 0
         Top = 0

@@ -66,7 +66,7 @@ var
 
 implementation
 
-uses Main, MMSystem, Clipbrd;
+uses Main, MMSystem, Clipbrd, UITypes;
 
 {$R *.dfm}
 

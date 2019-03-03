@@ -101,7 +101,7 @@ type
     BoolColor:array[boolean] of TColor;
     FVerifClose: boolean;
     WheelKeepY,IgnoreAgainCounter: integer;
-    FSoundPlayFile:string;
+    FSoundPlayFile:UnicodeString;
     FShowCursorTag,FCursorTagKeepOnScreen,FStartSus:boolean;
     FIgnores:TStringList;
     Corners:HRGN;
@@ -126,8 +126,8 @@ type
       SoundFilePath: string; Ignores: TStrings);
   end;
 
-  PGetModuleFileNameEx=function(hProcess,hModule:THandle;lpFileName:PAnsiChar;cchFileNameMax:UINT):UINT; stdcall;
-  PQueryFullProcessImageName=function(hProcess:THandle;dwFlags:UINT;lpFileName:PAnsiChar;lpdwSize:PUINT):UINT; stdcall;
+  PGetModuleFileNameEx=function(hProcess,hModule:THandle;lpFileName:PWideChar;cchFileNameMax:UINT):UINT; stdcall;
+  PQueryFullProcessImageName=function(hProcess:THandle;dwFlags:UINT;lpFileName:PWideChar;lpdwSize:PUINT):UINT; stdcall;
 
 var
   frmMetaClick: TfrmMetaClick;
@@ -136,7 +136,7 @@ var
 
 implementation
 
-uses CursorTag, Settings, Math, MMSystem, Orbit;
+uses CursorTag, Settings, Math, MMSystem, Orbit, System.Types, System.UITypes;
 
 const
   SysDragHoldX=4;//GetSystemMetrics(SM_CXDRAG)
@@ -663,7 +663,7 @@ begin
                end;
             end;
             if FSoundPlayFile<>'' then
-              sndPlaySound(PAnsiChar(FSoundPlayFile),SND_ASYNC);
+              sndPlaySound(PChar(FSoundPlayFile),SND_ASYNC);
             if ClickMode in [cmLeftDrag,cmRightDrag,cmWheel] then
               Clicked:=csFirstDone
             else if ClickMode=cmOrbit then
@@ -681,7 +681,7 @@ begin
               SetM(0,MOUSEEVENTF_RIGHTUP);
           end;
           if FSoundPlayFile<>'' then
-            sndPlaySound(PAnsiChar(FSoundPlayFile),SND_ASYNC);
+            sndPlaySound(PChar(FSoundPlayFile),SND_ASYNC);
           b:=true;//done
          end;
         //csOrbitCross moved above
@@ -1458,9 +1458,9 @@ end;
 procedure LoadPSAPI;
 begin
   GetModuleFileNameEx:=GetProcAddress(
-    LoadLibrary('psapi.dll'),'GetModuleFileNameExA');
+    LoadLibrary('psapi.dll'),'GetModuleFileNameExW');
   QueryFullProcessImageName:=GetProcAddress(
-    LoadLibrary('kernel32.dll'),'QueryFullProcessImageNameA');
+    LoadLibrary('kernel32.dll'),'QueryFullProcessImageNameW');
 end;
 
 initialization

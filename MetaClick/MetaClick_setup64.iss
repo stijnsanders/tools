@@ -10,9 +10,10 @@ DefaultDirName={pf}\MetaClick
 DisableDirPage=yes
 DefaultGroupName=MetaClick
 AllowNoIcons=yes
-OutputBaseFilename=MetaClick_setup
+ArchitecturesInstallIn64BitMode=x64
+OutputBaseFilename=MetaClick_setup64
 OutputDir=.
-SetupIconFile=ico_MetaClick.ico
+SetupIconFile=MetaClick_Icon.ico
 Compression=lzma
 SolidCompression=yes
 
@@ -20,7 +21,7 @@ SolidCompression=yes
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: "MetaClick.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\bin64\MetaClick.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "WhatsNew.txt"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]

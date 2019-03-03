@@ -182,7 +182,7 @@ var
 
 implementation
 
-uses Main, MMSystem, Clipbrd;
+uses Main, MMSystem, Clipbrd, System.UITypes;
 
 {$R *.dfm}
 
@@ -459,7 +459,7 @@ end;
 
 procedure TfrmSettings.btnSoundPlayClick(Sender: TObject);
 begin
-  if not(sndPlaySound(PAnsiChar(FSoundFilePath),SND_ASYNC)) then RaiseLastOSError;
+  if not(sndPlaySound(PChar(FSoundFilePath),SND_ASYNC)) then RaiseLastOSError;
 end;
 
 procedure TfrmSettings.btnSoundSelectClick(Sender: TObject);
@@ -507,7 +507,7 @@ procedure TfrmSettings.Timer2Timer(Sender: TObject);
 var
   h,h0,h1:THandle;
   pid,l:cardinal;
-  s,t:string;
+  s,t:UnicodeString;
 begin
   dec(FIgnTD);
   if FIgnTD=0 then
@@ -538,7 +538,7 @@ begin
         false,pid);
       l:=$400;
       SetLength(s,l);
-      if QueryFullProcessImageName(h1,0,PChar(s),@l)=0 then l:=0;
+      if QueryFullProcessImageName(h1,0,PWideChar(s),@l)=0 then l:=0;
       SetLength(s,l);
         CloseHandle(h1);
      end;
@@ -548,13 +548,13 @@ begin
       h1:=OpenProcess(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ,
         false,pid);
       SetLength(s,$400);
-      SetLength(s,GetModuleFileNameEx(h1,0,PChar(s),$400));
+      SetLength(s,GetModuleFileNameEx(h1,0,PWideChar(s),$400));
       CloseHandle(h1);
      end;
     if s='' then
      begin
       SetLength(s,$400);
-      SetLength(s,GetWindowModuleFileName(h,PChar(s),$400))
+      SetLength(s,GetWindowModuleFileName(h,PWideChar(s),$400))
      end;
     if s='' then
      begin

@@ -1,9 +1,9 @@
 object frmSettings: TfrmSettings
   Left = 223
   Top = 262
-  Width = 457
-  Height = 439
   Caption = 'MetaClick Settings'
+  ClientHeight = 400
+  ClientWidth = 441
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -478,6 +478,7 @@ object frmSettings: TfrmSettings
         Height = 33
         TabOrder = 3
         TabStop = True
+        StyleElements = [seFont, seBorder]
         OnClick = panBackground1Click
         OnEnter = panBackground1Enter
         OnExit = panBackground1Exit
@@ -489,6 +490,7 @@ object frmSettings: TfrmSettings
         Height = 33
         TabOrder = 4
         TabStop = True
+        StyleElements = [seFont, seBorder]
         OnClick = panBackground2Click
         OnEnter = panBackground2Enter
         OnExit = panBackground2Exit
@@ -559,7 +561,6 @@ object frmSettings: TfrmSettings
         Width = 73
         Height = 31
         Style = csDropDownList
-        ItemHeight = 23
         ItemIndex = 1
         TabOrder = 14
         Text = '1'
@@ -575,7 +576,6 @@ object frmSettings: TfrmSettings
         Width = 217
         Height = 31
         Style = csDropDownList
-        ItemHeight = 23
         ItemIndex = 0
         TabOrder = 15
         Text = 'Always show'
@@ -808,7 +808,6 @@ object frmSettings: TfrmSettings
         Width = 65
         Height = 31
         Style = csDropDownList
-        ItemHeight = 23
         ItemIndex = 1
         TabOrder = 12
         Text = '1'
@@ -909,7 +908,7 @@ object frmSettings: TfrmSettings
       object cbLeftSingle: TCheckBox
         Left = 0
         Top = 24
-        Width = 193
+        Width = 217
         Height = 25
         Anchors = [akLeft, akTop, akRight]
         Caption = 'L1: left single'
@@ -920,7 +919,7 @@ object frmSettings: TfrmSettings
       object cbLeftDouble: TCheckBox
         Left = 0
         Top = 48
-        Width = 193
+        Width = 217
         Height = 25
         Anchors = [akLeft, akTop, akRight]
         Caption = 'L2: left double'
@@ -931,7 +930,7 @@ object frmSettings: TfrmSettings
       object cbLeftDrag: TCheckBox
         Left = 0
         Top = 72
-        Width = 193
+        Width = 217
         Height = 25
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Ld: left drag'
@@ -942,7 +941,7 @@ object frmSettings: TfrmSettings
       object cbRightSingle: TCheckBox
         Left = 0
         Top = 96
-        Width = 193
+        Width = 217
         Height = 25
         Anchors = [akLeft, akTop, akRight]
         Caption = 'R1: right single'
@@ -953,7 +952,7 @@ object frmSettings: TfrmSettings
       object cbRightDouble: TCheckBox
         Left = 0
         Top = 120
-        Width = 193
+        Width = 217
         Height = 25
         Anchors = [akLeft, akTop, akRight]
         Caption = 'R2: right double'
@@ -964,7 +963,7 @@ object frmSettings: TfrmSettings
       object cbRightDrag: TCheckBox
         Left = 0
         Top = 144
-        Width = 193
+        Width = 217
         Height = 25
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Rd: right drag'
@@ -975,7 +974,7 @@ object frmSettings: TfrmSettings
       object cbWheel: TCheckBox
         Left = 0
         Top = 168
-        Width = 193
+        Width = 217
         Height = 25
         Anchors = [akLeft, akTop, akRight]
         Caption = 'W: wheel'
@@ -994,7 +993,7 @@ object frmSettings: TfrmSettings
       object cbSuspend: TCheckBox
         Left = 0
         Top = 216
-        Width = 193
+        Width = 217
         Height = 25
         Anchors = [akLeft, akTop, akRight]
         Caption = 'z: suspend'
@@ -1005,7 +1004,7 @@ object frmSettings: TfrmSettings
       object cbSettings: TCheckBox
         Left = 0
         Top = 240
-        Width = 193
+        Width = 217
         Height = 25
         Anchors = [akLeft, akTop, akRight]
         Caption = 's: settings'
@@ -1016,7 +1015,7 @@ object frmSettings: TfrmSettings
       object cbClose: TCheckBox
         Left = 0
         Top = 264
-        Width = 193
+        Width = 217
         Height = 25
         Anchors = [akLeft, akTop, akRight]
         Caption = 'x: exit'
