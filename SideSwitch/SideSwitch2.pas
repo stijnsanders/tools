@@ -33,6 +33,13 @@ type
     udIconTimeout: TUpDown;
     cbSwitchMirrored: TCheckBox;
     cbTaskBarNixTopMost: TCheckBox;
+    gbActivate: TGroupBox;
+    cbScreenTop: TCheckBox;
+    gbScreen: TGroupBox;
+    cbScreenLeft: TCheckBox;
+    cbScreenBottom: TCheckBox;
+    cbScreenRight: TCheckBox;
+    cbActivateHoldCtrl: TCheckBox;
     procedure btnFontClick(Sender: TObject);
     procedure btnClrMainClick(Sender: TObject);
     procedure btnClrVisibleClick(Sender: TObject);
@@ -67,3 +74,4 @@ begin
 end;
 
 end.
+

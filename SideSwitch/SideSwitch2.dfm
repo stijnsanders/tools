@@ -3,7 +3,7 @@ object frmSettings: TfrmSettings
   Top = 111
   BorderStyle = bsDialog
   Caption = 'SideSwitch settings'
-  ClientHeight = 353
+  ClientHeight = 434
   ClientWidth = 281
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -56,6 +56,7 @@ object frmSettings: TfrmSettings
     Position = 1000
     TabOrder = 1
     Thousands = False
+    Wrap = False
   end
   object txtIconHeight: TEdit
     Left = 8
@@ -75,34 +76,35 @@ object frmSettings: TfrmSettings
     Max = 250
     Position = 16
     TabOrder = 5
+    Wrap = False
   end
   object Button1: TButton
     Left = 80
-    Top = 312
+    Top = 392
     Width = 89
     Height = 25
     Caption = 'OK'
     Default = True
     ModalResult = 1
-    TabOrder = 15
+    TabOrder = 16
   end
   object Button2: TButton
     Left = 176
-    Top = 312
+    Top = 392
     Width = 89
     Height = 25
     Cancel = True
     Caption = 'Annuleren'
     ModalResult = 2
-    TabOrder = 16
+    TabOrder = 17
   end
   object cbSessionBoot: TCheckBox
     Left = 8
-    Top = 272
+    Top = 352
     Width = 257
     Height = 17
     Caption = 'Start when Windows starts'
-    TabOrder = 13
+    TabOrder = 14
   end
   object btnFont: TButton
     Left = 96
@@ -115,7 +117,7 @@ object frmSettings: TfrmSettings
   end
   object rgVisible: TRadioGroup
     Left = 56
-    Top = 104
+    Top = 184
     Width = 209
     Height = 57
     Caption = 'List visible windows'
@@ -123,11 +125,11 @@ object frmSettings: TfrmSettings
     Items.Strings = (
       'on its monitor'
       'on all monitors')
-    TabOrder = 10
+    TabOrder = 11
   end
   object rgMinimized: TRadioGroup
     Left = 56
-    Top = 168
+    Top = 248
     Width = 209
     Height = 81
     Caption = 'List minimized windows'
@@ -136,15 +138,15 @@ object frmSettings: TfrmSettings
       'on its monitor'
       'on all monitors'
       'on all + switch on restore')
-    TabOrder = 11
+    TabOrder = 12
   end
   object panClrMain: TPanel
     Left = 8
-    Top = 112
+    Top = 192
     Width = 41
     Height = 41
     BevelOuter = bvLowered
-    TabOrder = 7
+    TabOrder = 8
     OnClick = btnClrMainClick
     object btnClrMain: TButton
       Left = 8
@@ -157,11 +159,11 @@ object frmSettings: TfrmSettings
   end
   object panClrVisible: TPanel
     Left = 8
-    Top = 160
+    Top = 240
     Width = 41
     Height = 41
     BevelOuter = bvLowered
-    TabOrder = 8
+    TabOrder = 9
     OnClick = btnClrVisibleClick
     object btnClrVisible: TButton
       Left = 8
@@ -174,11 +176,11 @@ object frmSettings: TfrmSettings
   end
   object panClrMinimized: TPanel
     Left = 8
-    Top = 208
+    Top = 288
     Width = 41
     Height = 41
     BevelOuter = bvLowered
-    TabOrder = 9
+    TabOrder = 10
     OnClick = btnClrMinimizedClick
     object btnClrMinimized: TButton
       Left = 8
@@ -207,22 +209,82 @@ object frmSettings: TfrmSettings
     Max = 30000
     Position = 150
     TabOrder = 3
+    Wrap = False
   end
   object cbSwitchMirrored: TCheckBox
     Left = 8
-    Top = 256
+    Top = 336
     Width = 257
     Height = 17
     Caption = 'Switch mirrored'
-    TabOrder = 12
+    TabOrder = 13
   end
   object cbTaskBarNixTopMost: TCheckBox
     Left = 8
-    Top = 288
+    Top = 368
     Width = 257
     Height = 17
     Caption = 'Disable taskbar stay on top (Win7)'
-    TabOrder = 14
+    TabOrder = 15
+  end
+  object gbActivate: TGroupBox
+    Left = 8
+    Top = 104
+    Width = 257
+    Height = 73
+    Caption = 'Activate'
+    TabOrder = 7
+    object gbScreen: TGroupBox
+      Left = 16
+      Top = 16
+      Width = 33
+      Height = 41
+      TabOrder = 1
+    end
+    object cbScreenTop: TCheckBox
+      Left = 24
+      Top = 16
+      Width = 17
+      Height = 17
+      Checked = True
+      State = cbChecked
+      TabOrder = 0
+    end
+    object cbScreenLeft: TCheckBox
+      Left = 8
+      Top = 32
+      Width = 17
+      Height = 17
+      Checked = True
+      State = cbChecked
+      TabOrder = 2
+    end
+    object cbScreenBottom: TCheckBox
+      Left = 24
+      Top = 48
+      Width = 17
+      Height = 17
+      Checked = True
+      State = cbChecked
+      TabOrder = 3
+    end
+    object cbScreenRight: TCheckBox
+      Left = 40
+      Top = 32
+      Width = 17
+      Height = 17
+      Checked = True
+      State = cbChecked
+      TabOrder = 4
+    end
+    object cbActivateHoldCtrl: TCheckBox
+      Left = 64
+      Top = 48
+      Width = 113
+      Height = 17
+      Caption = 'by holding Ctrl'
+      TabOrder = 5
+    end
   end
   object FontDialog1: TFontDialog
     Font.Charset = DEFAULT_CHARSET
@@ -230,11 +292,14 @@ object frmSettings: TfrmSettings
     Font.Height = -11
     Font.Name = 'Tahoma'
     Font.Style = []
-    Left = 240
-    Top = 88
+    MinFontSize = 0
+    MaxFontSize = 0
+    Left = 232
+    Top = 32
   end
   object ColorDialog1: TColorDialog
-    Left = 240
-    Top = 120
+    Ctl3D = True
+    Left = 232
+    Top = 64
   end
 end

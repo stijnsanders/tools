@@ -29,15 +29,16 @@ type
   private
     FMutex:THandle;
     FHideTC:cardinal;
-    FTargetMon,FListMon:TMonitor;
+    FTargetMon:TMonitor;
     FAppList:array of record
       h:THandle;
       y:integer;
     end;
-    FAppListCount,FListY,FStartX,FStartY:integer;
+    FAppListCount,FListY,FStartX,FStartY,FCCounter:integer;
+    FActivateTop,FActivateLeft,FActivateBottom,FActivateRight,FActivateHoldCtrl,
     FIsListing,FListUpsideDown,FSwitchMirrored,
     FTaskBarNixTopMost,FShowTestButton,
-    FCtrlDown,FShiftDown,FAppMini,FDragging:boolean;
+    FShowAll,FShowFullInfo,FDrawNext,FAppMini,FDragging:boolean;
     FListSkip,FTaskBarHIcon,FAppHandle1,FAppHandle2:THandle;
     FKeepShowingMS,FIconTimeoutMS:cardinal;
     FBorderMargin,FIconHeight,FShowVisible,FShowMinimized:integer;
@@ -128,14 +129,24 @@ end;
 
 procedure TfrmSideSwitchMain.Timer1Timer(Sender: TObject);
 var
-  i,mw4,mh4:integer;
+  i,h,mw4,mh4:integer;
   m:TMonitor;
   r:TRect;
   p:TPoint;
   a:boolean;
 begin
   m:=nil;//counter warning
-  if Visible and (GetTickCount>FHideTC) and not(FDragging) then Visible:=false;
+  if Visible and (GetTickCount>FHideTC) and not(FDragging) then
+   begin
+    Visible:=false;
+    FShowAll:=false;
+   end;
+
+  if ((GetKeyState(VK_SHIFT) and $80)=0) and
+    ((GetKeyState(VK_CONTROL) and $80)<>0) then
+    inc(FCCounter)
+  else
+    FCCounter:=0;
 
   if not(FIsListing) then
    begin
@@ -151,12 +162,14 @@ begin
         mw4:=m.Width div 4;
         mh4:=m.Height div 4;
         a:=false;
-        if (p.Y=m.Top) and (p.X>=m.Left+mw4) and (p.X<=m.Left+mw4*3) then //top
+        if FActivateTop and (p.Y=m.Top) and
+          (p.X>=m.Left+mw4) and (p.X<=m.Left+mw4*3) then //top
           r:=Rect(
             m.Left+mw4,m.Top+FBorderMargin,
             m.Left+mw4*3,m.Top+m.Height-FBorderMargin)
         else
-        if (p.Y=m.Top+m.Height-1) and (p.X>=m.Left+mw4) and (p.X<=m.Left+mw4*3) then //bottom
+        if FActivateBottom and (p.Y=m.Top+m.Height-1) and
+          (p.X>=m.Left+mw4) and (p.X<=m.Left+mw4*3) then //bottom
          begin
           r:=Rect(
             m.Left+mw4,m.Top+FBorderMargin,
@@ -164,26 +177,48 @@ begin
           FListUpsideDown:=true;
          end
         else
-        if (p.X=m.Left) and (p.Y>=m.Top+mh4) and (p.Y<=m.Top+mh4*3) then //left
+        if FActivateLeft and (p.X=m.Left) and
+          (p.Y>=m.Top+mh4) and (p.Y<=m.Top+mh4*3) then //left
           r:=Rect(
             m.Left+FBorderMargin,m.Top+mh4,
             m.Left+mw4*3,m.Top+m.Height)
         else
-        if (p.X=m.Left+m.Width-1) and (p.Y>=m.Top+(m.Height div 4)) and (p.Y<=m.Top+(m.Height div 4)*3) then //right
+        if FActivateRight and (p.X=m.Left+m.Width-1) and
+          (p.Y>=m.Top+(m.Height div 4)) and (p.Y<=m.Top+(m.Height div 4)*3) then //right
           r:=Rect(
             m.Left+mw4*2,m.Top+mh4,
             m.Left+m.Width-FBorderMargin,m.Top+m.Height)
         else
-          a:=true;
+        if FActivateHoldCtrl and (FCCounter=3) and
+          (p.X>=m.Left) and (p.X<=m.Left+m.Width) and
+          (p.Y>=m.Top) and (p.Y<=m.Top+m.Height) then
+         begin
+          if p.Y<m.Top+m.Height-mh4 then
+            r:=Rect(p.X+8,p.Y+8,p.X+m.Width,p.Y+m.Height)
+          else
+           begin
+            r:=Rect(p.X+8,p.Y-m.Height+8,p.X+m.Width,p.Y-8);
+            FListUpsideDown:=true;
+           end;
+         end
+        else
+          a:=not(FDrawNext);
         inc(i);
        end;
+
       if not(a) then
        begin
         Canvas.Brush.Style:=bsSolid;
         Canvas.Brush.Color:=Color;
         Canvas.FillRect(Rect(0,0,ClientWidth,ClientHeight));
-        BoundsRect:=r;
-        FTargetMon:=m;
+        if FDrawNext then FDrawNext:=false else
+         begin
+          BoundsRect:=r;
+          FTargetMon:=m;
+          FMonitorRect:=m.BoundsRect;
+          FDesktopRect:=Screen.DesktopRect;
+          FListSkip:=GetShellWindow;//'Program Manager'
+         end;
         Visible:=true;
         if FListUpsideDown then FListY:=ClientHeight-FIconHeight-2 else FListY:=0;
         ShowWindow(Application.Handle,SW_HIDE);
@@ -195,39 +230,39 @@ begin
         Canvas.Brush.Color:=FColorMain;
 
         i:=0;
-        mw4:=FIconHeight*5;
-        Canvas.TextRect(Rect(i,FListY,i+mw4,FListY+FIconHeight),
+        h:=FIconHeight*5;
+        Canvas.TextRect(Rect(i,FListY,i+h,FListY+FIconHeight),
           i+FIconHeight+(FIconHeight div 2),FListY,'Hide');
-        inc(i,mw4+FIconHeight);
-        Canvas.TextRect(Rect(i,FListY,i+mw4,FListY+FIconHeight),
+        inc(i,h+FIconHeight);
+        Canvas.TextRect(Rect(i,FListY,i+h,FListY+FIconHeight),
           i+FIconHeight+(FIconHeight div 2),FListY,'Clear');
-        inc(i,mw4+FIconHeight);
-        if Screen.MonitorFromWindow(GetForegroundWindow,mdNull)<>m then
-          Canvas.TextRect(Rect(i,FListY,i+mw4,FListY+FIconHeight),
+        inc(i,h+FIconHeight);
+        if Screen.MonitorFromWindow(GetForegroundWindow,mdNull)<>FTargetmon then
+          Canvas.TextRect(Rect(i,FListY,i+h,FListY+FIconHeight),
             i+FIconHeight+(FIconHeight div 2),FListY,'Switch');
+
+        inc(i,h+FIconHeight);
+        Canvas.TextRect(Rect(i,FListY,i+h,FListY+FIconHeight),
+          i+FIconHeight+(FIconHeight div 2),FListY,'More');
+
         if FShowTestButton then
          begin
-          inc(i,mw4+FIconHeight);
-          Canvas.TextRect(Rect(i,FListY,i+mw4,FListY+FIconHeight),
+          inc(i,h+FIconHeight);
+          Canvas.TextRect(Rect(i,FListY,i+h,FListY+FIconHeight),
             i+FIconHeight+(FIconHeight div 2),FListY,'Test');
 
-          inc(i,mw4+FIconHeight);
-          Canvas.TextRect(Rect(i,FListY,i+mw4,FListY+FIconHeight),
+          inc(i,h+FIconHeight);
+          Canvas.TextRect(Rect(i,FListY,i+h,FListY+FIconHeight),
             i+FIconHeight+(FIconHeight div 2),FListY,'xxx');
-
          end;
 
         if FListUpsideDown then dec(FListY,FIconHeight+2) else inc(FListY,FIconHeight+2);
 
-        FListMon:=m;
-        FMonitorRect:=m.BoundsRect;
-        FDesktopRect:=Screen.DesktopRect;
-        FListSkip:=GetShellWindow;//'Program Manager'
         FAppHandle1:=0;
         FAppHandle2:=0;
         FAppMini:=false;
-        FCtrlDown:=(GetKeyState(VK_CONTROL) and $80)<>0;
-        FShiftDown:=(GetKeyState(VK_SHIFT) and $80)<>0;
+        //FShowAll:=(GetKeyState(VK_CONTROL) and $80)<>0;
+        FShowFullInfo:=(GetKeyState(VK_SHIFT) and $80)<>0;
         EnumWindows(@DoListWindow,0);
 
         FHideTC:=GetTickCount+FKeepShowingMS;
@@ -308,17 +343,17 @@ begin
   if (h<>Handle) and (h<>FListSkip) and IsWindowVisible(h) then
    begin
     hp:=GetWindowLong(h,GWL_HWNDPARENT);
-    if (hp=0) or (GetWindow(h,GW_OWNER)=0) or (FCtrlDown and (
+    if (hp=0) or (GetWindow(h,GW_OWNER)=0) or (FShowAll and (
       ((GetWindowLong(h,GWL_EXSTYLE) and WS_EX_APPWINDOW)<>0) or
       ((GetWindowLong(hp,GWL_EXSTYLE) and WS_EX_APPWINDOW)<>0))) then
      begin
       b:=IsIconic(h);
-      if FShiftDown then l:=true else
+      if FShowFullInfo then l:=true else
         if b then
           l:=(FShowMinimized<>ShowItsMonitor) or WindowOnMonitor(h)
         else
           l:=(FShowVisible<>ShowItsMonitor) or WindowOnMonitor(h);
-      if l and not(FCtrlDown)
+      if l and not(FShowAll)
         and (GetWindow(h,GW_CHILD)=0) and GetWindowPlacement(h,@wp) then
         if h=FAppHandle1 then
          begin
@@ -343,7 +378,7 @@ begin
         Canvas.TextOut(x,FListY,Glyph_Close);
         inc(x,x);
         SetLength(s,1024);
-        if FCtrlDown and FShiftDown then
+        if FShowAll and FShowFullInfo then
          begin
           SetLength(s,GetClassNameW(h,PWideChar(s),1023));
           if GetWindowPlacement(h,@wp) then
@@ -519,8 +554,13 @@ begin
           0:btnHideClick(Sender);
           1:btnClearClick(Sender);
           2:btnSwitchClick(Sender);
-          3:TestListWindows;
-          4:
+          3:
+           begin
+            FShowAll:=true;
+            FDrawNext:=true;
+           end;
+          4:TestListWindows;
+          5:
            begin
             FDragging:=true;
             FStartX:=X;
@@ -558,7 +598,7 @@ begin
             if IsIconic(FAppList[i].h) then
              begin
               ShowWindow(FAppList[i].h,SW_RESTORE);
-              if (FShowMinimized=ShowAllMonitorsSwitch) or (FShiftDown) then
+              if (FShowMinimized=ShowAllMonitorsSwitch) or (FShowFullInfo) then
                 SwitchWindow(FAppList[i].h);
              end;
             SetForegroundWindow(FAppList[i].h);
@@ -643,6 +683,12 @@ begin
   FTaskBarNixTopMost:=Default_TaskBarNixTopMost;
   FShowTestButton:=(ParamCount>0) and (LowerCase(ParamStr(1))='/test');
   FDragging:=false;
+  FCCounter:=0;
+  FDrawNext:=false;
+  FActivateTop:=true;
+  FActivateLeft:=true;
+  FActivateRight:=true;
+  FActivateBottom:=true;
   with TRegistry.Create do
    begin
     try
@@ -666,6 +712,11 @@ begin
         FIconTimeoutMS:=ReadInteger('IconTimeoutMS');
         FSwitchMirrored:=ReadBool('SwitchMirrored');
         FTaskBarNixTopMost:=ReadBool('TaskBarNixTopMost');
+        FActivateTop:=ReadBool('ActivateTop');
+        FActivateLeft:=ReadBool('ActivateLeft');
+        FActivateRight:=ReadBool('ActivateRight');
+        FActivateBottom:=ReadBool('ActivateBottom');
+        FActivateHoldCtrl:=ReadBool('ActivateHoldCtrl');
         CloseKey;
        end;
     except
@@ -692,6 +743,11 @@ begin
       rgMinimized.ItemIndex:=FShowMinimized;
       cbSwitchMirrored.Checked:=FSwitchMirrored;
       cbTaskBarNixTopMost.Checked:=FTaskBarNixTopMost;
+      cbScreenTop.Checked:=FActivateTop;
+      cbScreenLeft.Checked:=FActivateLeft;
+      cbScreenRight.Checked:=FActivateRight;
+      cbScreenBottom.Checked:=FActivateBottom;
+      cbActivateHoldCtrl.Checked:=FActivateHoldCtrl;
       r:=TRegistry.Create;
       try
         //r.RootKey:=HKEY_CURRENT_USER;//assert default
@@ -715,6 +771,11 @@ begin
         FShowMinimized:=rgMinimized.ItemIndex;
         FSwitchMirrored:=cbSwitchMirrored.Checked;
         FTaskBarNixTopMost:=cbTaskBarNixTopMost.Checked;
+        FActivateTop:=cbScreenTop.Checked;
+        FActivateLeft:=cbScreenLeft.Checked;
+        FActivateRight:=cbScreenRight.Checked;
+        FActivateBottom:=cbScreenBottom.Checked;
+        FActivateHoldCtrl:=cbActivateHoldCtrl.Checked;
         r:=TRegistry.Create;
         try
           //r.RootKey:=HKEY_CURRENT_USER;//assert default
@@ -735,6 +796,11 @@ begin
           r.WriteInteger('ShowMinimized',FShowMinimized);
           r.WriteBool('SwitchMirrored',FSwitchMirrored);
           r.WriteBool('TaskBarNixTopMost',FTaskBarNixTopMost);
+          r.WriteBool('ActivateTop',FActivateTop);
+          r.WriteBool('ActivateLeft',FActivateLeft);
+          r.WriteBool('ActivateRight',FActivateRight);
+          r.WriteBool('ActivateBottom',FActivateBottom);
+          r.WriteBool('ActivateHoldCtrl',FActivateHoldCtrl);
           r.CloseKey;
           r.OpenKey('\Software\Microsoft\Windows\CurrentVersion\Run',true);
           if cbSessionBoot.Checked then
