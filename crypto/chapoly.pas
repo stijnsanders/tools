@@ -18,42 +18,57 @@ interface
 type
   TChaChaNonce=array[0..2] of cardinal;
   TChaChaKey=array[0..7] of cardinal;
-  TChaChaMatrix=array[0..15] of cardinal;
+  TChaChaMatrix_U32=array[0..15] of cardinal;
+  TChaChaMatrix_U8 =array[0..63] of byte;
 
-function ChaCha20(block:cardinal;nonce:TChaChaNonce;key:TChaChaKey):TChaChaMatrix;
-
+function ChaCha20_Block(key:TChaChaKey;nonce:TChaChaNonce;counter:cardinal):
+  TChaChaMatrix_U32;
+function ChaCha20_Encrypt(key:TChaChaKey;nonce:TChaChaNonce;counter:cardinal;
+  const plaintext:UTF8String):UTF8String;
 
 implementation
 
-function ChaCha20(block:cardinal;nonce:TChaChaNonce;key:TChaChaKey):TChaChaMatrix;
+function ChaCha20_Block(key:TChaChaKey;nonce:TChaChaNonce;counter:cardinal):
+  TChaChaMatrix_U32;
 var
-  s:TChaChaMatrix;
   r:cardinal;
   procedure ChaChaQuarterRound(a,b,c,d:byte);
   var
     e:cardinal;
   begin
-    inc(s[a],s[b]);
-    e:=s[d] xor s[a];
-    s[d]:=(e shl 16) or (e shr 16);
+    inc(Result[a],Result[b]);
+    e:=Result[d] xor Result[a];
+    Result[d]:=(e shl 16) or (e shr 16);
 
-    inc(s[c],s[d]);
-    e:=s[b] xor s[c];
-    s[b]:=(e shl 12) or (e shr 20);
+    inc(Result[c],Result[d]);
+    e:=Result[b] xor Result[c];
+    Result[b]:=(e shl 12) or (e shr 20);
 
-    inc(s[a],s[b]);
-    e:=s[d] xor s[a];
-    s[d]:=(e shl 8) or (e shr 24);
+    inc(Result[a],Result[b]);
+    e:=Result[d] xor Result[a];
+    Result[d]:=(e shl 8) or (e shr 24);
 
-    inc(s[c],s[d]);
-    e:=s[b] xor s[c];
-    s[b]:=(e shl 7) or (e shr 25);
+    inc(Result[c],Result[d]);
+    e:=Result[b] xor Result[c];
+    Result[b]:=(e shl 7) or (e shr 25);
   end;
 begin
-  s[ 0]:=$61707865;  s[ 1]:=$3320646e;  s[ 2]:=$79622d32;  s[ 3]:=$6b206574;
-  s[ 4]:=key[0];     s[ 5]:=key[1];     s[ 6]:=key[2];     s[ 7]:=key[3];
-  s[ 8]:=key[4];     s[ 9]:=key[5];     s[10]:=key[6];     s[11]:=key[7];
-  s[12]:=block;      s[13]:=nonce[0];   s[14]:=nonce[1];   s[15]:=nonce[2];
+  Result[ 0]:=$61707865;
+  Result[ 1]:=$3320646e;
+  Result[ 2]:=$79622d32;
+  Result[ 3]:=$6b206574;
+  Result[ 4]:=key[0];
+  Result[ 5]:=key[1];
+  Result[ 6]:=key[2];
+  Result[ 7]:=key[3];
+  Result[ 8]:=key[4];
+  Result[ 9]:=key[5];
+  Result[10]:=key[6];
+  Result[11]:=key[7];
+  Result[12]:=counter;
+  Result[13]:=nonce[0];
+  Result[14]:=nonce[1];
+  Result[15]:=nonce[2];
 
   for r:=1 to 10 do
    begin
@@ -67,17 +82,47 @@ begin
     ChaChaQuarterRound(3,4, 9,14);
    end;
 
-  inc(s[ 0],$61707865); inc(s[ 1],$3320646e); inc(s[ 2],$79622d32); inc(s[ 3],$6b206574);
-  inc(s[ 4],key[0]);    inc(s[ 5],key[1]);    inc(s[ 6],key[2]);    inc(s[ 7],key[3]);
-  inc(s[ 8],key[4]);    inc(s[ 9],key[5]);    inc(s[10],key[6]);    inc(s[11],key[7]);
-  inc(s[12],block);     inc(s[13],nonce[0]);  inc(s[14],nonce[1]);  inc(s[15],nonce[2]);
+  inc(Result[ 0],$61707865);
+  inc(Result[ 1],$3320646e);
+  inc(Result[ 2],$79622d32);
+  inc(Result[ 3],$6b206574);
+  inc(Result[ 4],key[0]);
+  inc(Result[ 5],key[1]);
+  inc(Result[ 6],key[2]);
+  inc(Result[ 7],key[3]);
+  inc(Result[ 8],key[4]);
+  inc(Result[ 9],key[5]);
+  inc(Result[10],key[6]);
+  inc(Result[11],key[7]);
+  inc(Result[12],counter);
+  inc(Result[13],nonce[0]);
+  inc(Result[14],nonce[1]);
+  inc(Result[15],nonce[2]);
+end;
 
-  Result:=s;
-
-  //10f1e7e4 d13b5915 500fdd1f a32071c4
-  //c7d1f4c7 33c06803 0422aa9a c3d46c4e
-  //d2826446 079faa09 14c2d705 d98b02a2
-  //b5129cd1 de164eb9 cbd083e8 a2503c4e
+function ChaCha20_Encrypt(key:TChaChaKey;nonce:TChaChaNonce;counter:cardinal;
+  const plaintext:UTF8String):UTF8String;
+var
+  i,j,k,l,n:integer;
+  s:TChaChaMatrix_U32;
+begin
+  l:=Length(plaintext);
+  SetLength(Result,l);
+  n:=l shr 6;//n:=l div 64;
+  if (l and $3F)<>0 then inc(n);//if (l mod 64)=0 then inc(n);
+  j:=0;
+  for i:=0 to n-1 do
+   begin
+    s:=ChaCha20_Block(key,nonce,counter);
+    k:=0;
+    while (k<64) and (j<l) do
+     begin
+      inc(j);
+      byte(Result[j]):=byte(plaintext[j]) xor TChaChaMatrix_U8(s)[k];
+      inc(k);
+     end;
+    inc(counter);
+   end;
 end;
 
 end.
