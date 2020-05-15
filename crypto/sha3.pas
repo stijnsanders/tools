@@ -23,6 +23,12 @@ function SHA3_256(const x:UTF8String):UTF8String;
 function SHA3_384(const x:UTF8String):UTF8String;
 function SHA3_512(const x:UTF8String):UTF8String;
 
+type
+  KeccakLane=int64;
+  KeccakState=array[0..24] of KeccakLane;
+
+procedure KeccakF1600_StatePermute(var state:KeccakState);
+
 implementation
 
 {$D-}
@@ -30,10 +36,6 @@ implementation
 {$WARN UNSAFE_CAST OFF}
 {$WARN UNSAFE_CODE OFF}
 {$WARN UNSAFE_TYPE OFF}
-
-type
-  KeccakLane=int64;
-  KeccakState=array[0..24] of KeccakLane;
 
 procedure KeccakF1600_StatePermute(var state:KeccakState);
 var
