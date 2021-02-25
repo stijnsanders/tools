@@ -3,12 +3,13 @@
   HashUtils
   by Stijn Sanders
   http://yoy.be/md5
-  2015-2018
-  v1.0.3
+  2015-2021
+  v1.0.4
 
   based on
   https://en.wikipedia.org/wiki/Hmac
   https://tools.ietf.org/html/rfc2898
+  https://tools.ietf.org/html/rfc4648
 
   License: no license, free for any use
 
@@ -31,6 +32,9 @@ function PBKDF2(PRF:TPseudoRandomFunction;HashLength:cardinal;
 function HexEncode(const x:UTF8String):UTF8String;
 function HexEncodeUpperCase(const x:UTF8String):UTF8String;
 function HexDecode(const x:UTF8String):UTF8String;
+
+function Base32Encode(const x:UTF8String):UTF8String;
+function Base32Decode(const x:UTF8String):UTF8String;
 
 function Base64Encode(const x:UTF8String):UTF8String;
 function Base64Decode(const x:UTF8String):UTF8String;
@@ -167,6 +171,125 @@ begin
      end;
    end;
   SetLength(Result,KeyLength);
+end;
+
+const
+  Base32Codes:array[0..31] of AnsiChar=
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+
+function Base32Encode(const x:UTF8String):UTF8String;
+var
+  i,j,l:cardinal;
+begin
+  l:=Length(x);
+  i:=(l div 5);
+  if (l mod 5)<>0 then inc(i);
+  SetLength(Result,i*8);
+  i:=1;
+  j:=0;
+  while (i+4<=l) do
+   begin
+    inc(j);Result[j]:=Base32Codes[  byte(x[i  ]) shr 3];
+    inc(j);Result[j]:=Base32Codes[((byte(x[i  ]) and $07) shl 2)
+                                or (byte(x[i+1]) shr 6)];
+    inc(j);Result[j]:=Base32Codes[ (byte(x[i+1]) and $3E) shr 1];
+    inc(j);Result[j]:=Base32Codes[((byte(x[i+1]) and $01) shl 4)
+                                or (byte(x[i+2]) shr 4)];
+    inc(j);Result[j]:=Base32Codes[((byte(x[i+2]) and $0F) shl 1)
+                                or (byte(x[i+3]) shr 7)];
+    inc(j);Result[j]:=Base32Codes[ (byte(x[i+3]) and $7C) shr 2];
+    inc(j);Result[j]:=Base32Codes[((byte(x[i+3]) and $03) shl 3)
+                                or (byte(x[i+4]) shr 5)];
+    inc(j);Result[j]:=Base32Codes[  byte(x[i+4]) and $1F];
+    inc(i,5);
+   end;
+  case l-i of
+  0:
+   begin
+    inc(j);Result[j]:=Base32Codes[  byte(x[i  ]) shr 3];
+    inc(j);Result[j]:=Base32Codes[((byte(x[i  ]) and $07) shl 2)];
+    inc(j);Result[j]:='=';
+    inc(j);Result[j]:='=';
+    inc(j);Result[j]:='=';
+    inc(j);Result[j]:='=';
+    inc(j);Result[j]:='=';
+    inc(j);Result[j]:='=';
+   end;
+  1:
+   begin
+    inc(j);Result[j]:=Base32Codes[  byte(x[i  ]) shr 3];
+    inc(j);Result[j]:=Base32Codes[((byte(x[i  ]) and $07) shl 2)
+                                or (byte(x[i+1]) shr 6)];
+    inc(j);Result[j]:=Base32Codes[ (byte(x[i+1]) and $3E) shr 1];
+    inc(j);Result[j]:=Base32Codes[((byte(x[i+1]) and $01) shl 4)];
+    inc(j);Result[j]:='=';
+    inc(j);Result[j]:='=';
+    inc(j);Result[j]:='=';
+    inc(j);Result[j]:='=';
+   end;
+  2:
+   begin
+    inc(j);Result[j]:=Base32Codes[  byte(x[i  ]) shr 3];
+    inc(j);Result[j]:=Base32Codes[((byte(x[i  ]) and $07) shl 2)
+                                or (byte(x[i+1]) shr 6)];
+    inc(j);Result[j]:=Base32Codes[ (byte(x[i+1]) and $3E) shr 1];
+    inc(j);Result[j]:=Base32Codes[((byte(x[i+1]) and $01) shl 4)
+                                or (byte(x[i+2]) shr 4)];
+    inc(j);Result[j]:=Base32Codes[((byte(x[i+2]) and $0F) shl 1)];
+    inc(j);Result[j]:='=';
+    inc(j);Result[j]:='=';
+    inc(j);Result[j]:='=';
+   end;
+  3:
+   begin
+    inc(j);Result[j]:=Base32Codes[  byte(x[i  ]) shr 3];
+    inc(j);Result[j]:=Base32Codes[((byte(x[i  ]) and $07) shl 2)
+                                or (byte(x[i+1]) shr 6)];
+    inc(j);Result[j]:=Base32Codes[ (byte(x[i+1]) and $3E) shr 1];
+    inc(j);Result[j]:=Base32Codes[((byte(x[i+1]) and $01) shl 4)
+                                or (byte(x[i+2]) shr 4)];
+    inc(j);Result[j]:=Base32Codes[((byte(x[i+2]) and $0F) shl 1)
+                                or (byte(x[i+3]) shr 7)];
+    inc(j);Result[j]:=Base32Codes[ (byte(x[i+3]) and $7C) shr 2];
+    inc(j);Result[j]:=Base32Codes[((byte(x[i+3]) and $03) shl 3)];
+    inc(j);Result[j]:='=';
+   end;
+  end;
+end;
+
+function Base32Decode(const x:UTF8String):UTF8String;
+var
+  i,j,k,l,n:cardinal;
+  a:array[0..7] of byte;
+begin
+  l:=Length(x);
+  if l<8 then Result:='' else
+   begin
+    k:=(Length(x) div 8)*5;
+    SetLength(Result,k);
+    if x[l  ]='=' then dec(k);
+    if x[l-2]='=' then dec(k);
+    if x[l-3]='=' then dec(k);
+    if x[l-5]='=' then dec(k);
+    i:=0;
+    j:=0;
+    while i<l do
+     begin
+      for n:=0 to 7 do
+       begin
+        inc(i);a[n]:=0;while (a[n]<32) and (x[i]<>Base32Codes[a[n]]) do inc(a[n]);
+       end;
+      if i=l then
+        for n:=1 to 7 do
+          if a[n]=32 then a[n]:=0;
+      inc(j);Result[j]:=AnsiChar((a[0] shl 3) or (a[1] shr 2));
+      inc(j);Result[j]:=AnsiChar((a[1] shl 6) or (a[2] shl 1) or (a[3] shr 4));
+      inc(j);Result[j]:=AnsiChar((a[3] shl 4) or (a[4] shr 1));
+      inc(j);Result[j]:=AnsiChar((a[4] shl 7) or (a[5] shl 2) or (a[6] shr 3));
+      inc(j);Result[j]:=AnsiChar((a[6] shl 5) or (a[7]      ));
+     end;
+    SetLength(Result,k);
+   end;
 end;
 
 const
