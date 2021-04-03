@@ -152,9 +152,9 @@ begin
   while (i<KeyLength) do
    begin
     inc(j);
-    x:=PRF(Password,Salt+
+    x:=PRF(Password,Salt+UTF8String(
       AnsiChar(j shr 24)+AnsiChar((j shr 16) and $FF)+
-      AnsiChar((j shr 8) and $FF)+AnsiChar(j and $FF));
+      AnsiChar((j shr 8) and $FF)+AnsiChar(j and $FF)));
     y:=x;
     c:=Iterations-1;
     while c<>0 do

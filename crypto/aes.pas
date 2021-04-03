@@ -3,8 +3,8 @@
   aes
   by Stijn Sanders
   http://yoy.be/md5
-  2016-2018
-  v1.0.1
+  2016-2021
+  v1.0.2
 
   based on http://csrc.nist.gov/publications/fips/fips197/fips-197.pdf
 
@@ -216,9 +216,6 @@ begin
   //AddRoundKey
   for i:=0 to 3 do
     State[i]:=State[i] xor RoundKey[i];
-  //fix for xors below in first round
-  RoundKey[4]:=RoundKey[4] xor RoundKey[3];
-  RoundKey[5]:=RoundKey[5] xor RoundKey[4];
 
   ri:=4;
   rk:=0;
@@ -258,7 +255,8 @@ begin
         FourBytes(RoundKey[0])[3]:=FourBytes(RoundKey[0])[3] xor sbox[FourBytes(RoundKey[5])[0]];
        end
       else
-        RoundKey[ri]:=RoundKey[ri] xor RoundKey[ri-1];
+        if not((round=1) and (ri>3)) then
+          RoundKey[ri]:=RoundKey[ri] xor RoundKey[ri-1];
       State[i]:=State[i] xor RoundKey[ri];
       inc(ri);
      end;
@@ -277,19 +275,15 @@ begin
   //RoundKey:=Key;//see absolute
 
   //ExpandKey (up front, need them in reverse order)
-  for round:=1 to 8 do
+  for rk:=1 to 8 do
    begin
-    RoundKeys[round]:=RoundKey;
-    
-    FourBytes(RoundKey[0])[0]:=FourBytes(RoundKey[0])[0] xor sbox[FourBytes(RoundKey[5])[1]] xor rcon[round];
+    RoundKeys[rk]:=RoundKey;
+    FourBytes(RoundKey[0])[0]:=FourBytes(RoundKey[0])[0] xor sbox[FourBytes(RoundKey[5])[1]] xor rcon[rk];
     FourBytes(RoundKey[0])[1]:=FourBytes(RoundKey[0])[1] xor sbox[FourBytes(RoundKey[5])[2]];
     FourBytes(RoundKey[0])[2]:=FourBytes(RoundKey[0])[2] xor sbox[FourBytes(RoundKey[5])[3]];
     FourBytes(RoundKey[0])[3]:=FourBytes(RoundKey[0])[3] xor sbox[FourBytes(RoundKey[5])[0]];
-    RoundKey[1]:=RoundKey[1] xor RoundKey[0];
-    RoundKey[2]:=RoundKey[2] xor RoundKey[1];
-    RoundKey[3]:=RoundKey[3] xor RoundKey[2];
-    RoundKey[4]:=RoundKey[4] xor RoundKey[3];
-    RoundKey[5]:=RoundKey[5] xor RoundKey[4];
+    for ri:=1 to 5 do
+      RoundKey[ri]:=RoundKey[ri] xor RoundKey[ri-1];
    end;
 
   //AddRoundKey
