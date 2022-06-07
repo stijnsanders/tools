@@ -4,7 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ComCtrls, StdCtrls, ActnList, Menus, ImgList, DirFindNodes, ShlObj;
+  Dialogs, ComCtrls, StdCtrls, ActnList, Menus, ImgList, DirFindNodes, ShlObj,
+  System.Actions, System.ImageList;
 
 type
   TfDirFindMain = class(TForm)
@@ -26,36 +27,32 @@ type
     ImageList1: TImageList;
     ActionList1: TActionList;
     aCopy: TAction;
-    aSuspendResume: TAction;
     aRefresh: TAction;
     aTerminate: TAction;
     aDelete: TAction;
     aReplace: TAction;
-    aSuspendResumeAll: TAction;
     aTerminateAll: TAction;
     aDeleteAll: TAction;
     CopyLocation1: TMenuItem;
     N1: TMenuItem;
-    PauseResume1: TMenuItem;
     Refresh1: TMenuItem;
     Abort1: TMenuItem;
     Remove1: TMenuItem;
     N2: TMenuItem;
     Replace1: TMenuItem;
     N3: TMenuItem;
-    PauseResumeall1: TMenuItem;
     Abortall1: TMenuItem;
     Removeall1: TMenuItem;
     cbCountMatches: TCheckBox;
     Expand1: TMenuItem;
     cbRegExp: TCheckBox;
+    btnSearchSection: TButton;
     procedure btnSelectFolderClick(Sender: TObject);
     procedure btnStartClick(Sender: TObject);
     procedure tvMatchesCreateNodeClass(Sender: TCustomTreeView;
       var NodeClass: TTreeNodeClass);
     procedure tvMatchesContextPopup(Sender: TObject; MousePos: TPoint;
       var Handled: Boolean);
-    procedure aSuspendResumeExecute(Sender: TObject);
     procedure aRefreshExecute(Sender: TObject);
     procedure aTerminateExecute(Sender: TObject);
     procedure aDeleteExecute(Sender: TObject);
@@ -65,7 +62,6 @@ type
     procedure tvMatchesEnter(Sender: TObject);
     procedure tvMatchesExit(Sender: TObject);
     procedure tvMatchesChange(Sender: TObject; Node: TTreeNode);
-    procedure aSuspendResumeAllExecute(Sender: TObject);
     procedure aTerminateAllExecute(Sender: TObject);
     procedure aDeleteAllExecute(Sender: TObject);
     procedure aReplaceExecute(Sender: TObject);
@@ -206,7 +202,7 @@ begin
    begin
     inc(i);
     inc(j);
-    if x[i] in ['\','.','*','+','?','$','^','[',']','(',')','{','}'] then
+    if AnsiChar(x[i]) in ['\','.','*','+','?','$','^','[',']','(',')','{','}'] then
      begin
       Result[j]:='\';
       inc(j);
@@ -221,7 +217,7 @@ var
   n:TDirFinderNode;
   p:string;
 begin
-  if txtProgress.Focused and (txtProgress.SelLength<>0) then
+  if (txtProgress.Focused or (Sender=btnSearchSection)) and (txtProgress.SelLength<>0) then
     if cbRegExp.Checked then
       cbPattern.Text:=RegExSafe(txtProgress.SelText)
     else
@@ -365,11 +361,6 @@ begin
     raise EAbort.Create('Nothing selected');//Result:=nil?
 end;
 
-procedure TfDirFindMain.aSuspendResumeExecute(Sender: TObject);
-begin
-  PopupFinder.SuspendResume;
-end;
-
 procedure TfDirFindMain.aRefreshExecute(Sender: TObject);
 begin
   PopupFinder.Refresh;
@@ -466,18 +457,6 @@ end;
 procedure TfDirFindMain.DoFinderProgress(Sender:TObject;const PrgTxt:string);
 begin
   txtProgress.Text:=PrgTxt;
-end;
-
-procedure TfDirFindMain.aSuspendResumeAllExecute(Sender: TObject);
-var
-  tn:TTreeNode;
-begin
-  tn:=tvMatches.Items.GetFirstNode;
-  while (tn<>nil) do
-   begin
-    if tn is TDirFinderNode then (tn as TDirFinderNode).SuspendResume;
-    tn:=tn.getNextSibling;
-   end;
 end;
 
 procedure TfDirFindMain.aTerminateAllExecute(Sender: TObject);

@@ -34,9 +34,23 @@ type
 
 function FileAsWideString(const fn:string;var enc:TFileEncoding):WideString;
 
+{$IF not(Defined(RawByteString))}
+type
+  RawByteString=AnsiString;
+{$IFEND}
+
 implementation
 
 uses Windows, SysUtils, ActiveX, VBScript_RegExp_55_TLB;
+
+(*
+{$IF not(Defined(UTF8ToWideString))}
+function UTF8ToWideString(const x:AnsiString):WideString;
+begin
+  Result:=UTF8Decode(x);
+end;
+{$IFEND}
+*)
 
 function FileAsWideString(const fn:string;var enc:TFileEncoding):WideString;
 var
@@ -44,7 +58,7 @@ var
   fh:THandle;
   f:THandleStream;
   wx:word;
-  s:string;
+  s:RawByteString;
 begin
   fh:=CreateFile(PChar(fn),GENERIC_READ,FILE_SHARE_READ,nil,
     OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL or FILE_FLAG_SEQUENTIAL_SCAN,0);
@@ -72,7 +86,7 @@ begin
           i:=f.Size-3;
           SetLength(s,i);
           f.Read(s[1],i);
-          Result:=UTF8Decode(s);
+          Result:=UTF8ToWideString(s);
          end
         else
          begin
@@ -82,7 +96,7 @@ begin
           i:=f.Size;
           SetLength(s,i);
           f.Read(s[1],i);
-          Result:=s;
+          Result:=string(s);
          end;
        end;
     finally

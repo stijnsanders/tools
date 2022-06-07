@@ -28,7 +28,6 @@ type
       const msg:string;val:integer);
     destructor Destroy; override;
     procedure Abort;
-    procedure SuspendResume;
     procedure Refresh;
     function ReplaceAll(const ReplaceWith:WideString):integer;
     property OnProgress:TDirFinderNodeProgress
@@ -347,12 +346,6 @@ begin
    end;
 end;
 
-procedure TDirFinderNode.SuspendResume;
-begin
-  if FDirFinder<>nil then
-    if FDirFinder.Suspended then FDirFinder.Resume else FDirFinder.Suspend;
-end;
-
 function TDirFinderNode.ProgressText: string;
 begin
   Result:=FProgressText;
@@ -368,7 +361,8 @@ var
   re:RegExp;
   tn,tnLast:TTreeNode;
   enc:TFileEncoding;
-  fn,s:string;
+  fn:string;
+  s:RawByteString;
   w:WideString;
   f:TFileStream;
 const
@@ -411,7 +405,7 @@ begin
              end;
             else//feUnknown
              begin
-              s:=w;
+              s:=AnsiString(w);
               f.Write(s[1],Length(s));
              end;
           end;
