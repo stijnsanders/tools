@@ -31,7 +31,7 @@ implementation
 procedure TfrmDirDiffGoToLine.txtLineNumberKeyPress(Sender: TObject;
   var Key: Char);
 begin
-  if not(Key in ['0'..'9']) then Key:=#0;
+  if not(AnsiChar(Key) in ['0'..'9']) then Key:=#0;
 end;
 
 end.

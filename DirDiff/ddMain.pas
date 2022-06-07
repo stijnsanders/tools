@@ -4,7 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, Menus, StdCtrls, ExtCtrls, ComCtrls, ImgList, ddParams, ddData;
+  Dialogs, Menus, StdCtrls, ExtCtrls, ComCtrls, ImgList, ddParams, ddData,
+  System.ImageList;
 
 type
   TfrmDirDiffMain = class(TForm)
@@ -179,7 +180,7 @@ type
   public
     procedure AddSource(const FilePath:string);
   end;
-  
+
 var
   frmDirDiffMain: TfrmDirDiffMain;
 
@@ -189,7 +190,7 @@ implementation
 
 uses
   FileCtrl, ddPrefs, ClipBrd, ActiveX, ddGoToLine, ddHandle, MSXML2_TLB,
-  ddDiff, ddXmlTools, ShellAPI, ShlObj;
+  ddDiff, ddXmlTools, ShellAPI, ShlObj, UITypes;
 
 {$R *.dfm}
 
@@ -838,6 +839,7 @@ begin
   c:=StatusBar1.Canvas;
   c.Font.Assign(Font);
   c.Brush.Style:=bsSolid;
+  c.Pen.Style:=psClear;
   x:=Rect.Left+2;
   np:=tvFolders.Selected;
   if tvFolders.Visible and (np<>nil) then
@@ -859,6 +861,8 @@ begin
    begin
     tiUpdate.Enabled:=false;
     FQueueFlash:=0;
+    c.Brush.Color:=clBtnFace;
+    c.Rectangle(x,Rect.Top,Rect.Right,Rect.Bottom);
    end
   else
    begin
@@ -1549,7 +1553,7 @@ begin
     for i:=0 to FDataSet.DataCount-1 do
      begin
       x:=TDiffXmlInfo(Node.Data).Info[i].Node;
-      if x=nil then r[i]:='' else r[i]:='xml:'+UTF8Encode(x.xml);
+      if x=nil then r[i]:='' else r[i]:='xml:'+x.xml;
      end;
     lbView.Count:=0;
     lbView.Invalidate;
@@ -2042,7 +2046,7 @@ begin
      end;
     s1:=FDataSet[i].Path+s1;
     s2:=FDataSet[j].Path+s2;
-    if cd then ForceDirectories(ExtractFilePath(s2));
+    if cd then SysUtils.ForceDirectories(ExtractFilePath(s2));
    end
   else
    begin

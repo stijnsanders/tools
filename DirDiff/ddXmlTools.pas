@@ -143,7 +143,7 @@ end;
 function TDiffNodeSource1.LineData(Index: integer): UTF8String;
 begin
   if FList=nil then Result:='' else
-    Result:=FSet.XmlMatch(FList.item[Index]);
+    Result:=UTF8Encode(FSet.XmlMatch(FList.item[Index]));
 end;
 
 function TDiffNodeSource1.LineDisplay(Index: integer): string;
@@ -181,7 +181,7 @@ end;
 function TDiffNodeSource2.LineData(Index: integer): UTF8String;
 begin
   if FList=nil then Result:='' else
-    Result:=FSet.XmlMatch(FList.item[Index]);
+    Result:=UTF8Encode(FSet.XmlMatch(FList.item[Index]));
 end;
 
 function TDiffNodeSource2.LineDisplay(Index: integer): string;

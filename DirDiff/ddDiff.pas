@@ -27,7 +27,7 @@ type
   end;
   pkk=^tkk;
 var
-  i,j,k,l,lx,dc,EqLinesHead,EqLinesTail:integer;
+  i,j,k,l,dc,EqLinesHead,EqLinesTail:integer;
   ok:boolean;
   s:Utf8String;
   q:array of integer;
@@ -125,13 +125,11 @@ begin
       ax:=cy-cx;
       bx:=dy-dx;
       if ax>bx then l:=ax else l:=bx; //assert l<Length(kkk)
-      ay:=0;//counter warning
-      by:=0;//counter warning
 
       //trick: on grand dissimmilar length, widen start search diagonals
       //  in an attempt to find common center subsequence near middle faster
-      
-      i:=((dy-dx)-(cy-cx)+1) div 2;
+
+      i:=((dy-dx)-(cy-cx)-1) div 2;
       if i<cy-cx then i:=0;
       for k:=-i to i do
        begin
@@ -140,6 +138,8 @@ begin
         j:=cy  ; kk.b:=j; kk.bk:=k; kk.bx:=j; kk.by:=j;
        end;
       k:=i+2;
+      ay:=0;//counter warning
+      by:=0;//counter warning
       while i<>l do
        begin
         kk:=kx(-i-1);
@@ -304,7 +304,7 @@ begin
       //top fragment
       //if (ax>q[qi]) and (bx>q[qj]) then
       i:=0;
-      while (i<>dc) and ((ff[i*2]=ff[i*2+1]) or (ff[i*2]=q[qi+i*2])) do inc(i);
+      while (i<>dc) and ({(ff[i*2]=ff[i*2+1]) or }(ff[i*2]=q[qi+i*2])) do inc(i);
       if i<>dc then
        begin
         if qx=ql then
@@ -334,7 +334,7 @@ begin
       //bottom fragment
       //if (ay<q[qi+1]) and (by<q[qj+1]) then
       i:=0;
-      while (i<>dc) and ((ff[i*2]=ff[i*2+1]) or (ff[i*2+1]=q[qi+i*2+1])) do inc(i);
+      while (i<>dc) and ({(ff[i*2]=ff[i*2+1]) or }(ff[i*2+1]=q[qi+i*2+1])) do inc(i);
       if i<>dc then
        begin
         if qx=ql then

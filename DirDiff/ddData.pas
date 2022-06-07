@@ -236,6 +236,15 @@ begin
   yy[2]:=(xx[2]+$1FE) div 3;
 end;
 
+(*
+{$IF not(Defined(UTF8ToWideString))}
+function UTF8ToWideString(const x:AnsiString):WideString;
+begin
+  Result:=UTF8Decode(x);
+end;
+{$IFEND}
+*)
+
 { TDiffData }
 
 constructor TDiffData.Create;
@@ -374,7 +383,7 @@ begin
         f.Read(s[1],i);
         //detect NULL's
         for j:=1 to i do if s[j]=#0 then s[j]:=' ';//?
-        Result:=AnsiToUtf8(s);
+        Result:=UTF8Encode(s);
        end;
      end;
 
@@ -465,7 +474,7 @@ begin
         Windows.FindClose(fh);
        end;
       //load into content
-      FContentData:=sl.Text;
+      FContentData:=UTF8Encode(sl.Text);
       FContentLength:=Length(FContentData);
       FContentCount:=0;
       l:=1;
@@ -508,7 +517,7 @@ begin
     else
     if Copy(FPath2,1,4)='xml:' then
      begin
-      FContentData:=FOwner.ReworkXML(Copy(FPath2,5,Length(FPath2)-4));
+      FContentData:=FOwner.ReworkXML(UTF8String(Copy(FPath2,5,Length(FPath2)-4)));
       FIsXML:=true;
      end
     else
@@ -524,7 +533,7 @@ begin
         XmlDoc:=CoDOMDocument.Create;
         XmlDoc.async:=false;
         XmlDoc.preserveWhiteSpace:=FOwner.XmlPreserveWhiteSpace;
-        XmlDoc.loadXML(UTF8Decode(FContentData));//if not?
+        XmlDoc.loadXML(UTF8ToWideString(FContentData));//if not?
 
         FContentData:=FOwner.ReworkXML(FContentData);
        end;
@@ -1279,8 +1288,6 @@ type
   pkk=^tkk;
 var
   i,j,k,l,lx,dc:integer;
-  ok:boolean;
-  s:Utf8String;
   q:array of integer;
   qi,qx,ql,qStart,qStride,qNext,di,dj,
   aa,ax,ay,bb,bx,by,cx,cy,dx,dy:integer;
@@ -1355,7 +1362,7 @@ begin
         ax:=cy-cx;
         bx:=dy-dx;
         if ax>bx then l:=ax else l:=bx; //assert l<Length(kkk)
-        i:=((dy-dx)-(cy-cx)+1) div 2;
+        i:=((dy-dx)-(cy-cx)-1) div 2;
         if i<cy-cx then i:=0;
         for k:=-i to i do
          begin
@@ -1556,7 +1563,7 @@ begin
       //top fragment
       //if (ax>q[qi]) and (bx>q[qj]) then
       i:=0;
-      while (i<>dc) and ((ff[i*2]=ff[i*2+1]) or (ff[i*2]=q[qi+i*2])) do inc(i);
+      while (i<>dc) and ({(ff[i*2]=ff[i*2+1]) or }(ff[i*2]=q[qi+i*2])) do inc(i);
       if i<>dc then
        begin
         if qx=ql then
@@ -1586,7 +1593,7 @@ begin
       //bottom fragment
       //if (ay<q[qi+1]) and (by<q[qj+1]) then
       i:=0;
-      while (i<>dc) and ((ff[i*2]=ff[i*2+1]) or (ff[i*2+1]=q[qi+i*2+1])) do inc(i);
+      while (i<>dc) and ({(ff[i*2]=ff[i*2+1]) or }(ff[i*2+1]=q[qi+i*2+1])) do inc(i);
       if i<>dc then
        begin
         if qx=ql then
@@ -1725,7 +1732,7 @@ var
 begin
   if IgnoreWhitespace then
    begin
-    w:=UTF8Decode(X);
+    w:=UTF8ToWideString(X);
     i:=1;
     j:=1;
 
@@ -1761,7 +1768,7 @@ begin
    end
   else
     if IgnoreCase then
-      Result:=UTF8Encode(WideUpperCase(X))
+      Result:=UTF8Encode(UpperCase(UTF8ToString(X)))
     else
       Result:=X;
 end;
@@ -1812,6 +1819,7 @@ end;
 
 //never call with Value=0!
 procedure FillLongword(var X; Count: Integer; Value: Longword);
+{$IFDEF CPUX86}
 asm
   push  edi
   mov   edi,eax
@@ -1820,6 +1828,19 @@ asm
   rep   stosd
   pop   edi
 end;
+{$ENDIF}
+{$IFDEF CPUX64}
+type
+  TLongwordArray=array[0..0] of Longword;
+  PLongwordArray=^TLongwordArray;
+var
+  p:PLongwordArray;
+  i:integer;
+begin
+  p:=@X;
+  for i:=0 to Count-1 do p[i]:=Value;
+end;
+{$ENDIF}
 
 procedure TDiffSet.GenerateOverview(OverviewHeight:integer);
 var
@@ -2010,7 +2031,7 @@ begin
   Result:=-1;//default
   if Index=-1 then x:=0 else x:=Index+Direction;
   c:=IndexToContentMapIndex(x);
-  m1:=UpperCase(Match);
+  m1:=UTF8Encode(UpperCase(Match));
   while (Result=-1) and (c>=0) and (c<FContentMapCount) do
    begin
     i:=0;
@@ -2019,7 +2040,7 @@ begin
     if i=FDataCount then
       m2:=''
     else
-      m2:=UpperCase(FData[i].LineData(x-FContentMap[c+cmDelta+i]));
+      m2:=UTF8Encode(UpperCase(UTF8ToString(FData[i].LineData(x-FContentMap[c+cmDelta+i]))));
     if Pos(m1,m2)<>0 then
       Result:=x
     else
@@ -2091,9 +2112,9 @@ begin
     if i=FDataCount then Result:='' else
      begin
       ix:=Index-FContentMap[c+cmDelta+i];
-      Result:=Copy(Data[i].FContentData
+      Result:=UTF8ToString(Copy(Data[i].FContentData
         ,Data[i].FContent[ix].Index
-        ,Data[i].FContent[ix].Length);
+        ,Data[i].FContent[ix].Length));
      end;
    end;  
 end;
@@ -2136,9 +2157,9 @@ var
   i,j,p,l:integer;
   w:WideString;
   px:string;
-  procedure sAdd(xx:Utf8String);
+  procedure sAdd(const xx:string);
   begin
-    Result:=Result+xx+#13#10;
+    Result:=Result+UTF8Encode(xx)+#13#10;
   end;
   function Prefix:string;
   var
@@ -2150,7 +2171,7 @@ var
     SetLength(Result,prefix_i);
     FillChar(Result[1],prefix_i,' ');
   end;
-  procedure DoOpeningTag(x,y:WideString);
+  procedure DoOpeningTag(const x,y:WideString);
   var
     ml:MatchCollection;
     m:Match;
@@ -2158,7 +2179,7 @@ var
     i:integer;
   begin
     px:=Prefix;
-    if XmlAttrOnLine and not((Length(x)>1) and (char(x[2]) in ['!','?'])) then
+    if XmlAttrOnLine and not((Length(x)>1) and (AnsiChar(x[2]) in ['!','?'])) then
      begin
       ml:=reAttrs.Execute(x) as MatchCollection;
       if ml.Count=0 then
@@ -2211,7 +2232,7 @@ begin
 
   try
     Result:='';
-    src:=UTF8Decode(SourceData);
+    src:=UTF8ToWideString(SourceData);
     ml:=re.Execute(src) as MatchCollection;
 
     p:=1;
@@ -2381,9 +2402,9 @@ begin
           SetLength(ss,sl);
          end;
         ss[si].bm:=bm;
-        ss[si].t:=ExpandTabs(Copy(Data[ai].FContentData
+        ss[si].t:=UTF8ToString(ExpandTabs(Copy(Data[ai].FContentData
             ,Data[ai].FContent[i].Index
-            ,Data[ai].FContent[i].Length));
+            ,Data[ai].FContent[i].Length)));
         inc(si);
        end;
       inc(cx,FContentMapStride);

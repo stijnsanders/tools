@@ -45,7 +45,6 @@ object frmDirDiffGoToLine: TfrmDirDiffGoToLine
     Width = 97
     Height = 24
     Style = csDropDownList
-    ItemHeight = 16
     ItemIndex = 0
     TabOrder = 1
     Text = 'Any'
