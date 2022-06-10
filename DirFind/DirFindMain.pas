@@ -372,14 +372,18 @@ begin
 end;
 
 procedure TfDirFindMain.aDeleteExecute(Sender: TObject);
+var
+  n:TDirFinderNode;
 begin
+  n:=PopupFinder;
   if FFinderProgress<>nil then FFinderProgress.OnProgress:=nil;
   FFinderProgress:=nil;
   txtProgress.Text:='';
   Caption:=AppName;
   Application.Title:=AppName;
-  PopupFinder.Delete;
-  FPopupNode:=nil;
+  n.Delete;
+  n:=nil;
+  FPopupNode:=tvMatches.Selected;//for next press of [delete]
   if tvMatches.Focused and (tvMatches.Selected=nil) then cbPattern.SetFocus;
 end;
 
