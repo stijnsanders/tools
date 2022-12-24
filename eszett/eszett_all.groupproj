@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{76E267A1-F045-4F09-BCDB-054858E5828F}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="eszett.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="eszc.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="eszett">
+        <MSBuild Projects="eszett.dproj"/>
+    </Target>
+    <Target Name="eszett:Clean">
+        <MSBuild Projects="eszett.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="eszett:Make">
+        <MSBuild Projects="eszett.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="eszc">
+        <MSBuild Projects="eszc.dproj"/>
+    </Target>
+    <Target Name="eszc:Clean">
+        <MSBuild Projects="eszc.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="eszc:Make">
+        <MSBuild Projects="eszc.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="eszett;eszc"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="eszett:Clean;eszc:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="eszett:Make;eszc:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
