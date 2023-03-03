@@ -2163,13 +2163,13 @@ var
   end;
   function Prefix:string;
   var
-    prefix_i:integer;
+    prefix_i,i:integer;
   begin
     prefix_i:=0;
     if XmlIndent then
       if WideTabs then prefix_i:=l*8 else prefix_i:=l*4;
     SetLength(Result,prefix_i);
-    FillChar(Result[1],prefix_i,' ');
+    for i:=1 to prefix_i do Result[i]:=' ';
   end;
   procedure DoOpeningTag(const x,y:WideString);
   var

@@ -1,3 +1,7 @@
+v2.0.5.646
+Fixed issue with XML diff
+Switch to Delphi 10.4 Community Edition
+
 v2.0.4.544
 Fixed issue with more-than-2-way diffs
 Switch to Delphi 10.2.3 Community Edition
