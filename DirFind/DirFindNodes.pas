@@ -18,14 +18,16 @@ type
   private
     FDirFinder:TDirFinder;
     FRootPath,FFiles,FNotFiles,FPattern,FProgressText:string;
-    FIgnoreCase,FMultiLine,FCountMatches:boolean;
-    FTotalFilesFound,FTotalFinds:integer;
+    FIgnoreCase,FMultiLine:boolean;
+    FCountMatches:TDirFinderCountMatches;
+    FTotalFilesFound:integer;
+    FTotalFinds:array of integer;
     FOnProgress:TDirFinderNodeProgress;
   public
     procedure Start(const Folder,Files,NotFiles,Pattern:string;
-      IgnoreCase,MultiLine,CountMatches:boolean);
+      IgnoreCase,MultiLine:boolean;CountMatches:TDirFinderCountMatches);
     procedure FinderNotify(nm:TDirFinderNotifyMessage;
-      const msg:string;val:integer);
+      const msg:string;const vals:array of integer);
     destructor Destroy; override;
     procedure Abort;
     procedure Refresh;
@@ -41,8 +43,9 @@ type
 
   TDirFindFolderNode=class(TDirFindTreeNode)
   private
-    FMatchingFiles,FMatches,FFolders:integer;
-    procedure IncMatches(val:integer);
+    FMatchingFiles,FFolders:integer;
+    FMatches:array of integer;
+    procedure IncMatches(const vals:array of integer);
   public
     FolderName:string;
     procedure AfterConstruction; override;
@@ -84,7 +87,8 @@ uses SysUtils, Classes, VBScript_RegExp_55_TLB;
 const
   NodeTextSeparator=#$95;//'  ';
   NodeTextProgress='...';
-  NodeTextMatchCount=':';
+  NodeTextMatchCount=#$B7;//':';
+  NodeTextSubMatchCount=' \';
 
   iiFolder=0;
   iiFolderWorking=1;
@@ -165,13 +169,13 @@ begin
 end;
 
 procedure TDirFinderNode.FinderNotify(nm: TDirFinderNotifyMessage;
-  const msg: string; val: integer);
+  const msg: string; const vals: array of integer);
 var
   tn:TTreeNode;
   procedure FindNode(IsFile:boolean);
   var
     tn1:TTreeNode;
-    i,j:integer;
+    i,j,k:integer;
     s:string;
   begin
     tn:=Self;
@@ -189,7 +193,24 @@ var
         while (tn1<>nil) and (CompareText(tn1.Text,s)<0) do
           tn1:=tn1.getNextSibling;
         //assert doesn't exist already, only one FindNode(true) call
-        if FCountMatches then s:=s+NodeTextSeparator+IntToStr(val);
+        case FCountMatches of
+          ncMatches:
+            s:=s+NodeTextSeparator+IntToStr(vals[0]);//assert(Length(vals)=1)
+          ncSubMatches:
+            if Length(vals)>0 then
+              if Length(vals)>3 then
+               begin
+                s:=s+NodeTextSeparator+IntToStr(vals[0]);
+                for k:=1 to Length(vals)-1 do
+                  s:=s+NodeTextSubMatchCount+IntToStr(k)+'='+IntToStr(vals[k]);
+               end
+              else
+               begin
+                s:=s+NodeTextSeparator+IntToStr(vals[0]);
+                for k:=1 to Length(vals)-1 do
+                  s:=s+NodeTextMatchCount+IntToStr(vals[k]);
+               end;
+        end;
         DirFindNextNodeClass:=TDirFindMatchNode;
         if tn1=nil then
           tn1:=Owner.AddChild(tn,s)
@@ -222,6 +243,7 @@ var
 var
   tn1:TTreeNode;
   s1:string;
+  k,l:integer;
 begin
   case nm of
     nmDone:
@@ -232,11 +254,26 @@ begin
         ImageIndex:=iiFolder;
         SelectedIndex:=iiFolder;
        end;
-      if FCountMatches then
-        s1:=IntToStr(FTotalFilesFound)+NodeTextMatchCount+IntToStr(FTotalFinds)
-      else
-        s1:=IntToStr(FTotalFinds);
-      FProgressText:=FRootPath+NodeTextSeparator+'['+s1+']'+NodeTextSeparator+
+      case FCountMatches of
+        ncFiles:
+          s1:=IntToStr(FTotalFinds[0]);
+        ncMatches://assert(Length(FTotalFinds)=1)
+          s1:=IntToStr(FTotalFilesFound)+NodeTextMatchCount+IntToStr(FTotalFinds[0]);
+        ncSubMatches:
+         begin
+          s1:=IntToStr(FTotalFilesFound);
+          if Length(FTotalFinds)>3 then
+           begin
+            s1:=s1+NodeTextMatchCount+IntToStr(FTotalFinds[0]);
+            for k:=1 to Length(FTotalFinds)-1 do
+              s1:=s1+NodeTextSubMatchCount+IntToStr(k)+'='+IntToStr(FTotalFinds[k]);
+           end
+          else
+            for k:=0 to Length(FTotalFinds)-1 do
+              s1:=s1+NodeTextMatchCount+IntToStr(FTotalFinds[k]);
+         end;
+      end;
+      FProgressText:=FRootPath+NodeTextSeparator+s1+NodeTextSeparator+
         FPattern+NodeTextSeparator+FFiles+NodeTextSeparator+FNotFiles;
       Text:=FProgressText;
       if @FOnProgress<>nil then FOnProgress(Self,FProgressText);
@@ -290,11 +327,23 @@ begin
       tn.ImageIndex:=iiFile;
       tn.SelectedIndex:=iiFile;
       inc(FTotalFilesFound);
-      inc(FTotalFinds,val);
+      k:=Length(FTotalFinds);
+      l:=Length(vals);
+      if k<l then
+       begin
+        SetLength(FTotalFinds,l);
+        while k<l do
+         begin
+          FTotalFinds[k]:=0;
+          inc(k);
+         end;
+       end;
+      for k:=0 to l-1 do
+        inc(FTotalFinds[k],vals[k]);
       tn:=tn.Parent;
       while (tn<>nil) and (tn<>Self) do
        begin
-        (tn as TDirFindFolderNode).IncMatches(val);
+        (tn as TDirFindFolderNode).IncMatches(vals);
         tn:=tn.Parent;
        end;
      end;
@@ -302,7 +351,7 @@ begin
 end;
 
 procedure TDirFinderNode.Start(const Folder, Files, NotFiles, Pattern: string;
-  IgnoreCase, MultiLine, CountMatches: boolean);
+  IgnoreCase, MultiLine: boolean; CountMatches: TDirFinderCountMatches);
 var
   i:integer;
 begin
@@ -328,7 +377,8 @@ begin
   ImageIndex:=iiFolderWorking;
   SelectedIndex:=iiFolderWorking;
   FTotalFilesFound:=0;
-  FTotalFinds:=0;
+  SetLength(FTotalFinds,1);
+  FTotalFinds[0]:=0;
   Text:=FRootPath+NodeTextSeparator+NodeTextProgress+NodeTextSeparator+
     FPattern+NodeTextSeparator+FFiles+NodeTextSeparator+FNotFiles;
   FDirFinder:=TDirFinder.Create(FRootPath,FFiles,FNotFiles,FPattern,
@@ -341,8 +391,8 @@ begin
   if FDirFinder<>nil then
    begin
     FDirFinder.Terminate;
-    FinderNotify(nmError,'Aborted by user',0);
-    FinderNotify(nmDone,'',-1);
+    FinderNotify(nmError,'Aborted by user',[]);
+    FinderNotify(nmDone,'',[-1]);
    end;
 end;
 
@@ -442,19 +492,45 @@ end;
 procedure TDirFindFolderNode.AfterConstruction;
 begin
   inherited;
-  FMatches:=0;
+  FMatches:=nil;//SetLength(FMatches,0);
   FFolders:=0;
 end;
 
-procedure TDirFindFolderNode.IncMatches(val:integer);
+procedure TDirFindFolderNode.IncMatches(const vals:array of integer);
+var
+  k,l:integer;
+  s:string;
 begin
   inc(FMatchingFiles);
-  inc(FMatches,val);
-  //if FCountMatches then
-  if FMatchingFiles<>FMatches then
-    Text:=FolderName+NodeTextSeparator+IntToStr(FMatchingFiles)+NodeTextMatchCount+IntToStr(FMatches)
+  k:=Length(FMatches);
+  l:=Length(vals);
+  if k<l then
+   begin
+    SetLength(FMatches,l);
+    while k<l do
+     begin
+      FMatches[k]:=0;
+      inc(k);
+     end;
+   end;
+  for k:=0 to l-1 do inc(FMatches[k],vals[k]);
+  //case FCountMatches of
+  if (Length(FMatches)=0) or ((Length(FMatches)=1) and (FMatches[0]=FMatchingFiles)) then
+    s:=FolderName+NodeTextSeparator+IntToStr(FMatchingFiles)
   else
-    Text:=FolderName+NodeTextSeparator+IntToStr(FMatches);
+   begin
+    s:=FolderName+NodeTextSeparator+IntToStr(FMatchingFiles);
+    if Length(FMatches)>3 then
+     begin
+      s:=s+NodeTextMatchCount+IntToStr(FMatches[0]);
+      for k:=1 to l-1 do
+        s:=s+NodeTextSubMatchCount+IntToStr(k)+'='+IntToStr(FMatches[k]);
+     end
+    else
+      for k:=0 to l-1 do
+        s:=s+NodeTextMatchCount+IntToStr(FMatches[k]);
+   end;
+  Text:=s;
 end;
 
 function TDirFindFolderNode.ProgressText: string;

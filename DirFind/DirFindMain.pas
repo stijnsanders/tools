@@ -43,10 +43,13 @@ type
     N3: TMenuItem;
     Abortall1: TMenuItem;
     Removeall1: TMenuItem;
-    cbCountMatches: TCheckBox;
     Expand1: TMenuItem;
     cbRegExp: TCheckBox;
     btnSearchSection: TButton;
+    Label5: TLabel;
+    rbCountFiles: TRadioButton;
+    rbCountMatches: TRadioButton;
+    rbCountSubMatches: TRadioButton;
     procedure btnSelectFolderClick(Sender: TObject);
     procedure btnStartClick(Sender: TObject);
     procedure tvMatchesCreateNodeClass(Sender: TCustomTreeView;
@@ -86,7 +89,7 @@ implementation
 
 {$WARN UNIT_PLATFORM OFF}
 
-uses ActiveX, ComObj, FileCtrl, ClipBrd, DirFindReplace;
+uses ActiveX, ComObj, FileCtrl, ClipBrd, DirFindReplace, DirFindWorker;
 
 {$R *.dfm}
 
@@ -107,6 +110,7 @@ end;
 procedure TfDirFindMain.DoCreate;
 var
   d:string;
+  i:integer;
 begin
   inherited;
   OleInitialize(nil);//CoInitialize(nil);
@@ -137,13 +141,19 @@ begin
   cbRegExp.Checked:=IniStr('RegExp','0',d)='1';
   cbIgnoreCase.Checked:=IniStr('IgnoreCase','1',d)='1';
   cbMultiLine.Checked:=IniStr('MultiLine','0',d)='1';
-  cbCountMatches.Checked:=IniStr('CountMatches','0',d)='1';
+  i:=StrToIntDef(IniStr('CountMatches','0',d),0);
+  case i of
+    0:rbCountFiles.Checked:=true;
+    1:rbCountMatches.Checked:=true;
+    2:rbCountSubMatches.Checked:=true;
+  end;
   IndentLevelTabSize:=StrToInt(IniStr('TabSize','4',d));
 end;
 
 procedure TfDirFindMain.DoClose(var Action: TCloseAction);
 var
   d:string;
+  i:integer;
 const
   BoolStr:array[boolean] of string=('0','1');
 begin
@@ -167,7 +177,11 @@ begin
   SetIniStr('RegExp',BoolStr[cbRegExp.Checked],d);
   SetIniStr('IgnoreCase',BoolStr[cbIgnoreCase.Checked],d);
   SetIniStr('MultiLine',BoolStr[cbMultiLine.Checked],d);
-  SetIniStr('CountMatches',BoolStr[cbCountMatches.Checked],d);
+  if rbCountFiles.Checked then i:=0 else
+  if rbCountMatches.Checked then i:=1 else
+  if rbCountSubMatches.Checked then i:=2 else
+    i:=0;//default
+  SetIniStr('CountMatches',IntToStr(i),d);
 end;
 
 procedure TfDirFindMain.btnSelectFolderClick(Sender: TObject);
@@ -216,6 +230,7 @@ procedure TfDirFindMain.btnStartClick(Sender: TObject);
 var
   n:TDirFinderNode;
   p:string;
+  i:integer;
 begin
   if (txtProgress.Focused or (Sender=btnSearchSection)) and (txtProgress.SelLength<>0) then
     if cbRegExp.Checked then
@@ -227,6 +242,10 @@ begin
     p:=cbPattern.Text
   else
     p:=RegExSafe(cbPattern.Text);
+  if rbCountFiles.Checked then i:=0 else
+  if rbCountMatches.Checked then i:=1 else
+  if rbCountSubMatches.Checked then i:=2 else
+    i:=0;//default
   DirFindNextNodeClass:=TDirFinderNode;
   n:=tvMatches.Items.Add(nil,'') as TDirFinderNode;
   n.Start(
@@ -236,7 +255,7 @@ begin
     p,
     cbIgnoreCase.Checked,
     cbMultiLine.Checked,
-    cbCountMatches.Checked);
+    TDirFinderCountMatches(i));
   tvMatches.Selected:=n;
   AddToList(cbFolder);
   AddToList(cbFiles);
@@ -382,7 +401,6 @@ begin
   Caption:=AppName;
   Application.Title:=AppName;
   n.Delete;
-  n:=nil;
   FPopupNode:=tvMatches.Selected;//for next press of [delete]
   if tvMatches.Focused and (tvMatches.Selected=nil) then cbPattern.SetFocus;
 end;
@@ -539,7 +557,9 @@ begin
           'r','R':cbRegExp.Checked:=b;
           'c','C':cbIgnoreCase.Checked:=b;
           'm','M':cbMultiLine.Checked:=b;
-          'a','A':cbCountMatches.Checked:=b;
+          'f','F':rbCountFiles.Checked:=true;
+          'a','A':rbCountMatches.Checked:=true;
+          's','S':rbCountSubMatches.Checked:=true;
           else raise Exception.Create('Unknown command line option at position '+
             IntToStr(j)+':"'+s+'"');
         end;
