@@ -3,11 +3,11 @@ These are a few of my personal productivity tools. They have come into existence
 
 ## Allsorts
 
-A Windows shell extension that can copy the full path and filename of selected file(s) (and directories), sounds simple, but a task I was peacing together before with the location bar and the properties dialog. Use it to paste the full path in a file dialog when you had the folder view open on beforehand.
+A Windows shell extension that can copy the full path and filename of selected file(s) (and directories), sounds simple, but a task I was piecing together before with the location bar and the properties dialog. Use it to paste the full path in a file dialog when you had the folder view open on beforehand.
 
 ## DirDiff
 
-Screen real-estate, I like the term, and don't want it wasted, so why show something twice? I wanted a diff that shows what's equal between the two exactly once. Also those that say you can't diff XML's are wrong. Yes you can _create_ XML that's like hell to diff, but in most day-to-day cases a diff based on some or all values does just fine.
+Screen real-estate, I like the term, and don't want it wasted, so why show something twice? I wanted a diff that shows what's equal between the two, exactly once. Also those that say you can't diff XML's are wrong. Yes you can _create_ XML that's like hell to diff, but in most day-to-day cases a diff based on some or all values does just fine.
 
 ## DirFind
 
@@ -45,7 +45,6 @@ These are a few other tools made by me not contained in this repository:
 These are a few other tools, not by me, but which I highly recommend:
 
 * **[7-Zip](http://www.7-zip.org/)**: my ZIP-archive tool of choice. Supports a wide range of archive file formats.
-* **[Atom](https://atom.io/)**: written by the gentle people over at GitHub, designed to be as versatile as things like Emacs, Sublime; but based on Node.js and Chrome's V8.
 * **[Ditto-CP](http://sourceforge.net/projects/ditto-cp/)**: lost something because you copied something new before pasting that last thing? Don't worry, Ditto-CP kept a copy. Once you get the hang of this you'll even start copying things and paste them in a different order.
 * **[FileZilla](https://filezilla-project.org/)**: my FTP-client of choice. Also has a great FTP server.
 * **[The GIMP](https://www.gimp.org/)**: my graphics editor of choice.
