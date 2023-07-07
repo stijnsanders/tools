@@ -75,6 +75,7 @@ type
     cm2:IContextMenu2;
     function PopupFinder: TDirFinderNode;
     procedure DoFinderProgress(Sender: TObject; const PrgTxt: string);
+    procedure DoStoreValues(Sender: TObject);
   protected
     procedure DoCreate; override;
     procedure DoClose(var Action: TCloseAction); override;
@@ -192,18 +193,6 @@ begin
   if SelectDirectory('Select directory to search in','',d) then cbFolder.Text:=d;
 end;
 
-procedure AddToList(cb:TComboBox);
-var
-  i:integer;
-begin
-  if cb.Text<>'' then
-   begin
-    i:=cb.Items.IndexOf(cb.Text);
-    if i=-1 then cb.Items.Add(cb.Text);
-   end;
-  //assert cb.Sorted:=true;
-end;
-
 function RegExSafe(const x:string):string;
 var
   i,j,l:integer;
@@ -255,12 +244,9 @@ begin
     p,
     cbIgnoreCase.Checked,
     cbMultiLine.Checked,
-    TDirFinderCountMatches(i));
+    TDirFinderCountMatches(i),
+    DoStoreValues);
   tvMatches.Selected:=n;
-  AddToList(cbFolder);
-  AddToList(cbFiles);
-  AddToList(cbNotFiles);
-  AddToList(cbPattern);
 end;
 
 procedure TfDirFindMain.tvMatchesCreateNodeClass(Sender: TCustomTreeView;
@@ -598,6 +584,25 @@ begin
       btnStart.Click;
      end;
   end;
+end;
+
+procedure TfDirFindMain.DoStoreValues(Sender: TObject);
+var
+  n:TDirFinderNode;
+
+  procedure DoStore(cb:TComboBox;const Value:string);
+  begin
+    //assert cb.Items.Sorted
+    if (Value<>'') and (cb.Items.IndexOf(Value)=-1) then
+      cb.Items.Add(Value);
+  end;
+
+begin
+  n:=(Sender as TDirFinderNode);
+  DoStore(cbFolder,n.RootPath);
+  DoStore(cbFiles,n.FindFiles);
+  DoStore(cbNotFiles,n.FindNotFiles);
+  DoStore(cbPattern,n.Pattern);
 end;
 
 end.

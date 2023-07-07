@@ -2,7 +2,7 @@ unit DirFindNodes;
 
 interface
 
-uses ComCtrls, DirFindWorker;
+uses Classes, ComCtrls, DirFindWorker;
 
 type
   TDirFindTreeNode=class(TTreeNode)//abstract
@@ -23,9 +23,11 @@ type
     FTotalFilesFound:integer;
     FTotalFinds:array of integer;
     FOnProgress:TDirFinderNodeProgress;
+    FOnStoreValues:TNotifyEvent;
   public
     procedure Start(const Folder,Files,NotFiles,Pattern:string;
-      IgnoreCase,MultiLine:boolean;CountMatches:TDirFinderCountMatches);
+      IgnoreCase,MultiLine:boolean;CountMatches:TDirFinderCountMatches;
+      OnStoreValues:TNotifyEvent);
     procedure FinderNotify(nm:TDirFinderNotifyMessage;
       const msg:string;const vals:array of integer);
     destructor Destroy; override;
@@ -36,6 +38,8 @@ type
       read FOnProgress write FOnProgress;
     property Pattern:string read FPattern;
     property RootPath:string read FRootPath;
+    property FindFiles:string read FFiles;
+    property FindNotFiles:string read FNotFiles;
     function ProgressText:string; override;
     function IsFinding:boolean;
     function AllFilePaths:string;
@@ -82,7 +86,7 @@ var
 
 implementation
 
-uses SysUtils, Classes, VBScript_RegExp_55_TLB;
+uses SysUtils, VBScript_RegExp_55_TLB;
 
 const
   NodeTextSeparator=#$95;//'  ';
@@ -277,6 +281,7 @@ begin
         FPattern+NodeTextSeparator+FFiles+NodeTextSeparator+FNotFiles;
       Text:=FProgressText;
       if @FOnProgress<>nil then FOnProgress(Self,FProgressText);
+        if (@FOnStoreValues<>nil) and (FTotalFilesFound<>0) then FOnStoreValues(Self);
      end;
     nmError:
      begin
@@ -351,7 +356,8 @@ begin
 end;
 
 procedure TDirFinderNode.Start(const Folder, Files, NotFiles, Pattern: string;
-  IgnoreCase, MultiLine: boolean; CountMatches: TDirFinderCountMatches);
+  IgnoreCase, MultiLine: boolean; CountMatches: TDirFinderCountMatches;
+  OnStoreValues: TNotifyEvent);
 var
   i:integer;
 begin
@@ -364,6 +370,7 @@ begin
   FMultiLine:=MultiLine;
   FCountMatches:=CountMatches;
   FProgressText:=NodeTextProgress+Folder;
+  FOnStoreValues:=OnStoreValues;
   i:=Length(FRootPath);
   if (i<>0) and (FRootPath[i]='\') then SetLength(FRootPath,i-1);
   FDirFinder:=nil;
