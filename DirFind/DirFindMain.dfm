@@ -57,8 +57,8 @@ object fDirFindMain: TfDirFindMain
     FocusControl = rbCountFiles
   end
   object cbIgnoreCase: TCheckBox
-    Left = 80
-    Top = 128
+    Left = 81
+    Top = 129
     Width = 97
     Height = 17
     Caption = '&Ignore case'
@@ -68,7 +68,7 @@ object fDirFindMain: TfDirFindMain
   end
   object cbMultiLine: TCheckBox
     Left = 183
-    Top = 128
+    Top = 129
     Width = 79
     Height = 17
     Caption = '&Multi line'
@@ -81,7 +81,7 @@ object fDirFindMain: TfDirFindMain
     Height = 22
     Anchors = [akLeft, akTop, akRight]
     DropDownCount = 32
-    TabOrder = 7
+    TabOrder = 11
   end
   object btnSelectFolder: TButton
     Left = 664
@@ -90,7 +90,7 @@ object fDirFindMain: TfDirFindMain
     Height = 25
     Anchors = [akTop, akRight]
     Caption = '...'
-    TabOrder = 8
+    TabOrder = 12
     OnClick = btnSelectFolderClick
   end
   object cbFiles: TComboBox
@@ -100,7 +100,7 @@ object fDirFindMain: TfDirFindMain
     Height = 22
     Anchors = [akLeft, akTop, akRight]
     DropDownCount = 32
-    TabOrder = 9
+    TabOrder = 13
   end
   object cbPattern: TComboBox
     Left = 8
@@ -118,7 +118,7 @@ object fDirFindMain: TfDirFindMain
     Height = 25
     Caption = 'Start'
     Default = True
-    TabOrder = 4
+    TabOrder = 7
     OnClick = btnStartClick
   end
   object txtProgress: TEdit
@@ -129,7 +129,7 @@ object fDirFindMain: TfDirFindMain
     Anchors = [akLeft, akTop, akRight]
     ParentColor = True
     ReadOnly = True
-    TabOrder = 5
+    TabOrder = 8
   end
   object tvMatches: TTreeView
     Left = 8
@@ -145,7 +145,7 @@ object fDirFindMain: TfDirFindMain
     PopupMenu = PopupMenu1
     ReadOnly = True
     RightClickSelect = True
-    TabOrder = 6
+    TabOrder = 10
     OnChange = tvMatchesChange
     OnContextPopup = tvMatchesContextPopup
     OnCreateNodeClass = tvMatchesCreateNodeClass
@@ -161,11 +161,11 @@ object fDirFindMain: TfDirFindMain
     Height = 22
     Anchors = [akTop, akRight]
     DropDownCount = 32
-    TabOrder = 10
+    TabOrder = 14
   end
   object cbRegExp: TCheckBox
     Left = 8
-    Top = 128
+    Top = 129
     Width = 67
     Height = 17
     Caption = '&RegExp'
@@ -173,39 +173,39 @@ object fDirFindMain: TfDirFindMain
   end
   object btnSearchSection: TButton
     Left = 664
-    Top = 151
+    Top = 152
     Width = 25
     Height = 25
     Anchors = [akTop, akRight]
     Caption = '...'
-    TabOrder = 11
+    TabOrder = 9
     OnClick = btnStartClick
   end
   object rbCountFiles: TRadioButton
     Left = 313
-    Top = 128
+    Top = 129
     Width = 48
     Height = 17
     Caption = 'Files'
     Checked = True
-    TabOrder = 12
+    TabOrder = 4
     TabStop = True
   end
   object rbCountMatches: TRadioButton
     Left = 367
-    Top = 128
+    Top = 129
     Width = 74
     Height = 17
     Caption = 'Matches'
-    TabOrder = 13
+    TabOrder = 5
   end
   object rbCountSubMatches: TRadioButton
     Left = 447
-    Top = 128
+    Top = 129
     Width = 113
     Height = 17
     Caption = 'Sub-matches'
-    TabOrder = 14
+    TabOrder = 6
   end
   object PopupMenu1: TPopupMenu
     Left = 32
