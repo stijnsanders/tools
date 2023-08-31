@@ -10,7 +10,7 @@ type
   TDirFinderNotifyMessage=(nmError,nmDone,nmFolderFound,nmProgress,nmFolderDone,nmMatchFound);
 
   TDirFinderNotifyEvent=procedure(nm:TDirFinderNotifyMessage;
-    const msg:string;const vals:array of integer) of object;
+    const msg,info:string;const vals:array of integer) of object;
 
   TDirFinder=class(TThread)
   private
@@ -19,9 +19,9 @@ type
     FCountMatches:TDirFinderCountMatches;
     FOnNotify:TDirFinderNotifyEvent;
     FOnNotify_nm:TDirFinderNotifyMessage;
-    FOnNotify_msg:string;
+    FOnNotify_msg,FOnNotify_info:string;
     FOnNotify_vals:array of integer;
-    procedure Notify(nm:TDirFinderNotifyMessage;const msg:string;
+    procedure Notify(nm:TDirFinderNotifyMessage;const msg,info:string;
       const vals:array of integer);
     procedure DoNotify;
   protected
@@ -36,12 +36,15 @@ type
 
   TFileEncoding=(feUtf16,feUtf8,feUnknown);
 
-function FileAsWideString(const fn:string;var enc:TFileEncoding):WideString;
+function FileAsWideString(const fn:string;var fs:Int64;var enc:TFileEncoding):WideString;
 
 {$IF not(Defined(RawByteString))}
 type
   RawByteString=AnsiString;
 {$IFEND}
+
+const
+ NodeInfoSeparator=#$95;//'  ';
 
 implementation
 
@@ -56,7 +59,7 @@ end;
 {$IFEND}
 *)
 
-function FileAsWideString(const fn:string;var enc:TFileEncoding):WideString;
+function FileAsWideString(const fn:string;var fs:Int64;var enc:TFileEncoding):WideString;
 var
   i:integer;
   fh:THandle;
@@ -70,12 +73,13 @@ begin
    begin
     f:=THandleStream.Create(fh);
     try
+      fs:=f.Size;
       f.Read(wx,2);
       if wx=$FEFF then
        begin
         //UTF16
         enc:=feUtf16;
-        i:=(f.Size div 2)-1;
+        i:=(fs div 2)-1;
         SetLength(Result,i);
         f.Read(Result[1],i*2);
        end
@@ -87,7 +91,7 @@ begin
          begin
           //UTF-8
           enc:=feUtf8;
-          i:=f.Size-3;
+          i:=fs-3;
           SetLength(s,i);
           f.Read(s[1],i);
           Result:=UTF8ToWideString(s);
@@ -97,7 +101,7 @@ begin
           //assume current encoding
           enc:=feUnknown;
           f.Position:=0;
-          i:=f.Size;
+          i:=fs;
           SetLength(s,i);
           f.Read(s[1],i);
           Result:=string(s);
@@ -145,16 +149,31 @@ var
   d,fn:string;
   fh:THandle;
   fd:TWin32FindData;
+  fs:int64;
   enc:TFileEncoding;
   mc:MatchCollection;
   m:Match;
   sm:SubMatches;
   vals:array of integer;
+  tc,cFiles,cFolders:cardinal;
+
+  function fInfo:string;
+  var
+    st:TSystemTime;
+  begin
+    Result:=fn+NodeInfoSeparator+IntToStr(fs);//TODO: 'pretty size'
+    if FileTimeToSystemTime(fd.ftLastWriteTime,st) then
+      Result:=Result+NodeInfoSeparator+DateTimeToStr(SystemTimeToDateTime(st));
+  end;
+
 begin
   inherited;
   CoInitialize(nil);
   folders:=TStringList.Create;
   try
+    tc:=GetTickCount;
+    cFiles:=0;
+    cFolders:=0;
     folders.Add(FFolder);
 
     re:=CoRegExp.Create;
@@ -186,7 +205,8 @@ begin
        end;
       d:=folders[i];
       folders.Delete(i);
-      Notify(nmProgress,d,[]);//folders.Count);?
+      inc(cFolders);
+      Notify(nmProgress,d,'',[]);//folders.Count);?
       fh:=FindFirstFile(PChar(d+'\*.*'),fd);
       try
         repeat
@@ -196,17 +216,19 @@ begin
             if (fd.dwFileAttributes and FILE_ATTRIBUTE_DIRECTORY)=0 then
              begin
               if (allfiles1 or reFiles1.Test(fn)) and (allfiles2 or not(reFiles2.Test(fn))) then
+               begin
+                inc(cFiles);
                 case FCountMatches of
                   ncFiles:
-                    if re.Test(FileAsWideString(fn,enc)) then Notify(nmMatchFound,fn,[1]);
+                    if re.Test(FileAsWideString(fn,fs,enc)) then Notify(nmMatchFound,fn,fInfo,[1]);
                   ncMatches:
                    begin
-                    j:=(re.Execute(FileAsWideString(fn,enc)) as MatchCollection).Count;
-                    if j<>0 then Notify(nmMatchFound,fn,[j]);
+                    j:=(re.Execute(FileAsWideString(fn,fs,enc)) as MatchCollection).Count;
+                    if j<>0 then Notify(nmMatchFound,fn,fInfo,[j]);
                    end;
                   ncSubMatches:
                    begin
-                    mc:=re.Execute(FileAsWideString(fn,enc)) as MatchCollection;
+                    mc:=re.Execute(FileAsWideString(fn,fs,enc)) as MatchCollection;
                     if mc.Count<>0 then
                      begin
                       m:=mc[0] as Match;
@@ -228,35 +250,39 @@ begin
                             if TVarData(sm[k]).VType<>0 then inc(vals[k+1]);
                          end;
                        end;
-                      Notify(nmMatchFound,fn,vals);
+                      Notify(nmMatchFound,fn,fInfo,vals);
                      end;
                    end;
                 end;
+               end;
              end
             else
               if not((fd.cFileName[0]='.') and (
                 (fd.cFileName[1]=#0) or ((fd.cFileName[1]='.') and (fd.cFileName[2]=#0)))) then
                begin
                 folders.Add(fn);
-                Notify(nmFolderFound,fn,[]);
+                Notify(nmFolderFound,fn,fInfo,[]);
                end;
            end;
         until not(FindNextFile(fh,fd)) or Terminated;
-        Notify(nmFolderDone,d,[]);
+        Notify(nmFolderDone,d,'',[]);
       finally
         Windows.FindClose(fh);
       end;
      end;
 
   except
-    on e:Exception do Notify(nmError,e.Message,[]);
+    on e:Exception do Notify(nmError,e.Message,e.ClassName,[]);
   end;
-  Notify(nmDone,'',[]);
+  Notify(nmDone,'',
+    IntToStr(cFolders)+' folders'+NodeInfoSeparator+
+    IntToStr(cFiles)+' files'+NodeInfoSeparator+
+    IntToStr(cardinal(GetTickCount-tc))+'ms',[]);
   folders.Free;
 end;
 
 procedure TDirFinder.Notify(nm: TDirFinderNotifyMessage;
-  const msg: string; const vals:array of integer);
+  const msg,info: string; const vals:array of integer);
 var
   k,l:integer;
 begin
@@ -264,6 +290,7 @@ begin
    begin
     FOnNotify_nm:=nm;
     FOnNotify_msg:=msg;
+    FOnNotify_info:=info;
     //FOnNotify_vals:=vals;
     l:=Length(vals);
     SetLength(FOnNotify_vals,l);
@@ -280,7 +307,7 @@ begin
   l:=Length(FOnNotify_vals);
   SetLength(vals,l);
   for i:=0 to l-1 do vals[i]:=FOnNotify_vals[i];
-  FOnNotify(FOnNotify_nm,FOnNotify_msg,vals);
+  FOnNotify(FOnNotify_nm,FOnNotify_msg,FOnNotify_info,vals);
 end;
 
 end.

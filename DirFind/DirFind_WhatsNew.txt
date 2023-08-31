@@ -1,4 +1,4 @@
-2.0.5.652
+2.0.5.654
 - focus pattern input box on delete last search results
 - fixed error on deleting past last search result set
 - switch to Delphi 10.4 Community Edition

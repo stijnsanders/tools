@@ -29,7 +29,7 @@ type
       IgnoreCase,MultiLine:boolean;CountMatches:TDirFinderCountMatches;
       OnStoreValues:TNotifyEvent);
     procedure FinderNotify(nm:TDirFinderNotifyMessage;
-      const msg:string;const vals:array of integer);
+      const msg, info:string;const vals:array of integer);
     destructor Destroy; override;
     procedure Abort;
     procedure Refresh;
@@ -60,7 +60,7 @@ type
 
   TDirFindMatchNode=class(TDirFindTreeNode)
   private
-    FFilePath:string;
+    FFilePath,FFileDisplay:string;
     FLines:integer;
     FMatchingLinesLoaded:boolean;
   public
@@ -173,7 +173,7 @@ begin
 end;
 
 procedure TDirFinderNode.FinderNotify(nm: TDirFinderNotifyMessage;
-  const msg: string; const vals: array of integer);
+  const msg, info: string; const vals: array of integer);
 var
   tn:TTreeNode;
   procedure FindNode(IsFile:boolean);
@@ -221,6 +221,7 @@ var
         else
           tn1:=Owner.Insert(tn1,s);
         (tn1 as TDirFindMatchNode).FFilePath:=msg;
+        (tn1 as TDirFindMatchNode).FFileDisplay:=info;
        end
       else
        begin
@@ -278,10 +279,11 @@ begin
          end;
       end;
       FProgressText:=FRootPath+NodeTextSeparator+s1+NodeTextSeparator+
-        FPattern+NodeTextSeparator+FFiles+NodeTextSeparator+FNotFiles;
+        FPattern+NodeTextSeparator+FFiles;//+NodeTextSeparator+FNotFiles;
       Text:=FProgressText;
+      FProgressText:=FProgressText+NodeTextSeparator+FNotFiles+NodeTextSeparator+info;
       if @FOnProgress<>nil then FOnProgress(Self,FProgressText);
-        if (@FOnStoreValues<>nil) and (FTotalFilesFound<>0) then FOnStoreValues(Self);
+      if (@FOnStoreValues<>nil) and (FTotalFilesFound<>0) then FOnStoreValues(Self);
      end;
     nmError:
      begin
@@ -398,8 +400,8 @@ begin
   if FDirFinder<>nil then
    begin
     FDirFinder.Terminate;
-    FinderNotify(nmError,'Aborted by user',[]);
-    FinderNotify(nmDone,'',[-1]);
+    FinderNotify(nmError,'Aborted by user','',[]);
+    FinderNotify(nmDone,'','',[-1]);
    end;
 end;
 
@@ -419,6 +421,7 @@ var
   tn,tnLast:TTreeNode;
   enc:TFileEncoding;
   fn:string;
+  fs:Int64;
   s:RawByteString;
   w:WideString;
   f:TFileStream;
@@ -445,7 +448,7 @@ begin
         if tn.Count<>0 then tn.DeleteChildren;//reset any matching lines shown
 
         fn:=(tn as TDirFindMatchNode).FilePath;
-        w:=re.Replace(FileAsWideString(fn,enc),ReplaceWith);
+        w:=re.Replace(FileAsWideString(fn,fs,enc),ReplaceWith);
         f:=TFileStream.Create(fn,fmCreate);
         try
           case enc of
@@ -587,11 +590,12 @@ end;
 
 function TDirFindMatchNode.ProgressText: string;
 begin
-  Result:=FFilePath;//TODO: file size? last modified date?
+  Result:=FFileDisplay;
 end;
 
 procedure TDirFindMatchNode.DoDblClick;
 var
+  fs:Int64;
   re:RegExp;
   mc:MatchCollection;
   m1:Match;
@@ -602,7 +606,7 @@ var
 begin
   if not(FMatchingLinesLoaded) then
    begin
-    w:=FileAsWideString(FilePath,enc);
+    w:=FileAsWideString(FilePath,fs,enc);
 
     tn:=Self;
     while not(tn is TDirFinderNode) do tn:=tn.Parent;
@@ -704,10 +708,11 @@ var
      end;
   end;
 var
+  fs:int64;
   enc:TFileEncoding;
 begin
   for i:=0 to IndentSeekMax-1 do MaxLineIndentLevel[i].LineNumber:=-1;
-  w:=FileAsWideString((Parent as TDirFindMatchNode).FilePath,enc);
+  w:=FileAsWideString((Parent as TDirFindMatchNode).FilePath,fs,enc);
 
   tn:=Self;
   while not(tn is TDirFinderNode) do tn:=tn.Parent;
