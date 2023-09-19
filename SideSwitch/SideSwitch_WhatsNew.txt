@@ -3,6 +3,7 @@ SideSwitch - What's New
 v1.0.8.480
 - settings which border to activate on
 - activate by holding Ctrl (default off)
+- "black" all-screen curtain windows
 
 v1.0.7.?
 - (added to https://github.com/stijnsanders/tools )

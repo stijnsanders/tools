@@ -13,6 +13,7 @@ type
     Exit1: TMenuItem;
     Settings1: TMenuItem;
     N1: TMenuItem;
+    NewBlack1: TMenuItem;
     procedure Timer1Timer(Sender: TObject);
     procedure btnSwitchClick(Sender: TObject);
     procedure FormMouseMove(Sender: TObject; Shift: TShiftState; X,
@@ -26,6 +27,7 @@ type
     procedure PopupMenu1Popup(Sender: TObject);
     procedure FormMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure NewBlack1Click(Sender: TObject);
   private
     FMutex:THandle;
     FHideTC:cardinal;
@@ -44,12 +46,14 @@ type
     FBorderMargin,FIconHeight,FShowVisible,FShowMinimized:integer;
     FColorMain,FColorVisible,FColorMinimized:TColor;
     FDesktopRect,FMonitorRect:TRect;
+    FBlackForms:array of TForm;
     function WindowOnMonitor(h:THandle):boolean;
     function ListWindow(h: HWND): boolean;
     function ClearWindow(h: HWND): boolean;
     function TestWindow(h: HWND): boolean;
     procedure SwitchWindow(h: THandle);
     procedure TestListWindows;
+    procedure BlackClose(Sender: TObject);
   protected
     procedure CreateParams(var Params: TCreateParams); override;
     procedure DoCreate; override;
@@ -66,7 +70,7 @@ function GetShellWindow: HWND; stdcall;
 
 implementation
 
-uses Types, SideSwitch2, Registry;
+uses Types, SideSwitch2, Registry, SideSwitch3;
 
 {$R *.dfm}
 
@@ -261,7 +265,7 @@ begin
         FAppHandle1:=0;
         FAppHandle2:=0;
         FAppMini:=false;
-        //FShowAll:=(GetKeyState(VK_CONTROL) and $80)<>0;
+        FShowAll:=(GetKeyState(VK_CONTROL) and $80)<>0;
         FShowFullInfo:=(GetKeyState(VK_SHIFT) and $80)<>0;
         EnumWindows(@DoListWindow,0);
 
@@ -336,14 +340,29 @@ function TfrmSideSwitchMain.ListWindow(h:HWND):boolean;
 var
   hp,hx:THandle;
   s:WideString;
-  b,l:boolean;
+  b,l,IsBlack:boolean;
   x,i:integer;
   wp:TWindowPlacement;
+  BlackColor:TColor;
 begin
   if (h<>Handle) and (h<>FListSkip) and IsWindowVisible(h) then
    begin
+    IsBlack:=false;//default
+    BlackColor:=clBlack;//default
     hp:=GetWindowLong(h,GWL_HWNDPARENT);
-    if (hp=0) or (GetWindow(h,GW_OWNER)=0) or (FShowAll and (
+    if hp=Application.Handle then
+     begin
+      i:=0;
+      while (i<Length(FBlackForms)) and
+        not((FBlackForms[i]<>nil) and (FBlackForms[i].Handle=h)) do inc(i);
+      if i<Length(FBlackForms) then
+       begin
+        IsBlack:=true;
+        BlackColor:=FBlackForms[i].Color;
+       end;
+     end;
+
+    if IsBlack or (hp=0) or (GetWindow(h,GW_OWNER)=0) or (FShowAll and (
       ((GetWindowLong(h,GWL_EXSTYLE) and WS_EX_APPWINDOW)<>0) or
       ((GetWindowLong(hp,GWL_EXSTYLE) and WS_EX_APPWINDOW)<>0))) then
      begin
@@ -378,76 +397,95 @@ begin
         Canvas.TextOut(x,FListY,Glyph_Close);
         inc(x,x);
         SetLength(s,1024);
-        if FShowAll and FShowFullInfo then
+
+        if IsBlack and not(FShowAll and FShowFullInfo) then
          begin
-          SetLength(s,GetClassNameW(h,PWideChar(s),1023));
-          if GetWindowPlacement(h,@wp) then
-            s:=s+Format(' %.8x %d,%d %d,%d',[
-              wp.flags,
-              wp.rcNormalPosition.Left,
-              wp.rcNormalPosition.Top,
-              wp.rcNormalPosition.Right-wp.rcNormalPosition.Left,
-              wp.rcNormalPosition.Bottom-wp.rcNormalPosition.Top
-            ]);
+          //
+
+          i:=FListY+FIconHeight div 2;
+          Canvas.Brush.Color:=clRed;
+          Canvas.FillRect(Rect(x+2,FListY-1,x+4,FListY+FIconHeight+1));
+          Canvas.FillRect(Rect(x+6,i-3,x+6+FIconHeight*20,i-1));
+          Canvas.Brush.Color:=BlackColor;
+          Canvas.FillRect(Rect(x+8,i-1,x+6+FIconHeight*20,i+3));
+
          end
         else
-          SetLength(s,InternalGetWindowText(h,PWideChar(s),1023));
-        if b then
-          Canvas.Brush.Color:=FColorMinimized
-        else
-          Canvas.Brush.Color:=FColorVisible;
-        Canvas.TextRect(Rect(
-          FIconHeight+x-2,FListY,
-          FIconHeight+x+10+Canvas.TextWidth(s),FListY+FIconHeight),
-          FIconHeight+x+4,FListY,s);
-        Canvas.Brush.Color:=clRed;
-        Canvas.FillRect(Rect(x+2,FListY-1,x+4,FListY+FIconHeight+1));
-        hx:=0;//default
-        if FIconHeight<=24 then
          begin
-          if hx=0 then if SendMessageTimeout(h,WM_GETICON,ICON_SMALL2,0,SMTO_ABORTIFHUNG,FIconTimeoutMS,hx)=0 then hx:=0;
-          if hx=0 then if SendMessageTimeout(h,WM_GETICON,ICON_SMALL,0,SMTO_ABORTIFHUNG,FIconTimeoutMS,hx)=0 then hx:=0;
-          if hx=0 then hx:=GetClassLong(h,GCL_HICONSM);
-         end;
-        if hx=0 then if SendMessageTimeout(h,WM_GETICON,ICON_BIG,0,SMTO_ABORTIFHUNG,FIconTimeoutMS,hx)=0 then hx:=0;
-        if hx=0 then hx:=GetClassLong(h,GCL_HICON);
-        if (hx=0) and (hp<>0) then
-         begin
+         
+          if FShowAll and FShowFullInfo then
+           begin
+            SetLength(s,GetClassNameW(h,PWideChar(s),1023));
+            if GetWindowPlacement(h,@wp) then
+              s:=s+Format(' %.8x %d,%d %d,%d',[
+                wp.flags,
+                wp.rcNormalPosition.Left,
+                wp.rcNormalPosition.Top,
+                wp.rcNormalPosition.Right-wp.rcNormalPosition.Left,
+                wp.rcNormalPosition.Bottom-wp.rcNormalPosition.Top
+              ]);
+           end
+          else
+            SetLength(s,InternalGetWindowText(h,PWideChar(s),1023));
+          if b then
+            Canvas.Brush.Color:=FColorMinimized
+          else
+            Canvas.Brush.Color:=FColorVisible;
+          Canvas.TextRect(Rect(
+            FIconHeight+x-2,FListY,
+            FIconHeight+x+10+Canvas.TextWidth(s),FListY+FIconHeight),
+            FIconHeight+x+4,FListY,s);
+          Canvas.Brush.Color:=clRed;
+          Canvas.FillRect(Rect(x+2,FListY-1,x+4,FListY+FIconHeight+1));
+
+          hx:=0;//default
           if FIconHeight<=24 then
            begin
-            if hx=0 then if SendMessageTimeout(hp,WM_GETICON,ICON_SMALL2,0,SMTO_ABORTIFHUNG,FIconTimeoutMS,hx)=0 then hx:=0;
-            if hx=0 then if SendMessageTimeout(hp,WM_GETICON,ICON_SMALL,0,SMTO_ABORTIFHUNG,FIconTimeoutMS,hx)=0 then hx:=0;
-            if hx=0 then hx:=GetClassLong(hp,GCL_HICONSM);
+            if hx=0 then if SendMessageTimeout(h,WM_GETICON,ICON_SMALL2,0,SMTO_ABORTIFHUNG,FIconTimeoutMS,hx)=0 then hx:=0;
+            if hx=0 then if SendMessageTimeout(h,WM_GETICON,ICON_SMALL,0,SMTO_ABORTIFHUNG,FIconTimeoutMS,hx)=0 then hx:=0;
+            if hx=0 then hx:=GetClassLong(h,GCL_HICONSM);
            end;
-          if hx=0 then if SendMessageTimeout(hp,WM_GETICON,ICON_BIG,0,SMTO_ABORTIFHUNG,FIconTimeoutMS,hx)=0 then hx:=0;
-          if hx=0 then hx:=GetClassLong(hp,GCL_HICON);
-         end;
-        if hx=0 then
-         begin
-          SetLength(s,1024);
-          SetLength(s,GetClassNameW(h,PWideChar(s),1023));
-          if s='Shell_TrayWnd' then
+          if hx=0 then if SendMessageTimeout(h,WM_GETICON,ICON_BIG,0,SMTO_ABORTIFHUNG,FIconTimeoutMS,hx)=0 then hx:=0;
+          if hx=0 then hx:=GetClassLong(h,GCL_HICON);
+          if (hx=0) and (hp<>0) then
            begin
-            hx:=FTaskBarHIcon;
-            if FTaskBarNixTopMost then
+            if FIconHeight<=24 then
              begin
-              hp:=GetForegroundWindow;
-              i:=GetWindowLong(h,GWL_EXSTYLE);
-              if ((i and WS_EX_TOPMOST)<>0) and (h<>hp) then
+              if hx=0 then if SendMessageTimeout(hp,WM_GETICON,ICON_SMALL2,0,SMTO_ABORTIFHUNG,FIconTimeoutMS,hx)=0 then hx:=0;
+              if hx=0 then if SendMessageTimeout(hp,WM_GETICON,ICON_SMALL,0,SMTO_ABORTIFHUNG,FIconTimeoutMS,hx)=0 then hx:=0;
+              if hx=0 then hx:=GetClassLong(hp,GCL_HICONSM);
+             end;
+            if hx=0 then if SendMessageTimeout(hp,WM_GETICON,ICON_BIG,0,SMTO_ABORTIFHUNG,FIconTimeoutMS,hx)=0 then hx:=0;
+            if hx=0 then hx:=GetClassLong(hp,GCL_HICON);
+           end;
+          if hx=0 then
+           begin
+            SetLength(s,1024);
+            SetLength(s,GetClassNameW(h,PWideChar(s),1023));
+            if s='Shell_TrayWnd' then
+             begin
+              hx:=FTaskBarHIcon;
+              if FTaskBarNixTopMost then
                begin
-                dec(i,WS_EX_TOPMOST);
-                SetWindowLong(h,GWL_EXSTYLE,i);
-                //SetWindowPos(h,hp,?
-                SetWindowPos(h,HWND_BOTTOM,0,0,0,0,
-                  SWP_NOMOVE or SWP_NOSIZE or SWP_NOACTIVATE or SWP_ASYNCWINDOWPOS);
-                SetWindowPos(hp,HWND_NOTOPMOST,0,0,0,0,
-                  SWP_NOMOVE or SWP_NOSIZE or SWP_NOACTIVATE or SWP_ASYNCWINDOWPOS);
+                hp:=GetForegroundWindow;
+                i:=GetWindowLong(h,GWL_EXSTYLE);
+                if ((i and WS_EX_TOPMOST)<>0) and (h<>hp) then
+                 begin
+                  dec(i,WS_EX_TOPMOST);
+                  SetWindowLong(h,GWL_EXSTYLE,i);
+                  //SetWindowPos(h,hp,?
+                  SetWindowPos(h,HWND_BOTTOM,0,0,0,0,
+                    SWP_NOMOVE or SWP_NOSIZE or SWP_NOACTIVATE or SWP_ASYNCWINDOWPOS);
+                  SetWindowPos(hp,HWND_NOTOPMOST,0,0,0,0,
+                    SWP_NOMOVE or SWP_NOSIZE or SWP_NOACTIVATE or SWP_ASYNCWINDOWPOS);
+                 end;
                end;
              end;
            end;
+          //if hx=0 then default?
+          DrawIconEx(Canvas.Handle,x,FListY,hx,FIconHeight,FIconHeight,0,0,DI_NORMAL);
          end;
-        //if hx=0 then default?
-        DrawIconEx(Canvas.Handle,x,FListY,hx,FIconHeight,FIconHeight,0,0,DI_NORMAL);
+         
         SetLength(FAppList,FAppListCount+1);
         FAppList[FAppListCount].h:=h;
         FAppList[FAppListCount].y:=FListY;
@@ -829,9 +867,16 @@ begin
 end;
 
 procedure TfrmSideSwitchMain.WMDisplayChange(var Msg: TWMDisplayChange);
+var
+  i:integer;
+  r:TRect;
 begin
   Monitor;//forces update of Screen.Monitor!
   //if FSwitchOnDisplayChange then TestListWindows;
+  r:=Screen.DesktopRect;
+  for i:=0 to Length(FBlackForms)-1 do
+    if FBlackForms[i]<>nil then
+      FBlackForms[i].BoundsRect:=r;
 end;
 
 var
@@ -894,6 +939,33 @@ procedure TfrmSideSwitchMain.FormMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   FDragging:=false;
+end;
+
+procedure TfrmSideSwitchMain.NewBlack1Click(Sender: TObject);
+var
+  i,l:integer;
+  f:TfrmBlack;
+begin
+  l:=Length(FBlackForms);
+  i:=0;
+  while (i<l) and (FBlackForms[i]<>nil) do inc(i);
+  if i=l then
+    SetLength(FBlackForms,l+1);
+  f:=TfrmBlack.Create(Self);
+  FBlackForms[i]:=f;
+  f.BoundsRect:=FDesktopRect;
+  f.OnDestroy:=BlackClose;
+  f.Show;
+end;
+
+procedure TfrmSideSwitchMain.BlackClose(Sender: TObject);
+var
+  i,l:integer;
+begin
+  l:=Length(FBlackForms);
+  i:=0;
+  while (i<l) and (FBlackForms[i]<>Sender) do inc(i);
+  if i<l then FBlackForms[i]:=nil;
 end;
 
 end.

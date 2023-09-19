@@ -56,7 +56,6 @@ object frmSettings: TfrmSettings
     Position = 1000
     TabOrder = 1
     Thousands = False
-    Wrap = False
   end
   object txtIconHeight: TEdit
     Left = 8
@@ -76,7 +75,6 @@ object frmSettings: TfrmSettings
     Max = 250
     Position = 16
     TabOrder = 5
-    Wrap = False
   end
   object Button1: TButton
     Left = 80
@@ -209,7 +207,6 @@ object frmSettings: TfrmSettings
     Max = 30000
     Position = 150
     TabOrder = 3
-    Wrap = False
   end
   object cbSwitchMirrored: TCheckBox
     Left = 8
@@ -292,13 +289,10 @@ object frmSettings: TfrmSettings
     Font.Height = -11
     Font.Name = 'Tahoma'
     Font.Style = []
-    MinFontSize = 0
-    MaxFontSize = 0
     Left = 232
     Top = 32
   end
   object ColorDialog1: TColorDialog
-    Ctl3D = True
     Left = 232
     Top = 64
   end

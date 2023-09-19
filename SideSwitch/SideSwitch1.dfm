@@ -36,6 +36,10 @@ object frmSideSwitchMain: TfrmSideSwitchMain
       Caption = '&Settings...'
       OnClick = Settings1Click
     end
+    object NewBlack1: TMenuItem
+      Caption = 'New "Black"'
+      OnClick = NewBlack1Click
+    end
     object N1: TMenuItem
       Caption = '-'
     end
