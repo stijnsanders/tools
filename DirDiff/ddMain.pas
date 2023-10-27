@@ -598,6 +598,7 @@ begin
   if OpenDialog1.Execute then
    begin
     d.Path:=OpenDialog1.FileName;
+    (d.Display1 as TEdit).Text:=d.Path;
     UpdateUI;
    end;
 end;
@@ -612,6 +613,7 @@ begin
   if SelectDirectory2('Select Folder',s) then
    begin
     d.Path:=s;
+    (d.Display1 as TEdit).Text:=d.Path;
     UpdateUI;
    end;
 end;
