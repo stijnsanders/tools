@@ -1897,7 +1897,7 @@ begin
      end;
    end;
 
-  SendMessage(FParent,WM_PREVIEW,integer(bb),0);
+  SendMessage(FParent,WM_PREVIEW,WPARAM(bb),0);
 end;
 
 function TDiffSet.QueueInfo: string;
