@@ -1,10 +1,11 @@
-2.0.5.654
+2.0.5.666
 - focus pattern input box on delete last search results
 - fixed error on deleting past last search result set
 - switch to Delphi 10.4 Community Edition
 - option: count sub-matches
 - fixed fields tab order
 - only add values to combobox-lists on successful find
+- new line icons
 2.0.4.494
 - Noob-mode: RegExp checkbox (default not checked)
   (To all non-noobs: just check "RegExp" once and you're set.)

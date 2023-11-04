@@ -99,11 +99,27 @@ const
   iiFile=2;
   iiFolderGray=3;
   iiError=4;
-  iiLineMatch=5;
-  iiFileMulti=6;//..6+7
-  iiLineMatchMulti=14;//..14+7
-  iiLine=22;
-  iiLineNeighboursLoaded=23;
+  //iiFileMulti=6;//..6+7
+  //iiLineMatchMulti=14;//..14+7
+
+  {
+  iiLine_  ... 30+
+  top: 0'b':BOF, 1'i':interrupted, 2'l':line, 3'm':match
+  center: 0  'l':line, 4'm':match
+  bottom: 0'e':EOF, 8'i':interrupted, 16'l':line 24'm':match
+  }
+
+  //iiLine_interrupted=29;
+  iiLine_b__=30;
+  iiLine_i__=31;
+  iiLine_l__=32;
+  iiLine_m__=33;
+  iiLine__l_=0;
+  iiLine__m_=4;
+  iiLine___e=0;
+  iiLine___i=8;
+  iiLine___l=16;
+  iiLine___m=24;
 
 function IndentLevel(var w:WideString):integer;
 var
@@ -599,9 +615,9 @@ var
   re:RegExp;
   mc:MatchCollection;
   m1:Match;
-  i,j,l,k,m,n:integer;
+  i,j,l,k,k0,m,n,ii:integer;
   w,w1:WideString;
-  tn:TTreeNode;
+  tn,tn0:TTreeNode;
   enc:TFileEncoding;
 begin
   if not(FMatchingLinesLoaded) then
@@ -626,6 +642,8 @@ begin
     try
       i:=1;
       k:=1;
+      k0:=0;
+      tn0:=nil;
       l:=Length(w);
       while i<=l do
        begin
@@ -638,8 +656,30 @@ begin
           w1:=Copy(w,i,j-i);//TODO: expand tabs
           m:=IndentLevel(w1);
           tn:=Owner.AddChild(Self,Format('%.6d',[k])+NodeTextSeparator+w1);
-          tn.ImageIndex:=iiLineMatch;
-          tn.SelectedIndex:=iiLineMatch;
+
+          if k=1 then
+            if j+2<l then
+              ii:=iiLine_b__+iiLine__m_+iiLine___i
+            else
+              ii:=iiLine_b__+iiLine__m_+iiLine___e
+          else
+            if k=k0+1 then
+             begin
+              ii:=tn0.ImageIndex-iiLine___i+iiLine___m;
+              tn0.ImageIndex:=ii;
+              tn0.SelectedIndex:=ii;
+              ii:=iiLine_m__+iiLine__m_+iiLine___i;
+             end
+            else
+              if j+2<l then
+                ii:=iiLine_i__+iiLine__m_+iiLine___i
+              else
+                ii:=iiLine_i__+iiLine__m_+iiLine___e;
+          k0:=k;
+          tn0:=tn;
+
+          tn.ImageIndex:=ii;
+          tn.SelectedIndex:=ii;
           (tn as TDirFindLineNode).FLineNumber:=k;
           (tn as TDirFindLineNode).FIndentLevel:=m;
           //next match
@@ -680,6 +720,8 @@ var
     LineText:WideString;
   end;
   procedure AddLine;
+  var
+    ii:integer;
   begin
     tn:=Self;
     if (k<FLineNumber) then
@@ -701,8 +743,9 @@ var
           tn:=Owner.AddChild(Parent,s)
         else
           tn:=Owner.Insert(tn,s);
-      tn.ImageIndex:=iiLine;
-      tn.SelectedIndex:=iiLine;
+      ii:=iiLine_l__+iiLine__l_+iiLine___l;//see UpdateIcons
+      tn.ImageIndex:=ii;
+      tn.SelectedIndex:=ii;
       (tn as TDirFindLineNode).FLineNumber:=k;
       (tn as TDirFindLineNode).FIndentLevel:=m;
      end;
@@ -775,25 +818,47 @@ end;
 
 procedure TDirFindLineNode.UpdateIcons;
 var
-  tn0,tn1,tn2:TDirFindLineNode;
-  ml:integer;
+  tn1,tn2:TDirFindLineNode;
+  tl,ll,ii:integer;
+  m1,m2:boolean;
 begin
-  ml:=(Parent as TDirFindMatchNode).Lines;
-  tn0:=nil;
+  tl:=(Parent as TDirFindMatchNode).Lines;
+  ll:=0;
   tn1:=Self.Parent.getFirstChild as TDirFindLineNode;
   tn2:=(tn1.getNextSibling) as TDirFindLineNode;
+  m1:=false;
+  m2:=(tn1<>nil) and ((((tn1.ImageIndex-iiLine_b__) div iiLine__m_) and 1)<>0);
   while tn1<>nil do
    begin
-    if (tn1.ImageIndex=iiLine) and
-      (((tn0=nil) and (tn1.LineNumber=1)) or
-        ((tn0<>nil) and (tn0.LineNumber=tn1.LineNumber-1))) and
-      (((tn2=nil) and (tn1.LineNumber>=ml)) or
-        (((tn2<>nil) and (tn2.LineNumber=tn1.LineNumber+1)))) then
-     begin
-      tn1.ImageIndex:=iiLineNeighboursLoaded;
-      tn1.SelectedIndex:=iiLineNeighboursLoaded;
-     end;
-    tn0:=tn1;
+    if tn1.LineNumber=1 then
+      ii:=iiLine_b__
+    else
+      if tn1.LineNumber=ll then
+        if m1 then
+          ii:=iiLine_m__
+        else
+          ii:=iiLine_l__
+      else
+        ii:=iiLine_i__;
+    ll:=tn1.LineNumber+1;
+    m1:=m2;
+    m2:=(tn2<>nil) and ((((tn2.ImageIndex-iiLine_b__) div iiLine__m_) and 1)<>0);;
+    if m1 then
+      ii:=ii+iiLine__m_
+    else
+      ii:=ii+iiLine__l_;
+    if ll>tl then
+      ii:=ii+iiLine___e
+    else
+      if (tn2<>nil) and (tn2.LineNumber=ll) then
+        if m2 then
+          ii:=ii+iiLine___m
+        else
+          ii:=ii+iiLine___l
+      else
+        ii:=ii+iiLine___i;
+    tn1.ImageIndex:=ii;
+    tn1.SelectedIndex:=ii;
     tn1:=tn2;
     if tn2<>nil then tn2:=(tn2.getNextSibling) as TDirFindLineNode;
    end;
