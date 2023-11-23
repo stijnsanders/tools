@@ -169,11 +169,11 @@ var
 begin
   inherited;
   CoInitialize(nil);
+  tc:=GetTickCount;
+  cFiles:=0;
+  cFolders:=0;
   folders:=TStringList.Create;
   try
-    tc:=GetTickCount;
-    cFiles:=0;
-    cFolders:=0;
     folders.Add(FFolder);
 
     re:=CoRegExp.Create;

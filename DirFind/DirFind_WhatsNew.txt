@@ -1,6 +1,7 @@
 2.0.5.666
 - focus pattern input box on delete last search results
 - fixed error on deleting past last search result set
+- fixed incorrect byte-order-marks when replacing on UTF encoded files
 - switch to Delphi 10.4 Community Edition
 - option: count sub-matches
 - fixed fields tab order

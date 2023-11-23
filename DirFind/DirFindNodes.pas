@@ -442,8 +442,8 @@ var
   w:WideString;
   f:TFileStream;
 const
-  BOMUtf16=#$FF#$FE;
-  BOMUtf8=#$EF#$BB#$BF;
+  BOMUtf16:array[1..2] of AnsiChar=#$FF#$FE;
+  BOMUtf8:array[1..3] of AnsiChar=#$EF#$BB#$BF;
 begin
   //assert FDirFinder=nil, checked so by caller
   re:=CoRegExp.Create;
