@@ -414,7 +414,14 @@ end;
 
 procedure TfDirFindMain.tvMatchesKeyPress(Sender: TObject; var Key: Char);
 begin
-  if Key=#13 then tvMatchesDblClick(Sender);
+  case Key of
+    #13:tvMatchesDblClick(Sender);
+    '/'://if not tvMatches.IsEditing then
+      if tvMatches.Selected=nil then
+        tvMatches.FullCollapse
+      else
+        tvMatches.Selected.Collapse(true);
+   end;
 end;
 
 procedure TfDirFindMain.tvMatchesEnter(Sender: TObject);

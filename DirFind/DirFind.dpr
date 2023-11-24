@@ -12,7 +12,8 @@ uses
 
 begin
   Application.Initialize;
-  Application.Title := 'DirFind';
+  Application.Title:='DirFind';
+  Application.MainFormOnTaskBar:=true;
   Application.CreateForm(TfDirFindMain, fDirFindMain);
   Application.CreateForm(TfDirFindReplace, fDirFindReplace);
   Application.Run;

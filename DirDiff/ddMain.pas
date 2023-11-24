@@ -156,7 +156,8 @@ type
     FDataCount,FFilesSource:integer;
     vp1,vp2,FQueueFlash,FResetToTop,FResetToLine:integer;
     FCompareFile:TTreeNode;
-    FClosing,FSkipXML,FSkipNodeCheck,FSkipAppActivate,FAskingUpdate:boolean;
+    FClosing,FSkipXML,FSkipNodeCheck,FSkipAppActivate,FAskingUpdate,
+    FSomeChecked:boolean;
     procedure CreateSetUI(d: TDiffData);
     procedure ShowPrefs(bXml: boolean);
     procedure UpdateUI;
@@ -216,6 +217,7 @@ begin
   FSkipNodeCheck:=false;
   FSkipAppActivate:=false;
   FAskingUpdate:=false;
+  FSomeChecked:=false;
 
   sl:=TStringList.Create;
   try
@@ -716,6 +718,7 @@ begin
     Screen.Cursor:=crHourGlass;
     try
       FCompareFile:=nil;
+      FSomeChecked:=false;
       tvFolders.Items.Clear;
       LoadFiles(nil);
     finally
@@ -728,6 +731,7 @@ begin
     tvFolders.Visible:=false;
     spFolders.Visible:=false;
     FCompareFile:=nil;
+    FSomeChecked:=false;
     tvFolders.Items.Clear;
 
     r:=TResourceStream.Create(HInstance,'ICODOC',MakeIntResource(23));
@@ -1891,11 +1895,14 @@ begin
     if n<>nil then
      begin
       case n.StateIndex of
-        1://clear
+        1://was clear
+         begin
           n.StateIndex:=2;
-        2://selected
+          FSomeChecked:=true;
+         end;
+        2://was selected
           n.StateIndex:=1;
-        3://partial
+        3://was partial
          begin
           n.StateIndex:=1;
           n0:=n.getNextSibling;
@@ -1963,6 +1970,10 @@ var
   fo:TSHFileOpStruct;
   d:TDiffFileInfo;
 begin
+  if MessageBox(Handle,'Some items have been checkemarked, are you sure you want to delete only the focused item?',
+    PChar(Caption),MB_YESNO or MB_ICONQUESTION)<>idYes then
+    Exit;
+
   i:=(Sender as TComponent).Tag-1;
   if tvFolders.Visible then
    begin
@@ -2024,6 +2035,10 @@ var
 begin
   if FFilesSource=-1 then
     raise Exception.Create('No location selected as source');
+  if FSomeChecked then
+    if MessageBox(Handle,'Some items have been checkemarked, are you sure you want to update only the focused item?',
+      PChar(Caption),MB_YESNO or MB_ICONQUESTION)<>idYes then
+      Exit;
 
   i:=FFilesSource;
   j:=(Sender as TComponent).Tag-1;
@@ -2331,7 +2346,7 @@ begin
     if b then
      begin
       FAskingUpdate:=true;
-      if MessageBox(Handle,PChar('File update detected. Reload files now?'),
+      if MessageBox(Handle,'File update detected. Reload files now?',
         PChar(Caption),MB_OKCANCEL or MB_ICONQUESTION)=idOK then
         if tvFolders.Selected=nil then
           miRefresh.Click
