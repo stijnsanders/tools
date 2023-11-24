@@ -11,11 +11,9 @@ object frmDirDiffMain: TfrmDirDiffMain
   Font.Name = 'Verdana'
   Font.Style = []
   Menu = MainMenu1
-  OldCreateOrder = False
   Position = poDefault
   ShowHint = True
   OnResize = FormResize
-  PixelsPerInch = 96
   TextHeight = 14
   object spFolders: TSplitter
     Left = 200
@@ -50,6 +48,7 @@ object frmDirDiffMain: TfrmDirDiffMain
     OnExpanding = tvFoldersExpanding
     OnKeyPress = tvFoldersKeyPress
     OnMouseDown = tvFoldersMouseDown
+    ExplicitHeight = 433
   end
   object tvXML: TTreeView
     Left = 203
@@ -66,6 +65,7 @@ object frmDirDiffMain: TfrmDirDiffMain
     OnChange = tvXMLChange
     OnDeletion = tvXMLDeletion
     OnExpanding = tvXMLExpanding
+    ExplicitHeight = 433
   end
   object panMain: TPanel
     Left = 406
@@ -76,6 +76,8 @@ object frmDirDiffMain: TfrmDirDiffMain
     BevelOuter = bvNone
     BorderStyle = bsSingle
     TabOrder = 2
+    ExplicitWidth = 324
+    ExplicitHeight = 433
     object imgOverview: TImage
       Left = 0
       Top = 0
@@ -115,6 +117,8 @@ object frmDirDiffMain: TfrmDirDiffMain
       ParentFont = False
       TabOrder = 0
       OnDrawItem = lbViewDrawItem
+      ExplicitWidth = 288
+      ExplicitHeight = 429
     end
   end
   object panTop: TPanel
@@ -125,6 +129,7 @@ object frmDirDiffMain: TfrmDirDiffMain
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 3
+    ExplicitWidth = 730
     DesignSize = (
       734
       38)
@@ -137,6 +142,7 @@ object frmDirDiffMain: TfrmDirDiffMain
       TabOrder = 0
       Visible = False
       OnKeyPress = txtFindKeyPress
+      ExplicitWidth = 117
     end
     object btnFind: TButton
       Left = 432
@@ -148,6 +154,7 @@ object frmDirDiffMain: TfrmDirDiffMain
       TabOrder = 1
       Visible = False
       OnClick = miFindNextClick
+      ExplicitLeft = 428
     end
     object btnAddFile: TButton
       Left = 8
@@ -179,6 +186,8 @@ object frmDirDiffMain: TfrmDirDiffMain
         Width = 50
       end>
     OnDrawPanel = StatusBar1DrawPanel
+    ExplicitTop = 471
+    ExplicitWidth = 730
   end
   object MainMenu1: TMainMenu
     Images = ImageList1
@@ -389,12 +398,12 @@ object frmDirDiffMain: TfrmDirDiffMain
         OnClick = miReadOnlyClick
       end
       object miUpdate: TMenuItem
-        Caption = '&Update'
+        Caption = '&Update focused'
         Enabled = False
         OnClick = miUpdateClick
       end
       object miDelete: TMenuItem
-        Caption = '&Delete'
+        Caption = '&Delete focused'
         Enabled = False
         OnClick = miDeleteClick
       end
@@ -402,16 +411,16 @@ object frmDirDiffMain: TfrmDirDiffMain
         Caption = '-'
       end
       object miCopyUNCs: TMenuItem
-        Caption = 'Copy &file paths selected'
+        Caption = 'Copy &file paths checkmarked'
         OnClick = miCopyUNCsClick
       end
       object miUpdateSelected: TMenuItem
-        Caption = 'Update selected'
+        Caption = 'Update checkmarked'
         Enabled = False
         OnClick = miUpdateSelectedClick
       end
       object miDeleteSelected: TMenuItem
-        Caption = 'Delete selected'
+        Caption = 'Delete checkedmarked'
         Enabled = False
         OnClick = miDeleteSelectedClick
       end

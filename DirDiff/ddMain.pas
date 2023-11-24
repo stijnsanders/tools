@@ -1970,9 +1970,10 @@ begin
     s:='';
     while n<>nil do
      begin
-      if TDiffFileInfo(n.Data).Info[i].Name='' then
+      d:=TDiffFileInfo(n.Data);
+      if d.Info[i].Name='' then
         raise Exception.Create('File is not present in this location');
-      s:=PathDelim+TDiffFileInfo(n.Data).Info[i].Name+s;
+      s:=PathDelim+d.Info[i].Name+s;
       n:=n.Parent;
      end;
     s:=FDataSet[i].Path+s;
@@ -2034,16 +2035,20 @@ begin
     s2:='';
     while n<>nil do
      begin
-      if TDiffFileInfo(n.Data).Info[i].Name='' then
+      d:=TDiffFileInfo(n.Data);
+      if d.Info[i].Name='' then
         raise Exception.Create('File is not present in this location');
-      s1:=PathDelim+TDiffFileInfo(n.Data).Info[i].Name+s1;
-      if TDiffFileInfo(n.Data).Info[j].Name='' then
+      s1:=PathDelim+d.Info[i].Name+s1;
+      if d.Info[j].Name='' then
        begin
-        s2:=PathDelim+TDiffFileInfo(n.Data).Info[i].Name+s2;
-        cd:=cd or TDiffFileInfo(n.Data).IsDir;
+        s2:=PathDelim+d.Info[i].Name+s2;
+        cd:=cd or d.IsDir;
        end
       else
-        s2:=PathDelim+TDiffFileInfo(n.Data).Info[j].Name+s2;
+        if (s2='') and d.IsDir then
+          s2:=PathDelim //copy dir into destination parent dir
+        else
+          s2:=PathDelim+d.Info[j].Name+s2;
       n:=n.Parent;
      end;
     s1:=FDataSet[i].Path+s1;

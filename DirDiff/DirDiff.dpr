@@ -20,6 +20,8 @@ uses
 
 begin
   Application.Initialize;
+  Application.Title:='DirDiff';
+  Application.MainFormOnTaskBar:=true;
   Application.CreateForm(TfrmDirDiffMain, frmDirDiffMain);
   Application.Run;
 end.
