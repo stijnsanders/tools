@@ -213,7 +213,7 @@ begin
          begin
           FMutex:=h;
           FPrefix:='Boxer:'+AnsiChar($40+i);
-          frmSwitchHandle.Label1.Caption:=AnsiChar($40+i);
+          frmSwitchHandle.Label1.Caption:=char($40+i);
           frmSwitchHandle.Label1.Visible:=true;
           FTagOffset:=20*i+SysButtons;
           Caption:=FPrefix;
@@ -440,10 +440,10 @@ begin
         inc(c);
         h:=FBoxed[i].h;
         hx:=0;//default
-        if hx=0 then if SendMessageTimeout(h,WM_GETICON,ICON_SMALL2,0,SMTO_ABORTIFHUNG,IconTimeoutMS,hx)=0 then hx:=0;
-        if hx=0 then if SendMessageTimeout(h,WM_GETICON,ICON_SMALL,0,SMTO_ABORTIFHUNG,IconTimeoutMS,hx)=0 then hx:=0;
+        if hx=0 then if SendMessageTimeout(h,WM_GETICON,ICON_SMALL2,0,SMTO_ABORTIFHUNG,IconTimeoutMS,@hx)=0 then hx:=0;
+        if hx=0 then if SendMessageTimeout(h,WM_GETICON,ICON_SMALL,0,SMTO_ABORTIFHUNG,IconTimeoutMS,@hx)=0 then hx:=0;
         if hx=0 then hx:=GetClassLong(h,GCL_HICONSM);
-        if hx=0 then if SendMessageTimeout(h,WM_GETICON,ICON_BIG,0,SMTO_ABORTIFHUNG,IconTimeoutMS,hx)=0 then hx:=0;
+        if hx=0 then if SendMessageTimeout(h,WM_GETICON,ICON_BIG,0,SMTO_ABORTIFHUNG,IconTimeoutMS,@hx)=0 then hx:=0;
         if hx=0 then hx:=GetClassLong(h,GCL_HICON);
         //DrawIconEx(Canvas.Handle,x,FListY,hx,FIconHeight,FIconHeight,0,0,DI_NORMAL);
         //FBoxed[i].i1.Picture.Icon.Handle:=hx;
@@ -454,7 +454,6 @@ begin
         b.Height:=16;
         DrawIconEx(b.Canvas.Handle,0,0,hx,16,16,0,0,DI_NORMAL);
         FBoxed[i].i1.Picture.Bitmap:=b;
-
 
         SetLength(s,1023);
         SetLength(s,InternalGetWindowText(h,PWideChar(s),1023));
@@ -489,7 +488,8 @@ begin
   Application.Title:=ss;
   if rr then ReOrderTabs(-1);
 end;
-
+
+
 procedure TfrmBoxerMain.Panel1Click(Sender: TObject);
 begin
   UpdateTabs;

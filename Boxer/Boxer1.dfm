@@ -1,19 +1,17 @@
 object frmBoxerMain: TfrmBoxerMain
   Left = 117
   Top = 176
-  Width = 1226
-  Height = 506
   Caption = 'Boxer'
-  Color = clBackground
+  ClientHeight = 467
+  ClientWidth = 1210
+  Color = clAppWorkSpace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -12
   Font.Name = 'Verdana'
   Font.Style = []
-  OldCreateOrder = False
   Position = poDefault
   OnActivate = DoUpdateTabs
-  PixelsPerInch = 96
   TextHeight = 14
   object Panel1: TPanel
     Left = 0
@@ -48,6 +46,8 @@ object frmBoxerMain: TfrmBoxerMain
     VertScrollBar.Tracking = True
     Align = alClient
     BorderStyle = bsNone
+    Color = clAppWorkSpace
+    ParentColor = False
     TabOrder = 1
     OnEnter = DoUpdateTabs
     OnMouseDown = ScrollBox1MouseDown

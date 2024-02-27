@@ -1,3 +1,6 @@
+v1.0.2
+- switch to app workspace background color
+
 v1.0.1
 - don't show handle on windows of 0 width or height
 - drag the background workspace to scroll (when some windows are partially out of view)
