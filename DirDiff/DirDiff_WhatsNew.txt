@@ -1,7 +1,8 @@
-v2.0.5.666
+v2.0.5.670
 Fixed issue with XML diff
 Fixed issue with update folder
 Switch to Delphi 10.4 Community Edition
+Revised icons (left: red, right: green)
 
 v2.0.4.544
 Fixed issue with more-than-2-way diffs
