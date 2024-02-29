@@ -1,0 +1,14 @@
+Boxer "F" : To-Do's
+===================
+
+right-click-menu: close (settings, more?)
+switch to 'iconized': restore
+Detect window moved (move group along? update group's placement?)
+Group name
+Group color
+Remove from group
+Close group
+Re-order members of group? (instead of fixed order now)
+Group minimize all
+Group close all
+Settings: (default) color, font, alpha

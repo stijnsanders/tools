@@ -34,7 +34,7 @@ type
     FLabelsSize,FLabelsIndex:integer;
     FShell:Shell;
     FHotHandle:THandle;
-    FHotGroup,FHotWidth:integer;
+    FHotGroup,FHotWidth,FDropTimeout:integer;
     FHotDropped,FDropAuto:boolean;
     function GroupName(gi:integer;h1:THandle):string;
     procedure SetLabel(li,Value:integer;const Display:string);
@@ -55,6 +55,7 @@ const
   DisplayHeight=18;
   DisplayMarginY=2;
   DisplayWidthMaximized=400;
+  AutoRollUpTimerCount=8;//*Timer1.Interval
 
 implementation
 
@@ -130,6 +131,7 @@ var
   wp:TWindowPlacement;
   s:array[0..MAX_PATH] of WideChar;
   wn:PWideChar;
+  p:TPoint;
 begin
   h:=GetForegroundWindow;
 
@@ -189,6 +191,22 @@ begin
       FHotGroup:=-1;
      end;
    end;
+
+  if FHotDropped then
+   begin
+    p:=ScreenToClient(Mouse.CursorPos);
+    if (p.X<0) or (p.Y<0) or (p.X>ClientWidth) or (p.Y>ClientHeight) then
+     begin
+      inc(FDropTimeout);
+      if FDropTimeout>=AutoRollUpTimerCount then
+       begin
+        Height:=DisplaySlotY;
+        FHotDropped:=false;
+       end;
+     end
+    else
+      FDropTimeout:=0;
+   end;
 end;
 
 procedure TfrmBoxer.UpdateLastKnownPaths;
@@ -237,6 +255,7 @@ begin
    begin
     //force display refresh
     FHotHandle:=0;
+    FDropTimeout:=0;
     Timer1Timer(nil);
     FDropAuto:=false;
    end
@@ -271,6 +290,7 @@ begin
 
      end;
     FHotDropped:=true;
+    FDropTimeout:=0;
    end;
 end;
 

@@ -3,8 +3,8 @@ object frmBoxer: TfrmBoxer
   Top = 82
   BorderStyle = bsNone
   Caption = 'Boxer'
-  ClientHeight = 133
-  ClientWidth = 358
+  ClientHeight = 20
+  ClientWidth = 400
   Color = 52479
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -29,7 +29,7 @@ object frmBoxer: TfrmBoxer
   object Timer1: TTimer
     Interval = 250
     OnTimer = Timer1Timer
-    Left = 8
-    Top = 40
+    Left = 16
+    Top = 8
   end
 end
