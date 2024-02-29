@@ -323,6 +323,7 @@ end;
 procedure TfrmBoxer.lblListClick(Sender: TObject);
 var
   gi,hi:integer;
+  h:THandle;
 begin
   if FHotGroup=-1 then
    begin
@@ -376,8 +377,9 @@ begin
     hi:=FLabels[(Sender as TLabel).Tag].val;
 
     //switch to window
-    SetForegroundWindow(FHandles[hi].h);
-    SetWindowPlacement(FHotHandle,@FGroups[gi].wp);//?
+    h:=FHandles[hi].h;
+    SetForegroundWindow(h);
+    SetWindowPlacement(h,@FGroups[gi].wp);//?
 
     Height:=DisplaySlotY;
     FHotDropped:=false;
