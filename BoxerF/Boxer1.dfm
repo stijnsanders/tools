@@ -13,6 +13,7 @@ object frmBoxer: TfrmBoxer
   Font.Style = []
   FormStyle = fsStayOnTop
   OldCreateOrder = False
+  PopupMenu = PopupMenu1
   PixelsPerInch = 96
   TextHeight = 14
   object lblDisplay: TLabel
@@ -22,6 +23,7 @@ object frmBoxer: TfrmBoxer
     Height = 14
     AutoSize = False
     Caption = '...'
+    PopupMenu = PopupMenu1
     ShowAccelChar = False
     OnClick = lblDisplayClick
     OnMouseMove = lblDisplayMouseMove
@@ -31,5 +33,25 @@ object frmBoxer: TfrmBoxer
     OnTimer = Timer1Timer
     Left = 16
     Top = 8
+  end
+  object PopupMenu1: TPopupMenu
+    OnPopup = PopupMenu1Popup
+    Left = 48
+    Top = 8
+    object Removewindowfromgroup1: TMenuItem
+      Caption = 'Remove &window from group'
+      OnClick = Removewindowfromgroup1Click
+    end
+    object Removegroup1: TMenuItem
+      Caption = '&Remove group'
+      OnClick = Removegroup1Click
+    end
+    object N1: TMenuItem
+      Caption = '-'
+    end
+    object Exit1: TMenuItem
+      Caption = 'E&xit'
+      OnClick = Exit1Click
+    end
   end
 end

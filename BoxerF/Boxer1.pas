@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ExtCtrls, StdCtrls, Shell32_TLB;
+  Dialogs, ExtCtrls, StdCtrls, Shell32_TLB, Menus;
 
 const
   WM_DetectSwitch = WM_USER+1;
@@ -13,11 +13,20 @@ type
   TfrmBoxer = class(TForm)
     lblDisplay: TLabel;
     Timer1: TTimer;
+    PopupMenu1: TPopupMenu;
+    Removegroup1: TMenuItem;
+    N1: TMenuItem;
+    Exit1: TMenuItem;
+    Removewindowfromgroup1: TMenuItem;
     procedure lblDisplayClick(Sender: TObject);
     procedure lblListClick(Sender: TObject);
     procedure lblDisplayMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
     procedure Timer1Timer(Sender: TObject);
+    procedure Exit1Click(Sender: TObject);
+    procedure PopupMenu1Popup(Sender: TObject);
+    procedure Removegroup1Click(Sender: TObject);
+    procedure Removewindowfromgroup1Click(Sender: TObject);
   private
     FGroups:array of record
       wp:TWindowPlacement;
@@ -37,7 +46,7 @@ type
     FLabelsSize,FLabelsIndex:integer;
     FShell:Shell;
     FHotHandle:THandle;
-    FHotGroup,FHotWidth,FDropTimeout:integer;
+    FHotGroup,FHotWidth,FDropTimeout,FDropGroup:integer;
     FHotDropped,FDropAuto:boolean;
     procedure DetectSwitch(hwnd:THandle);
     function GroupName(gi:integer;h1:THandle):string;
@@ -339,6 +348,7 @@ begin
     lbl:=TLabel.Create(Self);
     lbl.AutoSize:=false;
     lbl.ShowAccelChar:=false;
+    lbl.PopupMenu:=PopupMenu1;
     lbl.Tag:=FLabelsIndex;
     lbl.OnClick:=lblListClick;
     lbl.Parent:=Self;
@@ -424,6 +434,57 @@ end;
 procedure TfrmBoxer.WMDetectSwitch(var Msg: TMessage);
 begin
   DetectSwitch(0);
+end;
+
+procedure TfrmBoxer.Exit1Click(Sender: TObject);
+begin
+  if MessageBox(GetDesktopWindow,'Are you sure to close Boxer "F"?','Boxer "F"',
+    MB_OKCANCEL or MB_ICONQUESTION)=idOk then Application.Terminate;
+end;
+
+procedure TfrmBoxer.PopupMenu1Popup(Sender: TObject);
+begin
+  FDropGroup:=FHotGroup;
+  Removewindowfromgroup1.Enabled:=(FHotGroup<>-1) and (FHotHandle<>0);
+  Removegroup1.Enabled:=FHotGroup<>-1;
+end;
+
+procedure TfrmBoxer.Removegroup1Click(Sender: TObject);
+var
+  hi:integer;
+begin
+  //assert FDropGroup<>-1
+  if MessageBox(GetDesktopWindow,'Are you sure to remove the group and release the windows?','Boxer "F"',
+    MB_OKCANCEL or MB_ICONQUESTION)=idOk then
+   begin
+    for hi:=0 to FHandlesIndex-1 do
+      if FHandles[hi].g=FDropGroup then
+       begin
+        FHandles[hi].h:=0;
+        FHandles[hi].g:=-1;
+        FHandles[hi].p:='';
+       end;
+    //FGroups[FHotGroup].?
+
+    if FDropGroup=FGroupsIndex-1 then dec(FGroupsIndex);
+    //TODO: else move the others up (or mark group-slot as 'free')
+
+   end;
+  FHotHandle:=0;//force update
+  PostMessage(Handle,WM_DetectSwitch,0,0);
+end;
+
+procedure TfrmBoxer.Removewindowfromgroup1Click(Sender: TObject);
+var
+  hi:integer;
+begin
+  //assert FHotHandle<>0
+  hi:=LookupHandle(FHotHandle);
+  FHandles[hi].h:=0;
+  FHandles[hi].g:=-1;
+  FHandles[hi].p:='';
+  FHotHandle:=0;//force update
+  PostMessage(Handle,WM_DetectSwitch,0,0);
 end;
 
 end.
