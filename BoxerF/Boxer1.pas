@@ -99,6 +99,13 @@ begin
   frmBoxer.DetectSwitch(hwnd);
 end;
 
+procedure wDetectMoveSize(hWinEventHook:THandle;event:DWORD;hwnd:HWND;
+  idObject:integer;idChild:integer;idEventThread:DWORD;dwmsEventTime:DWORD); stdcall;
+begin
+  frmBoxer.FHotHandle:=0;//force updaet
+  frmBoxer.DetectSwitch(hwnd);
+end;
+
 procedure TfrmBoxer.DoShow;
 begin
   inherited;
@@ -107,6 +114,9 @@ begin
 
   SetWinEventHook(EVENT_SYSTEM_FOREGROUND,EVENT_SYSTEM_FOREGROUND,0,
     wDetectSwitch,0,0,WINEVENT_OUTOFCONTEXT);
+
+  SetWinEventHook(EVENT_SYSTEM_MOVESIZEEND,EVENT_SYSTEM_MOVESIZEEND,0,
+    wDetectMoveSize,0,0,WINEVENT_OUTOFCONTEXT);
 
   //TODO: auto-detect windows with same placement?
 
