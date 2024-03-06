@@ -6,15 +6,18 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ExtCtrls, StdCtrls, Shell32_TLB;
 
+const
+  WM_DetectSwitch = WM_USER+1;
+
 type
   TfrmBoxer = class(TForm)
     lblDisplay: TLabel;
     Timer1: TTimer;
-    procedure Timer1Timer(Sender: TObject);
     procedure lblDisplayClick(Sender: TObject);
     procedure lblListClick(Sender: TObject);
     procedure lblDisplayMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
+    procedure Timer1Timer(Sender: TObject);
   private
     FGroups:array of record
       wp:TWindowPlacement;
@@ -36,15 +39,18 @@ type
     FHotHandle:THandle;
     FHotGroup,FHotWidth,FDropTimeout:integer;
     FHotDropped,FDropAuto:boolean;
+    procedure DetectSwitch(hwnd:THandle);
     function GroupName(gi:integer;h1:THandle):string;
     procedure SetLabel(li,Value:integer;const Display:string);
     function LookupHandle(h:THandle):integer;
     procedure UpdateLastKnownPaths;
     procedure DropDown;
+    procedure ResetDropDown(AllowAutoDrop:boolean);
   protected
     procedure DoCreate; override;
     procedure CreateParams(var Params: TCreateParams); override;
     procedure DoShow; override;
+    procedure WMDetectSwitch(var Msg: TMessage); message WM_DetectSwitch;
   end;
 
 var
@@ -55,7 +61,7 @@ const
   DisplayHeight=18;
   DisplayMarginY=2;
   DisplayWidthMaximized=400;
-  AutoRollUpTimerCount=8;//*Timer1.Interval
+  AutoRollUpTimerCount=6;//see also Timer1.Interval
 
 implementation
 
@@ -87,11 +93,20 @@ begin
   Params.ExStyle:=Params.ExStyle or WS_EX_NOACTIVATE;
 end;
 
+procedure wDetectSwitch(hWinEventHook:THandle;event:DWORD;hwnd:HWND;
+  idObject:integer;idChild:integer;idEventThread:DWORD;dwmsEventTime:DWORD); stdcall;
+begin
+  frmBoxer.DetectSwitch(hwnd);
+end;
+
 procedure TfrmBoxer.DoShow;
 begin
   inherited;
   OleInitialize(nil);
   ShowWindow(Application.Handle,SW_HIDE);
+
+  SetWinEventHook(EVENT_SYSTEM_FOREGROUND,EVENT_SYSTEM_FOREGROUND,0,
+    wDetectSwitch,0,0,WINEVENT_OUTOFCONTEXT);
 
   //TODO: auto-detect windows with same placement?
 
@@ -124,16 +139,15 @@ begin
   while (Result<FHandlesIndex) and (FHandles[Result].h<>h) do inc(Result);
 end;
 
-procedure TfrmBoxer.Timer1Timer(Sender: TObject);
+procedure TfrmBoxer.DetectSwitch(hwnd:THandle);
 var
   h:THandle;
   hi:integer;
   wp:TWindowPlacement;
   s:array[0..MAX_PATH] of WideChar;
   wn:PWideChar;
-  p:TPoint;
 begin
-  h:=GetForegroundWindow;
+  h:=GetForegroundWindow; //assert = hwnd
 
   //TODO: GetWindowPlacement and detect/update groups
 
@@ -191,7 +205,12 @@ begin
       FHotGroup:=-1;
      end;
    end;
+end;
 
+procedure TfrmBoxer.Timer1Timer(Sender: TObject);
+var
+  p:TPoint;
+begin
   if FHotDropped then
    begin
     p:=ScreenToClient(Mouse.CursorPos);
@@ -199,10 +218,7 @@ begin
      begin
       inc(FDropTimeout);
       if FDropTimeout>=AutoRollUpTimerCount then
-       begin
-        Height:=DisplaySlotY;
-        FHotDropped:=false;
-       end;
+        ResetDropDown(true);
      end
     else
       FDropTimeout:=0;
@@ -244,54 +260,58 @@ end;
 
 procedure TfrmBoxer.lblDisplayClick(Sender: TObject);
 begin
-  DropDown;
+  if FHotDropped then
+   begin
+    ResetDropDown(false);
+    PostMessage(Handle,WM_DetectSwitch,0,0);
+   end
+  else
+    DropDown;
 end;
 
 procedure TfrmBoxer.DropDown;
 var
   gi,hi,i:integer;
 begin
-  if FHotDropped then
+  if FHotGroup=-1 then
    begin
-    //force display refresh
-    FHotHandle:=0;
-    FDropTimeout:=0;
-    Timer1Timer(nil);
-    FDropAuto:=false;
+    //add to a group
+    lblDisplay.Caption:='(add to a group:)';
+    //UpdateLastKnownPaths;?
+
+    for gi:=0 to FGroupsIndex-1 do
+      SetLabel(gi,0,GroupName(gi,0));
+    SetLabel(FGroupsIndex,0,'(new group)');
+    Height:=DisplaySlotY*(FGroupsIndex+2);
+
    end
   else
    begin
-    if FHotGroup=-1 then
-     begin
-      //add to a group
-      lblDisplay.Caption:='(add to a group:)';
-      //UpdateLastKnownPaths;?
+    //list group
 
-      for gi:=0 to FGroupsIndex-1 do
-        SetLabel(gi,0,GroupName(gi,0));
-      SetLabel(FGroupsIndex,0,'(new group)');
-      Height:=DisplaySlotY*(FGroupsIndex+2);
+    i:=0;
+    for hi:=0 to FHandlesIndex-1 do
+      if FHandles[hi].g=FHotGroup then
+       begin
+        SetLabel(i,hi,FHandles[hi].p);
+        inc(i);
+       end;
+    Height:=DisplaySlotY*(i+1);
 
-     end
-    else
-     begin
-      //list group
+    //TODO: '(drop from group)'? '(move to group)'?
 
-      i:=0;
-      for hi:=0 to FHandlesIndex-1 do
-        if FHandles[hi].g=FHotGroup then
-         begin
-          SetLabel(i,hi,FHandles[hi].p);
-          inc(i);
-         end;
-      Height:=DisplaySlotY*(i+1);
-
-      //TODO: '(drop from group)'? '(move to group)'?
-
-     end;
-    FHotDropped:=true;
-    FDropTimeout:=0;
    end;
+  FHotDropped:=true;
+  Timer1.Enabled:=true;
+  FDropTimeout:=0;
+end;
+
+procedure TfrmBoxer.ResetDropDown(AllowAutoDrop:boolean);
+begin
+  Height:=DisplaySlotY;
+  FHotDropped:=false;
+  Timer1.Enabled:=false;
+  FDropAuto:=AllowAutoDrop;
 end;
 
 procedure TfrmBoxer.SetLabel(li, Value: integer; const Display: string);
@@ -369,20 +389,19 @@ begin
 
     //force update display
     FHotHandle:=0;
-    Timer1Timer(nil);
+    PostMessage(Handle,WM_DetectSwitch,0,0);
    end
   else
    begin
     gi:=FHotGroup;
     hi:=FLabels[(Sender as TLabel).Tag].val;
+    ResetDropdown(true);
 
     //switch to window
     h:=FHandles[hi].h;
     SetForegroundWindow(h);
     SetWindowPlacement(h,@FGroups[gi].wp);//?
 
-    Height:=DisplaySlotY;
-    FHotDropped:=false;
    end;
 end;
 
@@ -390,6 +409,11 @@ procedure TfrmBoxer.lblDisplayMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
   if FDropAuto and not(FHotDropped) then DropDown;
+end;
+
+procedure TfrmBoxer.WMDetectSwitch(var Msg: TMessage);
+begin
+  DetectSwitch(0);
 end;
 
 end.
