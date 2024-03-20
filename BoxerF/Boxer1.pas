@@ -213,7 +213,11 @@ begin
           FHotWidth,DisplaySlotY);
        end;
       lblDisplay.SetBounds(2,2,FHotWidth-4,DisplayHeight);
-      if not Visible then Show;
+      if not Visible then
+       begin
+        Show;
+        ShowWindow(Application.Handle,SW_HIDE);
+       end;
       FHotDropped:=false;
 
      end
