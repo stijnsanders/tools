@@ -1,7 +1,7 @@
 [Setup]
 AppId={{657712DF-3C12-4EB2-BC42-74E22CA14277}
 AppName=SideSwitch
-AppVerName=SideSwitch 1.0.8.460
+AppVerName=SideSwitch 1.0.8.676
 AppPublisher=Double Sigma Programming
 AppPublisherURL=http://yoy.be/sideswitch
 AppSupportURL=http://yoy.be/sideswitch

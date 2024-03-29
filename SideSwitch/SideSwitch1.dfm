@@ -19,7 +19,6 @@ object frmSideSwitchMain: TfrmSideSwitchMain
   Position = poScreenCenter
   OnMouseDown = FormMouseDown
   OnMouseMove = FormMouseMove
-  OnMouseUp = FormMouseUp
   PixelsPerInch = 96
   TextHeight = 16
   object Timer1: TTimer

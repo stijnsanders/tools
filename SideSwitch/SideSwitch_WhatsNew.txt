@@ -1,9 +1,10 @@
 SideSwitch - What's New
 
-v1.0.8.480
-- settings which border to activate on
+v1.0.8.676
+- setting: which border to activate on
 - activate by holding Ctrl (default off)
 - "black" all-screen curtain windows
+- setting: show clock
 
 v1.0.7.?
 - (added to https://github.com/stijnsanders/tools )

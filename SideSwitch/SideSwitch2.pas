@@ -14,8 +14,8 @@ type
     Label2: TLabel;
     txtIconHeight: TEdit;
     udIconHeight: TUpDown;
-    Button1: TButton;
-    Button2: TButton;
+    btnOK: TButton;
+    btnCancel: TButton;
     cbSessionBoot: TCheckBox;
     FontDialog1: TFontDialog;
     btnFont: TButton;
@@ -40,6 +40,8 @@ type
     cbScreenBottom: TCheckBox;
     cbScreenRight: TCheckBox;
     cbActivateHoldCtrl: TCheckBox;
+    cbClock: TCheckBox;
+    txtClock: TEdit;
     procedure btnFontClick(Sender: TObject);
     procedure btnClrMainClick(Sender: TObject);
     procedure btnClrVisibleClick(Sender: TObject);

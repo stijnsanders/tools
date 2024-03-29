@@ -25,8 +25,6 @@ type
     procedure Settings1Click(Sender: TObject);
     procedure btnHideClick(Sender: TObject);
     procedure PopupMenu1Popup(Sender: TObject);
-    procedure FormMouseUp(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure NewBlack1Click(Sender: TObject);
   private
     FMutex:THandle;
@@ -36,11 +34,12 @@ type
       h:THandle;
       y:integer;
     end;
-    FAppListCount,FListY,FStartX,FStartY,FCCounter:integer;
+    FAppListCount,FListY,FCCounter:integer;
     FActivateTop,FActivateLeft,FActivateBottom,FActivateRight,FActivateHoldCtrl,
     FIsListing,FListUpsideDown,FSwitchMirrored,
-    FTaskBarNixTopMost,FShowTestButton,
-    FShowAll,FShowFullInfo,FDrawNext,FAppMini,FDragging:boolean;
+    FTaskBarNixTopMost,FShowClock,FShowTestButton,
+    FShowAll,FShowFullInfo,FDrawNext,FAppMini:boolean;
+    FClockDTF:string;
     FListSkip,FTaskBarHIcon,FAppHandle1,FAppHandle2:THandle;
     FKeepShowingMS,FIconTimeoutMS:cardinal;
     FBorderMargin,FIconHeight,FShowVisible,FShowMinimized:integer;
@@ -111,6 +110,8 @@ const
   Default_ShowMinimized=ShowAllMonitorsSwitch;
   Default_SwitchMirrored=false;
   Default_TaskBarNixTopMost=false;
+  Default_ShowClock=false;
+  Default_ClockDTF=' ddd d/m hh:nn ';
   ICON_SMALL2=2;//since winXP
 
 function InternalGetWindowText; external user32 name 'InternalGetWindowText';
@@ -137,10 +138,10 @@ var
   m:TMonitor;
   r:TRect;
   p:TPoint;
-  a:boolean;
+  DoList:boolean;
 begin
   m:=nil;//counter warning
-  if Visible and (GetTickCount>FHideTC) and not(FDragging) then
+  if Visible and (GetTickCount>FHideTC) then
    begin
     Visible:=false;
     FShowAll:=false;
@@ -158,19 +159,21 @@ begin
     try
       p:=Mouse.CursorPos;
       i:=0;
-      a:=true;
+      DoList:=FDrawNext;
       FListUpsideDown:=false;
-      while (i<Screen.MonitorCount) and a do
+      while (i<Screen.MonitorCount) and not(DoList) do
        begin
         m:=Screen.Monitors[i];
         mw4:=m.Width div 4;
         mh4:=m.Height div 4;
-        a:=false;
         if FActivateTop and (p.Y=m.Top) and
           (p.X>=m.Left+mw4) and (p.X<=m.Left+mw4*3) then //top
+         begin
           r:=Rect(
             m.Left+mw4,m.Top+FBorderMargin,
-            m.Left+mw4*3,m.Top+m.Height-FBorderMargin)
+            m.Left+mw4*3,m.Top+m.Height-FBorderMargin);
+          DoList:=true;
+         end
         else
         if FActivateBottom and (p.Y=m.Top+m.Height-1) and
           (p.X>=m.Left+mw4) and (p.X<=m.Left+mw4*3) then //bottom
@@ -179,38 +182,47 @@ begin
             m.Left+mw4,m.Top+FBorderMargin,
             m.Left+mw4*3,m.Top+m.Height-FBorderMargin);
           FListUpsideDown:=true;
+          DoList:=true;
          end
         else
         if FActivateLeft and (p.X=m.Left) and
           (p.Y>=m.Top+mh4) and (p.Y<=m.Top+mh4*3) then //left
+         begin
           r:=Rect(
             m.Left+FBorderMargin,m.Top+mh4,
-            m.Left+mw4*3,m.Top+m.Height)
+            m.Left+mw4*3,m.Top+m.Height);
+          DoList:=true;
+         end
         else
         if FActivateRight and (p.X=m.Left+m.Width-1) and
           (p.Y>=m.Top+(m.Height div 4)) and (p.Y<=m.Top+(m.Height div 4)*3) then //right
+         begin
           r:=Rect(
             m.Left+mw4*2,m.Top+mh4,
-            m.Left+m.Width-FBorderMargin,m.Top+m.Height)
+            m.Left+m.Width-FBorderMargin,m.Top+m.Height);
+          DoList:=true;
+         end
         else
         if FActivateHoldCtrl and (FCCounter=3) and
           (p.X>=m.Left) and (p.X<=m.Left+m.Width) and
           (p.Y>=m.Top) and (p.Y<=m.Top+m.Height) then
          begin
           if p.Y<m.Top+m.Height-mh4 then
-            r:=Rect(p.X+8,p.Y+8,p.X+m.Width,p.Y+m.Height)
+           begin
+            r:=Rect(p.X+8,p.Y+8,p.X+m.Width,p.Y+m.Height);
+            DoList:=true;
+           end
           else
            begin
             r:=Rect(p.X+8,p.Y-m.Height+8,p.X+m.Width,p.Y-8);
             FListUpsideDown:=true;
+            DoList:=true;
            end;
-         end
-        else
-          a:=not(FDrawNext);
+         end;
         inc(i);
        end;
 
-      if not(a) then
+      if DoList then
        begin
         Canvas.Brush.Style:=bsSolid;
         Canvas.Brush.Color:=Color;
@@ -254,10 +266,17 @@ begin
           inc(i,h+FIconHeight);
           Canvas.TextRect(Rect(i,FListY,i+h,FListY+FIconHeight),
             i+FIconHeight+(FIconHeight div 2),FListY,'Test');
+         end;
 
+        if FShowClock then
+         begin
           inc(i,h+FIconHeight);
+          {
           Canvas.TextRect(Rect(i,FListY,i+h,FListY+FIconHeight),
-            i+FIconHeight+(FIconHeight div 2),FListY,'xxx');
+            i+(FIconHeight div 2),FListY,
+          }
+          Canvas.TextOut(i,FListY,
+            FormatDateTime(FClockDTF,Now));
          end;
 
         if FListUpsideDown then dec(FListY,FIconHeight+2) else inc(FListY,FIconHeight+2);
@@ -265,7 +284,7 @@ begin
         FAppHandle1:=0;
         FAppHandle2:=0;
         FAppMini:=false;
-        FShowAll:=(GetKeyState(VK_CONTROL) and $80)<>0;
+        //FShowAll:=(GetKeyState(VK_CONTROL) and $80)<>0;//Replaced by "more" button
         FShowFullInfo:=(GetKeyState(VK_SHIFT) and $80)<>0;
         EnumWindows(@DoListWindow,0);
 
@@ -350,7 +369,7 @@ begin
     IsBlack:=false;//default
     BlackColor:=clBlack;//default
     hp:=GetWindowLong(h,GWL_HWNDPARENT);
-    if hp=Application.Handle then
+    if hp=0 then //see TfrmBlack.CreateParams
      begin
       i:=0;
       while (i<Length(FBlackForms)) and
@@ -403,11 +422,11 @@ begin
           //
 
           i:=FListY+FIconHeight div 2;
+          Canvas.Brush.Color:=BlackColor;
+          Canvas.FillRect(Rect(x+8,FListY+1,x+10+FIconHeight*20,FListY+FIconHeight-3));
           Canvas.Brush.Color:=clRed;
           Canvas.FillRect(Rect(x+2,FListY-1,x+4,FListY+FIconHeight+1));
           Canvas.FillRect(Rect(x+6,i-3,x+6+FIconHeight*20,i-1));
-          Canvas.Brush.Color:=BlackColor;
-          Canvas.FillRect(Rect(x+8,i-1,x+6+FIconHeight*20,i+3));
 
          end
         else
@@ -565,16 +584,6 @@ procedure TfrmSideSwitchMain.FormMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
   FHideTC:=GetTickCount+FKeepShowingMS;
-  if FDragging then
-   begin
-    Canvas.TextRect(Rect(FIconHeight*24,FListY,FIconHeight*30,
-      FListY+FIconHeight),
-      FIconHeight*24+(FIconHeight div 2),FListY,Format('  %d,%d  ',[
-        X-FStartX,
-        Y-FStartY
-      ]));
-
-   end;
 end;
 
 procedure TfrmSideSwitchMain.FormMouseDown(Sender: TObject;
@@ -597,14 +606,9 @@ begin
             FShowAll:=true;
             FDrawNext:=true;
            end;
-          4:TestListWindows;
-          5:
-           begin
-            FDragging:=true;
-            FStartX:=X;
-            FStartY:=Y;
-           end;
-          //...
+          4:if FShowTestButton then TestListWindows
+          //5:if FShowClock then open settings?
+          //6:
         end
       else
         case X div (Font.Size*7 div 3) of
@@ -719,8 +723,9 @@ begin
   FShowMinimized:=Default_ShowMinimized;
   FSwitchMirrored:=Default_SwitchMirrored;
   FTaskBarNixTopMost:=Default_TaskBarNixTopMost;
+  FShowClock:=Default_ShowClock;
+  FClockDTF:=Default_ClockDTF;
   FShowTestButton:=(ParamCount>0) and (LowerCase(ParamStr(1))='/test');
-  FDragging:=false;
   FCCounter:=0;
   FDrawNext:=false;
   FActivateTop:=true;
@@ -755,6 +760,8 @@ begin
         FActivateRight:=ReadBool('ActivateRight');
         FActivateBottom:=ReadBool('ActivateBottom');
         FActivateHoldCtrl:=ReadBool('ActivateHoldCtrl');
+        FShowClock:=ReadBool('ShowClock');
+        FClockDTF:=ReadString('ClockDTF');
         CloseKey;
        end;
     except
@@ -786,6 +793,8 @@ begin
       cbScreenRight.Checked:=FActivateRight;
       cbScreenBottom.Checked:=FActivateBottom;
       cbActivateHoldCtrl.Checked:=FActivateHoldCtrl;
+      cbClock.Checked:=FShowClock;
+      txtClock.Text:=FClockDTF;
       r:=TRegistry.Create;
       try
         //r.RootKey:=HKEY_CURRENT_USER;//assert default
@@ -814,6 +823,8 @@ begin
         FActivateRight:=cbScreenRight.Checked;
         FActivateBottom:=cbScreenBottom.Checked;
         FActivateHoldCtrl:=cbActivateHoldCtrl.Checked;
+        FShowClock:=cbClock.Checked;
+        FClockDTF:=txtClock.Text;
         r:=TRegistry.Create;
         try
           //r.RootKey:=HKEY_CURRENT_USER;//assert default
@@ -839,6 +850,8 @@ begin
           r.WriteBool('ActivateRight',FActivateRight);
           r.WriteBool('ActivateBottom',FActivateBottom);
           r.WriteBool('ActivateHoldCtrl',FActivateHoldCtrl);
+          r.WriteBool('ShowClock',FShowClock);
+          r.WriteString('ClockDTF',FClockDTF);
           r.CloseKey;
           r.OpenKey('\Software\Microsoft\Windows\CurrentVersion\Run',true);
           if cbSessionBoot.Checked then
@@ -933,12 +946,6 @@ begin
       ]);
    end;
   Result:=true;
-end;
-
-procedure TfrmSideSwitchMain.FormMouseUp(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  FDragging:=false;
 end;
 
 procedure TfrmSideSwitchMain.NewBlack1Click(Sender: TObject);
