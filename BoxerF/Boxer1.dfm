@@ -46,6 +46,10 @@ object frmBoxer: TfrmBoxer
       Caption = '&Remove group'
       OnClick = Removegroup1Click
     end
+    object Useshellpaths1: TMenuItem
+      Caption = 'Use shell paths'
+      OnClick = Useshellpaths1Click
+    end
     object N1: TMenuItem
       Caption = '-'
     end

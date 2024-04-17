@@ -18,6 +18,7 @@ type
     N1: TMenuItem;
     Exit1: TMenuItem;
     Removewindowfromgroup1: TMenuItem;
+    Useshellpaths1: TMenuItem;
     procedure lblDisplayClick(Sender: TObject);
     procedure lblListClick(Sender: TObject);
     procedure lblDisplayMouseMove(Sender: TObject; Shift: TShiftState; X,
@@ -27,6 +28,7 @@ type
     procedure PopupMenu1Popup(Sender: TObject);
     procedure Removegroup1Click(Sender: TObject);
     procedure Removewindowfromgroup1Click(Sender: TObject);
+    procedure Useshellpaths1Click(Sender: TObject);
   private
     FGroups:array of record
       wp:TWindowPlacement;
@@ -47,7 +49,7 @@ type
     FShell:Shell;
     FHotHandle:THandle;
     FHotGroup,FHotWidth,FDropTimeout,FDropGroup:integer;
-    FHotDropped,FDropAuto:boolean;
+    FHotDropped,FDropAuto,FShellPaths:boolean;
     procedure DetectSwitch(hwnd:THandle);
     function GroupName(gi:integer;h1:THandle):string;
     procedure SetLabel(li,Value:integer;const Display:string);
@@ -72,6 +74,8 @@ const
   DisplayWidthMaximized=400;
   AutoRollUpTimerCount=6;//see also Timer1.Interval
 
+function InternalGetWindowText(hWnd: HWND; lpString: PWideChar; nMaxCount: Integer): Integer; stdcall;
+
 implementation
 
 uses ActiveX, ComObj;
@@ -93,6 +97,7 @@ begin
   FHotGroup:=-1;
   FHotDropped:=false;
   FDropAuto:=true;
+  FShellPaths:=false;//TODO: from config
 end;
 
 procedure TfrmBoxer.CreateParams(var Params: TCreateParams);
@@ -206,7 +211,8 @@ begin
        end
       else
        begin
-        FHotWidth:=wp.rcNormalPosition.Right-wp.rcNormalPosition.Left-16;
+        FHotWidth:=wp.rcNormalPosition.Right-wp.rcNormalPosition.Left-152;
+        if FHotWidth<120 then FHotWidth:=120;
         SetBounds(
           wp.rcNormalPosition.Left+8,
           wp.rcNormalPosition.Top-DisplaySlotY-DisplayMarginY,
@@ -249,37 +255,58 @@ begin
 end;
 
 procedure TfrmBoxer.UpdateLastKnownPaths;
+const
+  sSize=1024;
 var
   wl,w:OleVariant;
   i,hi:integer;
+  s:array[0..sSize] of WideChar;
 begin
-  if FShell=nil then FShell:=CoShell.Create;
-  try
-    inc(FHandlesTouched);//FHandlesTouched:=GetTickCount?
-    wl:=FShell.Windows;//TODO: find out which interface!
-    for i:=0 to wl.Count-1 do
-     begin
-      w:=wl.Item(i);
-      hi:=LookupHandle(w.HWND);
-      if hi<FHandlesIndex then
-       begin
-        FHandles[hi].p:=w.Document.Folder.Self.Path;//TODO: replace with explicit interface calls!
-        FHandles[hi].t:=FHandlesTouched;
-       end;
-     end;
-  except
-    //ignore pointer errors
-    //FShell:=nil//?
-  end;
+  if FShellPaths then
+   begin
 
-  for hi:=0 to FHandlesIndex-1 do
-    if FHandles[hi].t<>FHandlesTouched then
-     begin
-      FHandles[hi].h:=0;
-      FHandles[hi].g:=-1;
-      FHandles[hi].p:='';
-     end;
+    if FShell=nil then FShell:=CoShell.Create;
+    try
+      inc(FHandlesTouched);//FHandlesTouched:=GetTickCount?
+      wl:=FShell.Windows;//TODO: find out which interface!
+      for i:=0 to wl.Count-1 do
+       begin
+        w:=wl.Item(i);
+        hi:=LookupHandle(w.HWND);
+        if hi<FHandlesIndex then
+         begin
+          FHandles[hi].p:=w.Document.Folder.Self.Path;//TODO: replace with explicit interface calls!
+          FHandles[hi].t:=FHandlesTouched;
+         end;
+       end;
+    except
+      //ignore pointer errors
+      //FShell:=nil//?
+    end;
+
+    for hi:=0 to FHandlesIndex-1 do
+      if FHandles[hi].t<>FHandlesTouched then
+       begin
+        FHandles[hi].h:=0;
+        FHandles[hi].g:=-1;
+        FHandles[hi].p:='';
+       end;
+
+   end
+  else
+   begin
+
+    for hi:=0 to FHandlesIndex-1 do
+      if FHandles[hi].h<>0 then
+       begin
+        InternalGetWindowText(FHandles[hi].h,@s[0],sSize-1);
+        FHandles[hi].p:=s;
+       end;
+
+   end;
 end;
+
+function InternalGetWindowText; external user32 name 'InternalGetWindowText';
 
 procedure TfrmBoxer.lblDisplayClick(Sender: TObject);
 begin
@@ -489,6 +516,13 @@ begin
   FHandles[hi].p:='';
   FHotHandle:=0;//force update
   PostMessage(Handle,WM_DetectSwitch,0,0);
+end;
+
+procedure TfrmBoxer.Useshellpaths1Click(Sender: TObject);
+begin
+  FShellPaths:=not(FShellPaths);
+  Useshellpaths1.Checked:=FShellPaths;
+  UpdateLastKnownPaths;
 end;
 
 end.

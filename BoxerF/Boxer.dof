@@ -106,12 +106,12 @@ Launcher=
 UseLauncher=0
 DebugCWD=
 [Version Info]
-IncludeVerInfo=0
+IncludeVerInfo=1
 AutoIncBuild=0
 MajorVer=1
 MinorVer=0
 Release=0
-Build=0
+Build=680
 Debug=0
 PreRelease=0
 Special=0
@@ -121,15 +121,15 @@ Locale=2067
 CodePage=1252
 [Version Info Keys]
 CompanyName=
-FileDescription=
-FileVersion=1.0.0.0
+FileDescription=BoxerF
+FileVersion=1.0.0.680
 InternalName=
 LegalCopyright=
 LegalTrademarks=
 OriginalFilename=
 ProductName=
 ProductVersion=1.0.0.0
-Comments=
+Comments=http://yoy.be/
 [HistoryLists\hlUnitAliases]
 Count=1
 Item0=WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;
