@@ -42,6 +42,9 @@ type
     cbActivateHoldCtrl: TCheckBox;
     cbClock: TCheckBox;
     txtClock: TEdit;
+    cbSpotlight: TCheckBox;
+    txtSpotlight: TEdit;
+    udSpotlight: TUpDown;
     procedure btnFontClick(Sender: TObject);
     procedure btnClrMainClick(Sender: TObject);
     procedure btnClrVisibleClick(Sender: TObject);

@@ -7,7 +7,7 @@ object frmBlack: TfrmBlack
   ClientWidth = 390
   Color = clBlack
   Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
+  Font.Color = clWhite
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []

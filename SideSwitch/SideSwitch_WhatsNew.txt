@@ -1,5 +1,8 @@
 SideSwitch - What's New
 
+v1.0.9.680
+- 'spotlight': only display in the vicility of the mouse cursor
+
 v1.0.8.676
 - setting: which border to activate on
 - activate by holding Ctrl (default off)

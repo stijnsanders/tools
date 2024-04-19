@@ -34,15 +34,17 @@ type
       h:THandle;
       y:integer;
     end;
-    FAppListCount,FListY,FCCounter:integer;
+    FRender:TBitmap;
+    FCanvas:TCanvas;
+    FAppListCount,FCanvasWidth,FCanvasHeight,FListY,FCCounter:integer;
     FActivateTop,FActivateLeft,FActivateBottom,FActivateRight,FActivateHoldCtrl,
-    FIsListing,FListUpsideDown,FSwitchMirrored,
+    FIsListing,FListUpsideDown,FSwitchMirrored,FSpotlight,
     FTaskBarNixTopMost,FShowClock,FShowTestButton,
     FShowAll,FShowFullInfo,FDrawNext,FAppMini:boolean;
     FClockDTF:string;
     FListSkip,FTaskBarHIcon,FAppHandle1,FAppHandle2:THandle;
     FKeepShowingMS,FIconTimeoutMS:cardinal;
-    FBorderMargin,FIconHeight,FShowVisible,FShowMinimized:integer;
+    FBorderMargin,FIconHeight,FShowVisible,FShowMinimized,FSpotlightPx:integer;
     FColorMain,FColorVisible,FColorMinimized:TColor;
     FDesktopRect,FMonitorRect:TRect;
     FBlackForms:array of TForm;
@@ -112,6 +114,8 @@ const
   Default_TaskBarNixTopMost=false;
   Default_ShowClock=false;
   Default_ClockDTF=' ddd d/m hh:nn ';
+  Default_Spotlight=true;
+  Default_SpotlightPx=120;
   ICON_SMALL2=2;//since winXP
 
 function InternalGetWindowText; external user32 name 'InternalGetWindowText';
@@ -138,6 +142,9 @@ var
   m:TMonitor;
   r:TRect;
   p:TPoint;
+  q:HRGN;
+  s:string;
+  ts:TSize;
   DoList:boolean;
 begin
   m:=nil;//counter warning
@@ -224,9 +231,6 @@ begin
 
       if DoList then
        begin
-        Canvas.Brush.Style:=bsSolid;
-        Canvas.Brush.Color:=Color;
-        Canvas.FillRect(Rect(0,0,ClientWidth,ClientHeight));
         if FDrawNext then FDrawNext:=false else
          begin
           BoundsRect:=r;
@@ -234,49 +238,61 @@ begin
           FMonitorRect:=m.BoundsRect;
           FDesktopRect:=Screen.DesktopRect;
           FListSkip:=GetShellWindow;//'Program Manager'
+          FCanvasWidth:=r.Right-r.Left;//ClientWidth
+          FCanvasHeight:=r.Bottom-r.Top;//ClientHeight
+          if FSpotlight then
+           begin
+            FRender.Width:=FCanvasWidth;
+            FRender.Height:=FCanvasHeight;
+            FCanvas:=FRender.Canvas;
+           end
+          else
+            FCanvas:=Canvas;
          end;
+        FCanvas.Brush.Style:=bsSolid;
+        FCanvas.Brush.Color:=Color;
+        FCanvas.FillRect(Rect(0,0,FCanvasWidth,FCanvasHeight));
         Visible:=true;
-        if FListUpsideDown then FListY:=ClientHeight-FIconHeight-2 else FListY:=0;
+        if FListUpsideDown then FListY:=FCanvasHeight-FIconHeight-2 else FListY:=0;
         ShowWindow(Application.Handle,SW_HIDE);
 
         FAppListCount:=1;
         SetLength(FAppList,FAppListCount);
         FAppList[0].h:=0;
         FAppList[0].y:=FListY;
-        Canvas.Brush.Color:=FColorMain;
+        FCanvas.Brush.Color:=FColorMain;
 
         i:=0;
         h:=FIconHeight*5;
-        Canvas.TextRect(Rect(i,FListY,i+h,FListY+FIconHeight),
+        FCanvas.TextRect(Rect(i,FListY,i+h,FListY+FIconHeight),
           i+FIconHeight+(FIconHeight div 2),FListY,'Hide');
         inc(i,h+FIconHeight);
-        Canvas.TextRect(Rect(i,FListY,i+h,FListY+FIconHeight),
+        FCanvas.TextRect(Rect(i,FListY,i+h,FListY+FIconHeight),
           i+FIconHeight+(FIconHeight div 2),FListY,'Clear');
         inc(i,h+FIconHeight);
         if Screen.MonitorFromWindow(GetForegroundWindow,mdNull)<>FTargetmon then
-          Canvas.TextRect(Rect(i,FListY,i+h,FListY+FIconHeight),
+          FCanvas.TextRect(Rect(i,FListY,i+h,FListY+FIconHeight),
             i+FIconHeight+(FIconHeight div 2),FListY,'Switch');
 
         inc(i,h+FIconHeight);
-        Canvas.TextRect(Rect(i,FListY,i+h,FListY+FIconHeight),
+        FCanvas.TextRect(Rect(i,FListY,i+h,FListY+FIconHeight),
           i+FIconHeight+(FIconHeight div 2),FListY,'More');
 
         if FShowTestButton then
          begin
           inc(i,h+FIconHeight);
-          Canvas.TextRect(Rect(i,FListY,i+h,FListY+FIconHeight),
+          FCanvas.TextRect(Rect(i,FListY,i+h,FListY+FIconHeight),
             i+FIconHeight+(FIconHeight div 2),FListY,'Test');
          end;
 
         if FShowClock then
          begin
+          s:=FormatDateTime(FClockDTF,Now);
+          ts:=FCanvas.TextExtent(s);
+          if ts.cx<h then ts.cx:=h-8;
           inc(i,h+FIconHeight);
-          {
-          Canvas.TextRect(Rect(i,FListY,i+h,FListY+FIconHeight),
-            i+(FIconHeight div 2),FListY,
-          }
-          Canvas.TextOut(i,FListY,
-            FormatDateTime(FClockDTF,Now));
+          FCanvas.TextRect(Rect(i,FListY,i+ts.cx+8,FListY+FIconHeight),
+            i+4,FListY,s);
          end;
 
         if FListUpsideDown then dec(FListY,FIconHeight+2) else inc(FListY,FIconHeight+2);
@@ -290,6 +306,21 @@ begin
 
         FHideTC:=GetTickCount+FKeepShowingMS;
        end;
+
+      if FSpotlight and Visible then
+       begin
+        Canvas.Brush.Style:=bsSolid;
+        Canvas.Brush.Color:=Color;
+        Canvas.FillRect(Rect(0,0,FCanvasWidth,FCanvasHeight));
+        p:=ScreenToClient(p);
+        q:=CreateEllipticRgn(p.X-FSpotlightPx,p.Y-FSpotlightPx,
+          p.X+FSpotlightPx,p.Y+FSpotlightPx);
+        SelectClipRgn(Canvas.Handle,q);
+        BitBlt(Canvas.Handle,0,0,FCanvasWidth,FCanvasHeight,FCanvas.Handle,0,0,SRCCOPY);
+        SelectClipRgn(Canvas.Handle,0);
+        DeleteObject(q);
+       end;
+
     except
       //silent (e.g. when workstation is locked)
     end;
@@ -408,12 +439,12 @@ begin
       if l then
        begin
         x:=Font.Size*7 div 3;
-        Canvas.Brush.Color:=FColorMain;
+        FCanvas.Brush.Color:=FColorMain;
         if b then
-          Canvas.TextOut(0,FListY,Glyph_Restore)
+          FCanvas.TextOut(0,FListY,Glyph_Restore)
         else
-          Canvas.TextOut(0,FListY,Glyph_Minimize);
-        Canvas.TextOut(x,FListY,Glyph_Close);
+          FCanvas.TextOut(0,FListY,Glyph_Minimize);
+        FCanvas.TextOut(x,FListY,Glyph_Close);
         inc(x,x);
         SetLength(s,1024);
 
@@ -422,11 +453,11 @@ begin
           //
 
           i:=FListY+FIconHeight div 2;
-          Canvas.Brush.Color:=BlackColor;
-          Canvas.FillRect(Rect(x+8,FListY+1,x+10+FIconHeight*20,FListY+FIconHeight-3));
-          Canvas.Brush.Color:=clRed;
-          Canvas.FillRect(Rect(x+2,FListY-1,x+4,FListY+FIconHeight+1));
-          Canvas.FillRect(Rect(x+6,i-3,x+6+FIconHeight*20,i-1));
+          FCanvas.Brush.Color:=BlackColor;
+          FCanvas.FillRect(Rect(x+8,FListY+1,x+10+FIconHeight*20,FListY+FIconHeight-3));
+          FCanvas.Brush.Color:=clRed;
+          FCanvas.FillRect(Rect(x+2,FListY-1,x+4,FListY+FIconHeight+1));
+          FCanvas.FillRect(Rect(x+6,i-3,x+6+FIconHeight*20,i-1));
 
          end
         else
@@ -447,15 +478,15 @@ begin
           else
             SetLength(s,InternalGetWindowText(h,PWideChar(s),1023));
           if b then
-            Canvas.Brush.Color:=FColorMinimized
+            FCanvas.Brush.Color:=FColorMinimized
           else
-            Canvas.Brush.Color:=FColorVisible;
-          Canvas.TextRect(Rect(
+            FCanvas.Brush.Color:=FColorVisible;
+          FCanvas.TextRect(Rect(
             FIconHeight+x-2,FListY,
-            FIconHeight+x+10+Canvas.TextWidth(s),FListY+FIconHeight),
+            FIconHeight+x+10+FCanvas.TextWidth(s),FListY+FIconHeight),
             FIconHeight+x+4,FListY,s);
-          Canvas.Brush.Color:=clRed;
-          Canvas.FillRect(Rect(x+2,FListY-1,x+4,FListY+FIconHeight+1));
+          FCanvas.Brush.Color:=clRed;
+          FCanvas.FillRect(Rect(x+2,FListY-1,x+4,FListY+FIconHeight+1));
 
           hx:=0;//default
           if FIconHeight<=24 then
@@ -502,7 +533,7 @@ begin
              end;
            end;
           //if hx=0 then default?
-          DrawIconEx(Canvas.Handle,x,FListY,hx,FIconHeight,FIconHeight,0,0,DI_NORMAL);
+          DrawIconEx(FCanvas.Handle,x,FListY,hx,FIconHeight,FIconHeight,0,0,DI_NORMAL);
          end;
          
         SetLength(FAppList,FAppListCount+1);
@@ -526,7 +557,7 @@ begin
         FAppMini:=false;
        end;
    end;
-  Result:=FListY<ClientHeight;
+  Result:=FListY<FCanvasHeight;
 end;
 
 procedure TfrmSideSwitchMain.btnSwitchClick(Sender: TObject);
@@ -617,14 +648,14 @@ begin
              begin
               ShowWindow(FAppList[i].h,SW_RESTORE);
               if FShowMinimized=ShowAllMonitorsSwitch then SwitchWindow(FAppList[i].h);
-              Canvas.Brush.Color:=FColorVisible;
-              Canvas.TextOut(0,FAppList[i].y,Glyph_Minimize);
+              FCanvas.Brush.Color:=FColorVisible;
+              FCanvas.TextOut(0,FAppList[i].y,Glyph_Minimize);
              end
             else
              begin
               ShowWindow(FAppList[i].h,SW_MINIMIZE);
-              Canvas.Brush.Color:=FColorMinimized;
-              Canvas.TextOut(0,FAppList[i].y,Glyph_Restore);
+              FCanvas.Brush.Color:=FColorMinimized;
+              FCanvas.TextOut(0,FAppList[i].y,Glyph_Restore);
              end;
           1://close
            begin
@@ -632,8 +663,8 @@ begin
               PostMessage(FAppList[i].h,WM_QUIT,0,0)
             else
               PostMessage(FAppList[i].h,WM_CLOSE,0,0);
-            Canvas.Brush.Color:=Color;
-            Canvas.FillRect(Rect(0,FAppList[i].y,Width,FAppList[i].y+FIconHeight+1));
+            FCanvas.Brush.Color:=Color;
+            FCanvas.FillRect(Rect(0,FAppList[i].y,Width,FAppList[i].y+FIconHeight+1));
            end;
           else
            begin
@@ -725,6 +756,8 @@ begin
   FTaskBarNixTopMost:=Default_TaskBarNixTopMost;
   FShowClock:=Default_ShowClock;
   FClockDTF:=Default_ClockDTF;
+  FSpotlight:=Default_Spotlight;
+  FSpotlightPx:=Default_SpotlightPx;
   FShowTestButton:=(ParamCount>0) and (LowerCase(ParamStr(1))='/test');
   FCCounter:=0;
   FDrawNext:=false;
@@ -762,6 +795,8 @@ begin
         FActivateHoldCtrl:=ReadBool('ActivateHoldCtrl');
         FShowClock:=ReadBool('ShowClock');
         FClockDTF:=ReadString('ClockDTF');
+        FSpotlight:=ReadBool('Spotlight');
+        FSpotlightPx:=ReadInteger('SpotlightPx');
         CloseKey;
        end;
     except
@@ -769,6 +804,10 @@ begin
     end;
     Free;
    end;
+  FRender:=TBitmap.Create;
+  FRender.Canvas.Brush.Color:=Color;
+  FRender.Canvas.Font.Assign(Font);
+  FRender.PixelFormat:=pf32bit;//TODO copy from screen canvas?
 end;
 
 procedure TfrmSideSwitchMain.Settings1Click(Sender: TObject);
@@ -795,6 +834,8 @@ begin
       cbActivateHoldCtrl.Checked:=FActivateHoldCtrl;
       cbClock.Checked:=FShowClock;
       txtClock.Text:=FClockDTF;
+      cbSpotlight.Checked:=FSpotlight;
+      udSpotlight.Position:=FSpotlightPx;
       r:=TRegistry.Create;
       try
         //r.RootKey:=HKEY_CURRENT_USER;//assert default
@@ -825,6 +866,8 @@ begin
         FActivateHoldCtrl:=cbActivateHoldCtrl.Checked;
         FShowClock:=cbClock.Checked;
         FClockDTF:=txtClock.Text;
+        FSpotlight:=cbSpotlight.Checked;
+        FSpotlightPx:=udSpotlight.Position;
         r:=TRegistry.Create;
         try
           //r.RootKey:=HKEY_CURRENT_USER;//assert default
@@ -852,6 +895,8 @@ begin
           r.WriteBool('ActivateHoldCtrl',FActivateHoldCtrl);
           r.WriteBool('ShowClock',FShowClock);
           r.WriteString('ClockDTF',FClockDTF);
+          r.WriteBool('Spotlight',FSpotlight);
+          r.WriteInteger('SpotlightPx',FSpotlightPx);
           r.CloseKey;
           r.OpenKey('\Software\Microsoft\Windows\CurrentVersion\Run',true);
           if cbSessionBoot.Checked then

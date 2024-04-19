@@ -84,7 +84,7 @@ object frmSettings: TfrmSettings
     Caption = 'OK'
     Default = True
     ModalResult = 1
-    TabOrder = 18
+    TabOrder = 21
   end
   object btnCancel: TButton
     Left = 176
@@ -94,7 +94,7 @@ object frmSettings: TfrmSettings
     Cancel = True
     Caption = 'Cancel'
     ModalResult = 2
-    TabOrder = 19
+    TabOrder = 22
   end
   object cbSessionBoot: TCheckBox
     Left = 8
@@ -102,7 +102,7 @@ object frmSettings: TfrmSettings
     Width = 257
     Height = 17
     Caption = 'Start when Windows starts'
-    TabOrder = 16
+    TabOrder = 19
   end
   object btnFont: TButton
     Left = 96
@@ -123,7 +123,7 @@ object frmSettings: TfrmSettings
     Items.Strings = (
       'on its monitor'
       'on all monitors')
-    TabOrder = 13
+    TabOrder = 16
   end
   object rgMinimized: TRadioGroup
     Left = 56
@@ -136,7 +136,7 @@ object frmSettings: TfrmSettings
       'on its monitor'
       'on all monitors'
       'on all + switch on restore')
-    TabOrder = 14
+    TabOrder = 17
   end
   object panClrMain: TPanel
     Left = 8
@@ -144,7 +144,7 @@ object frmSettings: TfrmSettings
     Width = 41
     Height = 41
     BevelOuter = bvLowered
-    TabOrder = 10
+    TabOrder = 13
     OnClick = btnClrMainClick
     object btnClrMain: TButton
       Left = 8
@@ -161,7 +161,7 @@ object frmSettings: TfrmSettings
     Width = 41
     Height = 41
     BevelOuter = bvLowered
-    TabOrder = 11
+    TabOrder = 14
     OnClick = btnClrVisibleClick
     object btnClrVisible: TButton
       Left = 8
@@ -178,7 +178,7 @@ object frmSettings: TfrmSettings
     Width = 41
     Height = 41
     BevelOuter = bvLowered
-    TabOrder = 12
+    TabOrder = 15
     OnClick = btnClrMinimizedClick
     object btnClrMinimized: TButton
       Left = 8
@@ -214,7 +214,7 @@ object frmSettings: TfrmSettings
     Width = 257
     Height = 17
     Caption = 'Switch mirrored'
-    TabOrder = 15
+    TabOrder = 18
   end
   object cbTaskBarNixTopMost: TCheckBox
     Left = 8
@@ -222,7 +222,7 @@ object frmSettings: TfrmSettings
     Width = 257
     Height = 17
     Caption = 'Disable taskbar stay on top (Win7)'
-    TabOrder = 17
+    TabOrder = 20
   end
   object gbActivate: TGroupBox
     Left = 8
@@ -298,6 +298,37 @@ object frmSettings: TfrmSettings
     Height = 24
     TabOrder = 9
     Text = 'ccccc d/m hh:nn'
+  end
+  object cbSpotlight: TCheckBox
+    Left = 144
+    Top = 144
+    Width = 121
+    Height = 17
+    Caption = 'Spotlight (px)'
+    Checked = True
+    State = cbChecked
+    TabOrder = 10
+  end
+  object txtSpotlight: TEdit
+    Left = 144
+    Top = 160
+    Width = 57
+    Height = 24
+    TabOrder = 11
+    Text = '120'
+  end
+  object udSpotlight: TUpDown
+    Left = 201
+    Top = 160
+    Width = 16
+    Height = 24
+    Associate = txtSpotlight
+    Min = 10
+    Max = 10000
+    Increment = 10
+    Position = 120
+    TabOrder = 12
+    Thousands = False
   end
   object FontDialog1: TFontDialog
     Font.Charset = DEFAULT_CHARSET
