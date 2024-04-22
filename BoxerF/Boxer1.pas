@@ -166,7 +166,7 @@ end;
 procedure TfrmBoxer.DetectSwitch(hwnd:THandle);
 var
   h:THandle;
-  hi:integer;
+  hi,x,y:integer;
   wp:TWindowPlacement;
   s:array[0..MAX_PATH] of WideChar;
   wn:PWideChar;
@@ -213,10 +213,15 @@ begin
        begin
         FHotWidth:=wp.rcNormalPosition.Right-wp.rcNormalPosition.Left-152;
         if FHotWidth<120 then FHotWidth:=120;
-        SetBounds(
-          wp.rcNormalPosition.Left+8,
-          wp.rcNormalPosition.Top-DisplaySlotY-DisplayMarginY,
-          FHotWidth,DisplaySlotY);
+        x:=wp.rcNormalPosition.Left+8;
+        y:=wp.rcNormalPosition.Top-DisplaySlotY-DisplayMarginY;
+        if y<-3 then
+         begin
+          y:=-3;
+          FHotWidth:=FHotWidth div 2;
+          inc(x,FHotWidth);
+         end;
+        SetBounds(x,y,FHotWidth,DisplaySlotY);
        end;
       lblDisplay.SetBounds(2,2,FHotWidth-4,DisplayHeight);
       if not Visible then
@@ -261,11 +266,13 @@ var
   wl,w:OleVariant;
   i,hi:integer;
   s:array[0..sSize] of WideChar;
+  DoCleanup:boolean;
 begin
   if FShellPaths then
    begin
 
     if FShell=nil then FShell:=CoShell.Create;
+    DoCleanup:=true;
     try
       inc(FHandlesTouched);//FHandlesTouched:=GetTickCount?
       wl:=FShell.Windows;//TODO: find out which interface!
@@ -282,8 +289,25 @@ begin
     except
       //ignore pointer errors
       //FShell:=nil//?
+      DoCleanup:=false;
     end;
 
+   end
+  else
+   begin
+
+    DoCleanup:=false;
+    for hi:=0 to FHandlesIndex-1 do
+      if FHandles[hi].h<>0 then
+        if InternalGetWindowText(FHandles[hi].h,@s[0],sSize-1)<>0 then
+         begin
+          FHandles[hi].p:=s;
+          FHandles[hi].t:=FHandlesTouched;
+          DoCleanup:=true;
+         end;
+
+   end;
+  if DoCleanup then
     for hi:=0 to FHandlesIndex-1 do
       if FHandles[hi].t<>FHandlesTouched then
        begin
@@ -291,19 +315,6 @@ begin
         FHandles[hi].g:=-1;
         FHandles[hi].p:='';
        end;
-
-   end
-  else
-   begin
-
-    for hi:=0 to FHandlesIndex-1 do
-      if FHandles[hi].h<>0 then
-       begin
-        InternalGetWindowText(FHandles[hi].h,@s[0],sSize-1);
-        FHandles[hi].p:=s;
-       end;
-
-   end;
 end;
 
 function InternalGetWindowText; external user32 name 'InternalGetWindowText';
