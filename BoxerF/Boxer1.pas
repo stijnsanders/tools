@@ -49,8 +49,9 @@ type
     FShell:Shell;
     FHotHandle:THandle;
     FHotGroup,FHotWidth,FDropTimeout,FDropGroup:integer;
-    FHotDropped,FDropAuto,FShellPaths:boolean;
+    FHotDropped,FDropAuto,FShellPaths,FFirstShow:boolean;
     procedure DetectSwitch(hwnd:THandle);
+    procedure DetectClose(hwnd:THandle);
     function GroupName(gi:integer;h1:THandle):string;
     procedure SetLabel(li,Value:integer;const Display:string);
     function LookupHandle(h:THandle):integer;
@@ -98,6 +99,7 @@ begin
   FHotDropped:=false;
   FDropAuto:=true;
   FShellPaths:=false;//TODO: from config
+  FFirstShow:=true;
 end;
 
 procedure TfrmBoxer.CreateParams(var Params: TCreateParams);
@@ -116,24 +118,38 @@ end;
 procedure wDetectMoveSize(hWinEventHook:THandle;event:DWORD;hwnd:HWND;
   idObject:integer;idChild:integer;idEventThread:DWORD;dwmsEventTime:DWORD); stdcall;
 begin
-  frmBoxer.FHotHandle:=0;//force updaet
+  frmBoxer.FHotHandle:=0;//force update
   frmBoxer.DetectSwitch(hwnd);
+end;
+
+procedure wDetectClose(hWinEventHook:THandle;event:DWORD;hwnd:HWND;
+  idObject:integer;idChild:integer;idEventThread:DWORD;dwmsEventTime:DWORD); stdcall;
+begin
+  if idObject=OBJID_WINDOW then
+    frmBoxer.DetectClose(hwnd);
 end;
 
 procedure TfrmBoxer.DoShow;
 begin
   inherited;
-  OleInitialize(nil);
-  ShowWindow(Application.Handle,SW_HIDE);
+  if FFirstShow then
+   begin
+    FFirstShow:=false;
+    OleInitialize(nil);
+    ShowWindow(Application.Handle,SW_HIDE);
 
-  SetWinEventHook(EVENT_SYSTEM_FOREGROUND,EVENT_SYSTEM_FOREGROUND,0,
-    wDetectSwitch,0,0,WINEVENT_OUTOFCONTEXT);
+    SetWinEventHook(EVENT_SYSTEM_FOREGROUND,EVENT_SYSTEM_FOREGROUND,0,
+      wDetectSwitch,0,0,WINEVENT_OUTOFCONTEXT);
 
-  SetWinEventHook(EVENT_SYSTEM_MOVESIZEEND,EVENT_SYSTEM_MOVESIZEEND,0,
-    wDetectMoveSize,0,0,WINEVENT_OUTOFCONTEXT);
+    SetWinEventHook(EVENT_SYSTEM_MOVESIZEEND,EVENT_SYSTEM_MOVESIZEEND,0,
+      wDetectMoveSize,0,0,WINEVENT_OUTOFCONTEXT);
 
-  //TODO: auto-detect windows with same placement?
+    SetWinEventHook(EVENT_OBJECT_DESTROY,EVENT_OBJECT_DESTROY,0,
+      wDetectClose,0,0,WINEVENT_OUTOFCONTEXT);
 
+    //TODO: auto-detect windows with same placement?
+
+   end;
 end;
 
 function TfrmBoxer.GroupName(gi:integer;h1:THandle): string;
@@ -241,6 +257,22 @@ begin
    end;
 end;
 
+procedure TfrmBoxer.DetectClose(hwnd:THandle);
+var
+  hi:integer;
+begin
+  //assert FHotHandle<>0
+  hi:=LookupHandle(hwnd);
+  if hi<FHandlesIndex then
+   begin
+    FHandles[hi].h:=0;
+    FHandles[hi].g:=-1;
+    FHandles[hi].p:='';
+    FHotHandle:=0;//force update
+    PostMessage(Handle,WM_DetectSwitch,0,0);
+   end;
+end;
+
 procedure TfrmBoxer.Timer1Timer(Sender: TObject);
 var
   p:TPoint;
@@ -268,13 +300,13 @@ var
   s:array[0..sSize] of WideChar;
   DoCleanup:boolean;
 begin
+  inc(FHandlesTouched);//FHandlesTouched:=GetTickCount?
   if FShellPaths then
    begin
 
     if FShell=nil then FShell:=CoShell.Create;
     DoCleanup:=true;
     try
-      inc(FHandlesTouched);//FHandlesTouched:=GetTickCount?
       wl:=FShell.Windows;//TODO: find out which interface!
       for i:=0 to wl.Count-1 do
        begin
