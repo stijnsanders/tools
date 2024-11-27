@@ -1,6 +1,7 @@
-v2.0.5.670
+v2.0.5.686
 Fixed issue with XML diff
 Fixed issue with update folder
+Fixed issue with Ctrl+down past last unequality
 Switch to Delphi 10.4 Community Edition
 Revised icons (left: red, right: green)
 

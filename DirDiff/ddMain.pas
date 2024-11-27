@@ -1003,7 +1003,7 @@ procedure TfrmDirDiffMain.ListToLine(Idx:integer);
 var
   i:integer;
 begin
-  if (Idx<>-1) and (lbView.Count<>0) then
+  if (Idx<>-1) and (lbView.Count<>0) and (Idx<lbView.Count) then
    begin
     i:=Idx-((lbView.ClientHeight div lbView.ItemHeight) div 2);
     if i<0 then i:=0;

@@ -48,7 +48,6 @@ object frmDirDiffMain: TfrmDirDiffMain
     OnExpanding = tvFoldersExpanding
     OnKeyPress = tvFoldersKeyPress
     OnMouseDown = tvFoldersMouseDown
-    ExplicitHeight = 433
   end
   object tvXML: TTreeView
     Left = 203
@@ -65,7 +64,6 @@ object frmDirDiffMain: TfrmDirDiffMain
     OnChange = tvXMLChange
     OnDeletion = tvXMLDeletion
     OnExpanding = tvXMLExpanding
-    ExplicitHeight = 433
   end
   object panMain: TPanel
     Left = 406
@@ -117,8 +115,6 @@ object frmDirDiffMain: TfrmDirDiffMain
       ParentFont = False
       TabOrder = 0
       OnDrawItem = lbViewDrawItem
-      ExplicitWidth = 288
-      ExplicitHeight = 429
     end
   end
   object panTop: TPanel
