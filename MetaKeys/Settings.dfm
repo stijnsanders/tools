@@ -314,10 +314,6 @@ object frmSettings: TfrmSettings
     object tbDisplay: TTabSheet
       BorderWidth = 4
       Caption = 'Display'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label2: TLabel
         Left = 0
         Top = 0
@@ -409,10 +405,6 @@ object frmSettings: TfrmSettings
       BorderWidth = 4
       Caption = 'Repeat'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblDelay: TLabel
         Left = 0
         Top = 32
@@ -489,10 +481,6 @@ object frmSettings: TfrmSettings
       BorderWidth = 4
       Caption = 'Keyboard'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lbKbl: TListBox
         Left = 0
         Top = 0
