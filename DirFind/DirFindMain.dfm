@@ -80,7 +80,6 @@ object fDirFindMain: TfDirFindMain
     Anchors = [akLeft, akTop, akRight]
     DropDownCount = 32
     TabOrder = 11
-    ExplicitWidth = 645
   end
   object btnSelectFolder: TButton
     Left = 664
@@ -91,7 +90,6 @@ object fDirFindMain: TfDirFindMain
     Caption = '...'
     TabOrder = 12
     OnClick = btnSelectFolderClick
-    ExplicitLeft = 660
   end
   object cbFiles: TComboBox
     Left = 8
@@ -101,7 +99,6 @@ object fDirFindMain: TfDirFindMain
     Anchors = [akLeft, akTop, akRight]
     DropDownCount = 32
     TabOrder = 13
-    ExplicitWidth = 349
   end
   object cbPattern: TComboBox
     Left = 8
@@ -111,7 +108,6 @@ object fDirFindMain: TfDirFindMain
     Anchors = [akLeft, akTop, akRight]
     DropDownCount = 32
     TabOrder = 0
-    ExplicitWidth = 677
   end
   object btnStart: TButton
     Left = 8
@@ -132,7 +128,6 @@ object fDirFindMain: TfDirFindMain
     ParentColor = True
     ReadOnly = True
     TabOrder = 8
-    ExplicitWidth = 565
   end
   object tvMatches: TTreeView
     Left = 8
@@ -156,8 +151,6 @@ object fDirFindMain: TfDirFindMain
     OnEnter = tvMatchesEnter
     OnExit = tvMatchesExit
     OnKeyPress = tvMatchesKeyPress
-    ExplicitWidth = 677
-    ExplicitHeight = 320
   end
   object cbNotFiles: TComboBox
     Left = 432
@@ -167,7 +160,6 @@ object fDirFindMain: TfDirFindMain
     Anchors = [akTop, akRight]
     DropDownCount = 32
     TabOrder = 14
-    ExplicitLeft = 428
   end
   object cbRegExp: TCheckBox
     Left = 8
@@ -186,7 +178,6 @@ object fDirFindMain: TfDirFindMain
     Caption = '...'
     TabOrder = 9
     OnClick = btnStartClick
-    ExplicitLeft = 660
   end
   object rbCountFiles: TRadioButton
     Left = 313

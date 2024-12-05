@@ -190,7 +190,8 @@ var
   d:string;
 begin
   d:=cbFolder.Text;
-  if SelectDirectory('Select directory to search in','',d) then cbFolder.Text:=d;
+  if SelectDirectory('Select directory to search in','',d,
+    [sdShowEdit,sdShowShares,sdNewUI],Self) then cbFolder.Text:=d;
 end;
 
 function RegExSafe(const x:string):string;
