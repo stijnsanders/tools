@@ -851,6 +851,7 @@ begin
        begin
         FIconHeight:=udIconHeight.Position;
         Self.Font:=FontDialog1.Font;
+        FRender.Canvas.Font.Assign(Font);
         FKeepShowingMS:=udKeepShowing.Position;
         FColorMain:=panClrMain.Color;
         FColorVisible:=panClrVisible.Color;
