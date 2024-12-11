@@ -74,8 +74,6 @@ object frmDirDiffMain: TfrmDirDiffMain
     BevelOuter = bvNone
     BorderStyle = bsSingle
     TabOrder = 2
-    ExplicitWidth = 324
-    ExplicitHeight = 433
     object imgOverview: TImage
       Left = 0
       Top = 0
@@ -125,7 +123,6 @@ object frmDirDiffMain: TfrmDirDiffMain
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 3
-    ExplicitWidth = 730
     DesignSize = (
       734
       38)
@@ -138,7 +135,6 @@ object frmDirDiffMain: TfrmDirDiffMain
       TabOrder = 0
       Visible = False
       OnKeyPress = txtFindKeyPress
-      ExplicitWidth = 117
     end
     object btnFind: TButton
       Left = 432
@@ -150,7 +146,6 @@ object frmDirDiffMain: TfrmDirDiffMain
       TabOrder = 1
       Visible = False
       OnClick = miFindNextClick
-      ExplicitLeft = 428
     end
     object btnAddFile: TButton
       Left = 8
@@ -182,8 +177,6 @@ object frmDirDiffMain: TfrmDirDiffMain
         Width = 50
       end>
     OnDrawPanel = StatusBar1DrawPanel
-    ExplicitTop = 471
-    ExplicitWidth = 730
   end
   object MainMenu1: TMainMenu
     Images = ImageList1

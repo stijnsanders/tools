@@ -1263,7 +1263,7 @@ procedure TfrmDirDiffMain.miSearchClick(Sender: TObject);
 var
   y1,y2,x1,x2:integer;
 begin
-  if FDataSet.DataCount<>0 then
+  if (FDataSet<>nil) and (FDataSet.DataCount<>0) then
    begin
     y1:=btnAddFile.Height;
     y2:=(y1+8)*FDataSet.DataCount+8;
@@ -1276,6 +1276,7 @@ begin
     btnFind.Visible:=true;
     txtFind.SelectAll;
     txtFind.SetFocus;
+    FDataSet.Queue(djOverview,imgOverview.Height);
    end;
 end;
 
