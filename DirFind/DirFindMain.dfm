@@ -2409,5 +2409,11 @@ object fDirFindMain: TfDirFindMain
       ShortCut = 16430
       OnExecute = aDeleteAllExecute
     end
+    object aUndo: TAction
+      Caption = 'Undo'
+      Enabled = False
+      ShortCut = 16474
+      OnExecute = aUndoExecute
+    end
   end
 end

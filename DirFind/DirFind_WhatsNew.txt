@@ -1,4 +1,4 @@
-2.0.5.688
+2.0.5.690
 - focus pattern input box on delete last search results
 - fixed error on deleting past last search result set
 - fixed incorrect byte-order-marks when replacing on UTF encoded files
@@ -7,6 +7,7 @@
 - fixed fields tab order
 - only add values to combobox-lists on successful find
 - new line icons
+- undo up to 8 deleted find operations
 2.0.4.494
 - Noob-mode: RegExp checkbox (default not checked)
   (To all non-noobs: just check "RegExp" once and you're set.)

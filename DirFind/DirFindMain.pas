@@ -7,6 +7,9 @@ uses
   Dialogs, ComCtrls, StdCtrls, ActnList, Menus, ImgList, DirFindNodes, ShlObj,
   System.Actions, System.ImageList;
 
+const
+  UndoStackSize=8;
+
 type
   TfDirFindMain = class(TForm)
     Label1: TLabel;
@@ -50,6 +53,7 @@ type
     rbCountFiles: TRadioButton;
     rbCountMatches: TRadioButton;
     rbCountSubMatches: TRadioButton;
+    aUndo: TAction;
     procedure btnSelectFolderClick(Sender: TObject);
     procedure btnStartClick(Sender: TObject);
     procedure tvMatchesCreateNodeClass(Sender: TCustomTreeView;
@@ -69,10 +73,13 @@ type
     procedure aDeleteAllExecute(Sender: TObject);
     procedure aReplaceExecute(Sender: TObject);
     procedure Expand1Click(Sender: TObject);
+    procedure aUndoExecute(Sender: TObject);
   private
     FPopupNode:TTreeNode;
     FFinderProgress:TDirFinderNode;
     cm2:IContextMenu2;
+    FUndoStack:array[0..UndoStackSize-1] of TDirFinderData;
+    FUndoStackStart,FUndoStackIndex:integer;
     function PopupFinder: TDirFinderNode;
     procedure DoFinderProgress(Sender: TObject; const PrgTxt: string);
     procedure DoStoreValues(Sender: TObject);
@@ -117,6 +124,8 @@ begin
   OleInitialize(nil);//CoInitialize(nil);
   FPopupNode:=nil;
   FFinderProgress:=nil;
+  FUndoStackStart:=0;
+  FUndoStackIndex:=0;
   cm2:=nil;
   try
     d:=GetEnvironmentVariable('APPDATA');
@@ -218,10 +227,12 @@ end;
 
 procedure TfDirFindMain.btnStartClick(Sender: TObject);
 var
+  d:TDirFinderData;
   n:TDirFinderNode;
-  p:string;
-  i:integer;
 begin
+  d.RootPath:=cbFolder.Text;
+  d.Files:=cbFiles.Text;
+  d.NotFiles:=cbNotFiles.Text;
   if (txtProgress.Focused or (Sender=btnSearchSection)) and (txtProgress.SelLength<>0) then
     if cbRegExp.Checked then
       cbPattern.Text:=RegExSafe(txtProgress.SelText)
@@ -229,24 +240,18 @@ begin
       cbPattern.Text:=txtProgress.SelText;
   cbPattern.SelectAll;
   if cbRegExp.Checked then
-    p:=cbPattern.Text
+    d.Pattern:=cbPattern.Text
   else
-    p:=RegExSafe(cbPattern.Text);
-  if rbCountFiles.Checked then i:=0 else
-  if rbCountMatches.Checked then i:=1 else
-  if rbCountSubMatches.Checked then i:=2 else
-    i:=0;//default
+    d.Pattern:=RegExSafe(cbPattern.Text);
+  d.IgnoreCase:=cbIgnoreCase.Checked;
+  d.MultiLine:=cbMultiLine.Checked;
+  if rbCountFiles.Checked then d.CountMatches:=ncFiles else
+  if rbCountMatches.Checked then d.CountMatches:=ncMatches else
+  if rbCountSubMatches.Checked then d.CountMatches:=ncSubMatches else
+    d.CountMatches:=ncFiles;//default
   DirFindNextNodeClass:=TDirFinderNode;
   n:=tvMatches.Items.Add(nil,'') as TDirFinderNode;
-  n.Start(
-    cbFolder.Text,
-    cbFiles.Text,
-    cbNotFiles.Text,
-    p,
-    cbIgnoreCase.Checked,
-    cbMultiLine.Checked,
-    TDirFinderCountMatches(i),
-    DoStoreValues);
+  n.Start(d,DoStoreValues);
   tvMatches.Selected:=n;
 end;
 
@@ -362,8 +367,11 @@ end;
 
 function TfDirFindMain.PopupFinder: TDirFinderNode;
 begin
-  while (FPopupNode<>nil) and (FPopupNode.Parent<>nil) do FPopupNode:=FPopupNode.Parent;
-  if FPopupNode<>nil then Result:=FPopupNode as TDirFinderNode else
+  while (FPopupNode<>nil) and (FPopupNode.Parent<>nil) do
+    FPopupNode:=FPopupNode.Parent;
+  if (FPopupNode<>nil) and (FPopupNode is TDirFinderNode) then
+    Result:=FPopupNode as TDirFinderNode
+  else
     raise EAbort.Create('Nothing selected');//Result:=nil?
 end;
 
@@ -379,17 +387,47 @@ end;
 
 procedure TfDirFindMain.aDeleteExecute(Sender: TObject);
 var
-  n:TDirFinderNode;
+  n:TTreeNode;
 begin
-  n:=PopupFinder;
+  //see also PopupFinder;
+  n:=FPopupNode;
+  while (n<>nil) and (n.Parent<>nil) do n:=n.Parent;
   if FFinderProgress<>nil then FFinderProgress.OnProgress:=nil;
   FFinderProgress:=nil;
   txtProgress.Text:='';
   Caption:=AppName;
   Application.Title:=AppName;
+
+  if (n<>nil) and (n is TDirFinderNode) then
+   begin
+    FUndoStack[FUndoStackIndex]:=(n as TDirFinderNode).Data;
+    inc(FUndoStackIndex);
+    if FUndoStackIndex=UndoStackSize then FUndoStackIndex:=0;
+    if FUndoStackIndex=FUndoStackStart then
+     begin
+      inc(FUndoStackStart);
+      if FUndoStackStart=UndoStackSize then FUndoStackStart:=0;
+     end;
+   end;
+
   n.Delete;
   FPopupNode:=tvMatches.Selected;//for next press of [delete]
   if tvMatches.Focused and (tvMatches.Selected=nil) then cbPattern.SetFocus;
+end;
+
+procedure TfDirFindMain.aUndoExecute(Sender: TObject);
+var
+  n:TDirFinderNode;
+begin
+  if FUndoStackStart<>FUndoStackIndex then
+   begin
+    if FUndoStackIndex=0 then FUndoStackIndex:=UndoStackSize;
+    dec(FUndoStackIndex);
+    DirFindNextNodeClass:=TDirFinderNode;
+    n:=tvMatches.Items.Add(nil,'') as TDirFinderNode;
+    n.Start(FUndoStack[FUndoStackIndex],DoStoreValues);
+    tvMatches.Selected:=n;
+   end;
 end;
 
 procedure TfDirFindMain.tvMatchesDblClick(Sender: TObject);
@@ -430,6 +468,7 @@ begin
   aDelete.Enabled:=true;
   aDeleteAll.Enabled:=true;
   aCopy.Enabled:=true;
+  aUndo.Enabled:=true;
 end;
 
 procedure TfDirFindMain.tvMatchesExit(Sender: TObject);
@@ -437,6 +476,7 @@ begin
   aDelete.Enabled:=false;
   aDeleteAll.Enabled:=false;
   aCopy.Enabled:=false;
+  aUndo.Enabled:=false;
 end;
 
 procedure TfDirFindMain.tvMatchesChange(Sender: TObject; Node: TTreeNode);
@@ -465,7 +505,8 @@ begin
   while (tn<>nil) and not(tn is TDirFinderNode) do tn:=tn.Parent;
   if tn<>nil then
    begin
-    Caption:=AppName+' - '+(tn as TDirFinderNode).RootPath+' - '+(tn as TDirFinderNode).Pattern;
+    Caption:=AppName+' - '+(tn as TDirFinderNode).Data.RootPath
+      +' - '+(tn as TDirFinderNode).Data.Pattern;
     Application.Title:=Caption;
    end;
 end;
@@ -509,7 +550,7 @@ var
 begin
   tn:=PopupFinder;
   if tn.IsFinding then raise Exception.Create('Matching job is still running. Wait for it to complete first.');
-  fDirFindReplace.lblPattern.Caption:=tn.Pattern;
+  fDirFindReplace.lblPattern.Caption:=tn.Data.Pattern;
   if fDirFindReplace.ShowModal=mrOk then
     MessageBox(Handle,PChar('Performed replace, '+
       IntToStr(tn.ReplaceAll(fDirFindReplace.txtReplaceWith.Text))+' file(s) changed.'),
@@ -607,10 +648,10 @@ var
 
 begin
   n:=(Sender as TDirFinderNode);
-  DoStore(cbFolder,n.RootPath);
-  DoStore(cbFiles,n.FindFiles);
-  DoStore(cbNotFiles,n.FindNotFiles);
-  DoStore(cbPattern,n.Pattern);
+  DoStore(cbFolder,n.Data.RootPath);
+  DoStore(cbFiles,n.Data.Files);
+  DoStore(cbNotFiles,n.Data.NotFiles);
+  DoStore(cbPattern,n.Data.Pattern);
 end;
 
 end.

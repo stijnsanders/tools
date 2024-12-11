@@ -14,20 +14,23 @@ type
   TDirFinderNodeProgress=procedure(Sender:TObject;
     const PrgTxt:string) of object;
 
+  TDirFinderData=record
+    RootPath,Files,NotFiles,Pattern:string;
+    IgnoreCase,MultiLine:boolean;
+    CountMatches:TDirFinderCountMatches;
+  end;
+
   TDirFinderNode=class(TDirFindTreeNode)
   private
     FDirFinder:TDirFinder;
-    FRootPath,FFiles,FNotFiles,FPattern,FProgressText:string;
-    FIgnoreCase,FMultiLine:boolean;
-    FCountMatches:TDirFinderCountMatches;
+    FData:TDirFinderData;
+    FProgressText:string;
     FTotalFilesFound:integer;
     FTotalFinds:array of integer;
     FOnProgress:TDirFinderNodeProgress;
     FOnStoreValues:TNotifyEvent;
   public
-    procedure Start(const Folder,Files,NotFiles,Pattern:string;
-      IgnoreCase,MultiLine:boolean;CountMatches:TDirFinderCountMatches;
-      OnStoreValues:TNotifyEvent);
+    procedure Start(const Data:TDirFinderData;OnStoreValues:TNotifyEvent);
     procedure FinderNotify(nm:TDirFinderNotifyMessage;
       const msg, info:string;const vals:array of integer);
     destructor Destroy; override;
@@ -36,10 +39,7 @@ type
     function ReplaceAll(const ReplaceWith:WideString):integer;
     property OnProgress:TDirFinderNodeProgress
       read FOnProgress write FOnProgress;
-    property Pattern:string read FPattern;
-    property RootPath:string read FRootPath;
-    property FindFiles:string read FFiles;
-    property FindNotFiles:string read FNotFiles;
+    property Data:TDirFinderData read FData;
     function ProgressText:string; override;
     function IsFinding:boolean;
     function AllFilePaths:string;
@@ -199,7 +199,7 @@ var
     s:string;
   begin
     tn:=Self;
-    i:=Length(FRootPath)+2;
+    i:=Length(FData.RootPath)+2;
     while (i<=Length(msg)) do
      begin
       j:=i;
@@ -213,7 +213,7 @@ var
         while (tn1<>nil) and (CompareText(tn1.Text,s)<0) do
           tn1:=tn1.getNextSibling;
         //assert doesn't exist already, only one FindNode(true) call
-        case FCountMatches of
+        case FData.CountMatches of
           ncMatches:
             s:=s+NodeTextSeparator+IntToStr(vals[0]);//assert(Length(vals)=1)
           ncSubMatches:
@@ -275,7 +275,7 @@ begin
         ImageIndex:=iiFolder;
         SelectedIndex:=iiFolder;
        end;
-      case FCountMatches of
+      case FData.CountMatches of
         ncFiles:
           s1:=IntToStr(FTotalFinds[0]);
         ncMatches://assert(Length(FTotalFinds)=1)
@@ -294,10 +294,10 @@ begin
               s1:=s1+NodeTextMatchCount+IntToStr(FTotalFinds[k]);
          end;
       end;
-      FProgressText:=FRootPath+NodeTextSeparator+s1+NodeTextSeparator+
-        FPattern+NodeTextSeparator+FFiles;//+NodeTextSeparator+FNotFiles;
+      FProgressText:=FData.RootPath+NodeTextSeparator+s1+NodeTextSeparator+
+        FData.Pattern+NodeTextSeparator+FData.Files;//+NodeTextSeparator+FNotFiles;
       Text:=FProgressText;
-      FProgressText:=FProgressText+NodeTextSeparator+FNotFiles+NodeTextSeparator+info;
+      FProgressText:=FProgressText+NodeTextSeparator+FData.NotFiles+NodeTextSeparator+info;
       if @FOnProgress<>nil then FOnProgress(Self,FProgressText);
       if (@FOnStoreValues<>nil) and (FTotalFilesFound<>0) then FOnStoreValues(Self);
      end;
@@ -373,24 +373,17 @@ begin
   end;
 end;
 
-procedure TDirFinderNode.Start(const Folder, Files, NotFiles, Pattern: string;
-  IgnoreCase, MultiLine: boolean; CountMatches: TDirFinderCountMatches;
+procedure TDirFinderNode.Start(const Data: TDirFinderData;
   OnStoreValues: TNotifyEvent);
 var
   i:integer;
 begin
   //assert called once, short after add/create
-  FRootPath:=Folder;
-  FFiles:=Files;
-  FNotFiles:=NotFiles;
-  FPattern:=Pattern;
-  FIgnoreCase:=IgnoreCase;
-  FMultiLine:=MultiLine;
-  FCountMatches:=CountMatches;
-  FProgressText:=NodeTextProgress+Folder;
+  FData:=Data;
+  FProgressText:=NodeTextProgress+FData.RootPath;
   FOnStoreValues:=OnStoreValues;
-  i:=Length(FRootPath);
-  if (i<>0) and (FRootPath[i]='\') then SetLength(FRootPath,i-1);
+  i:=Length(FData.RootPath);
+  if (i<>0) and (FData.RootPath[i]='\') then SetLength(FData.RootPath,i-1);
   FDirFinder:=nil;
   Refresh;
 end;
@@ -404,10 +397,15 @@ begin
   FTotalFilesFound:=0;
   SetLength(FTotalFinds,1);
   FTotalFinds[0]:=0;
-  Text:=FRootPath+NodeTextSeparator+NodeTextProgress+NodeTextSeparator+
-    FPattern+NodeTextSeparator+FFiles+NodeTextSeparator+FNotFiles;
-  FDirFinder:=TDirFinder.Create(FRootPath,FFiles,FNotFiles,FPattern,
-    FIgnoreCase,FMultiLine,FCountMatches,FinderNotify);
+  Text:=FData.RootPath
+    +NodeTextSeparator+NodeTextProgress
+    +NodeTextSeparator+FData.Pattern
+    +NodeTextSeparator+FData.Files
+    +NodeTextSeparator+FData.NotFiles
+    ;
+  FDirFinder:=TDirFinder.Create(FData.RootPath,FData.Files,FData.NotFiles,
+    FData.Pattern,FData.IgnoreCase,FData.MultiLine,FData.CountMatches,
+    FinderNotify);
   //assert notifies nmDone when done
 end;
 
@@ -447,9 +445,9 @@ const
 begin
   //assert FDirFinder=nil, checked so by caller
   re:=CoRegExp.Create;
-  re.Pattern:=FPattern;
-  re.IgnoreCase:=FIgnoreCase;
-  re.Multiline:=FMultiLine;
+  re.Pattern:=FData.Pattern;
+  re.IgnoreCase:=FData.IgnoreCase;
+  re.Multiline:=FData.MultiLine;
   re.Global:=true;
 
   Result:=0;
@@ -575,7 +573,7 @@ begin
     Result:=(tn as TDirFindFolderNode).FolderName+Result;
     tn:=tn.Parent;
    end;
-  Result:=(tn as TDirFinderNode).RootPath+Result;//+NodeTextSeparator+IntToStr?
+  Result:=(tn as TDirFinderNode).Data.RootPath+Result;//+NodeTextSeparator+IntToStr?
 end;
 
 procedure TDirFindFolderNode.SetPrioFolder;
@@ -627,9 +625,9 @@ begin
     tn:=Self;
     while not(tn is TDirFinderNode) do tn:=tn.Parent;
     re:=CoRegExp.Create;
-    re.Pattern:=(tn as TDirFinderNode).FPattern;
-    re.IgnoreCase:=(tn as TDirFinderNode).FIgnoreCase;
-    re.Multiline:=(tn as TDirFinderNode).FMultiLine;
+    re.Pattern:=(tn as TDirFinderNode).Data.Pattern;
+    re.IgnoreCase:=(tn as TDirFinderNode).Data.IgnoreCase;
+    re.Multiline:=(tn as TDirFinderNode).Data.MultiLine;
     re.Global:=true;
 
     mc:=re.Execute(w) as MatchCollection;
