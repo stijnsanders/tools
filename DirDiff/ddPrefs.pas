@@ -33,6 +33,8 @@ type
     cbWideTabs: TCheckBox;
     cbEOLMarkers: TCheckBox;
     Label3: TLabel;
+    cbSearchCaseSensitive: TCheckBox;
+    cbSearchOnlyDiffLines: TCheckBox;
     procedure btnFontClick(Sender: TObject);
   end;
 

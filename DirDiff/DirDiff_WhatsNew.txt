@@ -5,6 +5,8 @@ Fixed issue with Ctrl+down past last unequality
 Fixed issue with misaligned overview after Ctrl+F display
 Switch to Delphi 12 Community Edition
 Revised icons (left: red, right: green)
+Add file now supports multi-select
+Search/Find now has switches: case sensitive, diff lines only
 
 v2.0.4.544
 Fixed issue with more-than-2-way diffs

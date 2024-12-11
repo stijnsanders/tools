@@ -11,9 +11,7 @@ object frmDirDiffPrefs: TfrmDirDiffPrefs
   Font.Height = -13
   Font.Name = 'Verdana'
   Font.Style = []
-  OldCreateOrder = False
   Position = poMainFormCenter
-  PixelsPerInch = 96
   TextHeight = 16
   object PageControl1: TPageControl
     Left = 8
@@ -88,6 +86,22 @@ object frmDirDiffPrefs: TfrmDirDiffPrefs
         Height = 17
         Caption = '&End of line marker'
         TabOrder = 6
+      end
+      object cbSearchCaseSensitive: TCheckBox
+        Left = 0
+        Top = 167
+        Width = 297
+        Height = 17
+        Caption = 'Search default case sensitive'
+        TabOrder = 7
+      end
+      object cbSearchOnlyDiffLines: TCheckBox
+        Left = 0
+        Top = 183
+        Width = 297
+        Height = 17
+        Caption = 'Search default diff lines only'
+        TabOrder = 8
       end
     end
     object TabSheet2: TTabSheet

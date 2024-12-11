@@ -80,6 +80,9 @@ type
     miCopyUNCs: TMenuItem;
     N10: TMenuItem;
     miClearSelFiles: TMenuItem;
+    Searchcasesensitive1: TMenuItem;
+    Searchonlyindifflines1: TMenuItem;
+    OpenDialog2: TOpenDialog;
     procedure miExitClick(Sender: TObject);
     procedure miAddFileClick(Sender: TObject);
     procedure miAddFolderClick(Sender: TObject);
@@ -151,13 +154,16 @@ type
       State: TDragState; var Accept: Boolean);
     procedure tvFoldersDragDrop(Sender, Source: TObject; X, Y: Integer);
     procedure tvFoldersKeyPress(Sender: TObject; var Key: Char);
+    procedure Searchcasesensitive1Click(Sender: TObject);
+    procedure Searchonlyindifflines1Click(Sender: TObject);
   private
     FDataSet:TDiffSet;
     FDataCount,FFilesSource:integer;
     vp1,vp2,FQueueFlash,FResetToTop,FResetToLine:integer;
     FCompareFile:TTreeNode;
     FClosing,FSkipXML,FSkipNodeCheck,FSkipAppActivate,FAskingUpdate,
-    FSomeChecked:boolean;
+    FSomeChecked,
+    FDefaultSearchCaseSensitive,FDefaultSearchOnlyDiffLines:boolean;
     procedure CreateSetUI(d: TDiffData);
     procedure ShowPrefs(bXml: boolean);
     procedure UpdateUI;
@@ -260,6 +266,12 @@ begin
     else
       miXmlOff.Checked:=true;
 
+    FDefaultSearchCaseSensitive:=sl.Values['SearchCaseSensitive']='1';
+    FDefaultSearchOnlyDiffLines:=sl.Values['SearchOnlyDiffLines']='1';
+
+    Searchcasesensitive1.Checked:=FDefaultSearchCaseSensitive;
+    Searchonlyindifflines1.Checked:=FDefaultSearchOnlyDiffLines;
+
   except
     //use defaults
   end;
@@ -327,14 +339,18 @@ end;
 
 procedure TfrmDirDiffMain.miAddFileClick(Sender: TObject);
 var
+  i:integer;
   d:TDiffData;
 begin
-  if OpenDialog1.Execute then
+  if OpenDialog2.Execute then
    begin
-    d:=TDiffData.Create;
-    d.Path:=OpenDialog1.FileName;
-    FDataSet.AddData(d);
-    CreateSetUI(d);
+    for i:=0 to OpenDialog2.Files.Count-1 do
+     begin
+      d:=TDiffData.Create;
+      d.Path:=OpenDialog2.Files[i];
+      FDataSet.AddData(d);
+      CreateSetUI(d);
+     end;
     UpdateUI;
    end;
 end;
@@ -525,6 +541,8 @@ begin
     f.cbIgnoreCase.Checked:=FDataSet.IgnoreCase;
     f.cbWideTabs.Checked:=FDataSet.WideTabs;
     f.cbEOLMarkers.Checked:=FDataSet.EOLMarkers;
+    f.cbSearchCaseSensitive.Checked:=FDefaultSearchCaseSensitive;
+    f.cbSearchOnlyDiffLines.Checked:=FDefaultSearchOnlyDiffLines;
     if f.ShowModal=mrOk then
      begin
       //apply
@@ -549,7 +567,11 @@ begin
       FDataSet.XmlIgnoreCData:=f.cbXmlCdataAsText.Checked;
       FDataSet.XmlDefiningArributes.Assign(f.txtXmlDefAttrs.Lines);
       //TODO: refresh?
-      
+      FDefaultSearchCaseSensitive:=f.cbSearchCaseSensitive.Checked;
+      Searchcasesensitive1.Checked:=FDefaultSearchCaseSensitive;//?
+      FDefaultSearchOnlyDiffLines:=f.cbSearchOnlyDiffLines.Checked;
+      Searchonlyindifflines1.Checked:=FDefaultSearchOnlyDiffLines;//?
+
       //save
       sl:=TStringList.Create;
       try
@@ -581,6 +603,9 @@ begin
           f.txtXmlDefAttrs.Text,#13#10,' ',[rfReplaceAll]);
         sl.Values['XMLElementsIgnoreSeq']:=B[f.cbXmlElemIgnSeq.Checked];
         sl.Values['XMLIgnoreCDATA']:=B[f.cbXmlCdataAsText.Checked];
+        sl.Values['SearchCaseSensitive']:=B[f.cbSearchCaseSensitive.Checked];
+        sl.Values['SearchOnlyDiffLines']:=B[f.cbSearchOnlyDiffLines.Checked];
+
         sl.SaveToFile(ChangeFileExt(Application.ExeName,'.ini'));
       finally
         sl.Free;
@@ -1293,7 +1318,8 @@ procedure TfrmDirDiffMain.miFindNextClick(Sender: TObject);
 begin
   if txtFind.Visible then
    begin
-    ListToLine(FDataSet.FindNextText(lbView.ItemIndex,+1,txtFind.Text));
+    ListToLine(FDataSet.FindNextMatch(lbView.ItemIndex,+1,txtFind.Text,
+      Searchcasesensitive1.Checked,Searchonlyindifflines1.Checked));
     if not lbView.Focused then lbView.SetFocus;
    end
   else
@@ -1304,11 +1330,22 @@ procedure TfrmDirDiffMain.miFindPreviousClick(Sender: TObject);
 begin
   if txtFind.Visible then
    begin
-    ListToLine(FDataSet.FindNextText(lbView.ItemIndex,-1,txtFind.Text));
+    ListToLine(FDataSet.FindNextMatch(lbView.ItemIndex,-1,txtFind.Text,
+      Searchcasesensitive1.Checked,Searchonlyindifflines1.Checked));
     if not lbView.Focused then lbView.SetFocus;
    end
   else
     miSearchClick(Sender);
+end;
+
+procedure TfrmDirDiffMain.Searchcasesensitive1Click(Sender: TObject);
+begin
+  Searchcasesensitive1.Checked:=not(Searchcasesensitive1.Checked);
+end;
+
+procedure TfrmDirDiffMain.Searchonlyindifflines1Click(Sender: TObject);
+begin
+  Searchonlyindifflines1.Checked:=not(Searchonlyindifflines1.Checked);
 end;
 
 procedure TfrmDirDiffMain.Selectall1Click(Sender: TObject);

@@ -126,7 +126,8 @@ type
     function DrawLine(Canvas:TCanvas;const Rect:TRect;
       State: TOwnerDrawState;Idx:integer):integer;
     function FindNext(Index,Direction:integer):integer;
-    function FindNextText(Index,Direction:integer;const Match:string):integer;
+    function FindNextMatch(Index,Direction:integer;const Match:string;
+      CaseSensitive,OnlyDiffLines:boolean):integer;
     function FindLine(Index,Where:integer):integer;
     function LineText(Index:integer):string;
     function QueueInfo:string;
@@ -2022,26 +2023,45 @@ begin
    end;
 end;
 
-function TDiffSet.FindNextText(Index, Direction: integer;
-  const Match: string): integer;
+function TDiffSet.FindNextMatch(Index, Direction: integer; const Match: string;
+  CaseSensitive, OnlyDiffLines: boolean): integer;
 var
-  c,x,i:integer;
+  c,x,i,j:integer;
+  b,c0:boolean;
   m1,m2:UTF8String;
 begin
   Result:=-1;//default
   if Index=-1 then x:=0 else x:=Index+Direction;
   c:=IndexToContentMapIndex(x);
-  m1:=UTF8Encode(UpperCase(Match));
+  if CaseSensitive then
+    m1:=UTF8Encode(Match)
+  else
+    m1:=UTF8Encode(UpperCase(Match));
   while (Result=-1) and (c>=0) and (c<FContentMapCount) do
    begin
     i:=0;
     while (i<>FDataCount) and
       ((FContentMap[c+cmBitMask] and (1 shl i))=0) do inc(i);
-    if i=FDataCount then
-      m2:=''
+    if OnlyDiffLines then
+      if i=0 then
+       begin
+        j:=i;
+        while (j<>FDataCount) and
+          ((FContentMap[c+cmBitMask] and (1 shl j))<>0) do inc(j);
+        b:=j<>FDataCount;
+       end
+      else
+        b:=true
     else
-      m2:=UTF8Encode(UpperCase(UTF8ToString(FData[i].LineData(x-FContentMap[c+cmDelta+i]))));
-    if Pos(m1,m2)<>0 then
+      b:=i<>FDataCount;
+    if b then
+     begin
+      c0:=IgnoreCase;
+      IgnoreCase:=not(CaseSensitive);
+      m2:=FData[i].LineData(x-FContentMap[c+cmDelta+i]);
+      IgnoreCase:=c0;
+     end;
+    if b and (Pos(m1,m2)<>0) then
       Result:=x
     else
      begin

@@ -276,6 +276,14 @@ object frmDirDiffMain: TfrmDirDiffMain
         ShortCut = 8306
         OnClick = miFindPreviousClick
       end
+      object Searchcasesensitive1: TMenuItem
+        Caption = 'Search case sensitive'
+        OnClick = Searchcasesensitive1Click
+      end
+      object Searchonlyindifflines1: TMenuItem
+        Caption = 'Search only in diff lines'
+        OnClick = Searchonlyindifflines1Click
+      end
       object miGotoLine: TMenuItem
         Caption = '&Go-to line'
         ShortCut = 16455
@@ -2021,11 +2029,11 @@ object frmDirDiffMain: TfrmDirDiffMain
     Interval = 200
     OnTimer = tiUpdateTimer
     Left = 32
-    Top = 200
+    Top = 248
   end
   object ImageList2: TImageList
     Left = 32
-    Top = 248
+    Top = 296
     Bitmap = {
       494C010104000900040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
@@ -2297,5 +2305,11 @@ object frmDirDiffMain: TfrmDirDiffMain
       C003C003C003C003C003C003C003C003C003C003C003C003C003C003C003C003
       FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000000000000000000000
       000000000000}
+  end
+  object OpenDialog2: TOpenDialog
+    Filter = 'All files (*.*)|*.*'
+    Options = [ofHideReadOnly, ofAllowMultiSelect, ofPathMustExist, ofFileMustExist, ofEnableSizing]
+    Left = 32
+    Top = 200
   end
 end
