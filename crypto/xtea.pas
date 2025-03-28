@@ -30,6 +30,14 @@ function BTEA(v:PXXTEAData;n:integer;const k:TTEAKey):boolean;
 
 implementation
 
+{$D-}
+{$L-}
+{$Q-}
+{$R-}
+{$WARN UNSAFE_CAST OFF}
+{$WARN UNSAFE_CODE OFF}
+{$WARN UNSAFE_TYPE OFF}
+
 procedure TEA_encrypt(var v0,v1:cardinal;const k:TTEAKey);
 var
   sum,i:cardinal;

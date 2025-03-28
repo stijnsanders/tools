@@ -21,6 +21,14 @@ function MD5HashFromStream(Stream:TStream;ReadBytes:int64=-1):AnsiString;
 
 implementation
 
+{$D-}
+{$L-}
+{$Q-}
+{$R-}
+{$WARN UNSAFE_CAST OFF}
+{$WARN UNSAFE_CODE OFF}
+{$WARN UNSAFE_TYPE OFF}
+
 function MD5HashFromStream(Stream:TStream;ReadBytes:int64=-1):AnsiString;
 const
   roll1:array[0..3] of cardinal=(7,12,17,22);

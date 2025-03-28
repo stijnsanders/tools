@@ -22,6 +22,14 @@ function xxHash64(const s:UTF8String;seed:int64):int64;
 
 implementation
 
+{$D-}
+{$L-}
+{$Q-}
+{$R-}
+{$WARN UNSAFE_CAST OFF}
+{$WARN UNSAFE_CODE OFF}
+{$WARN UNSAFE_TYPE OFF}
+
 function xxHash32(const s:UTF8String;seed:cardinal):cardinal;
 const
   p1=2654435761;

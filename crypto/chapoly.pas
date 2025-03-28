@@ -28,6 +28,14 @@ function ChaCha20_Encrypt(key:TChaChaKey;nonce:TChaChaNonce;counter:cardinal;
 
 implementation
 
+{$D-}
+{$L-}
+{$Q-}
+{$R-}
+{$WARN UNSAFE_CAST OFF}
+{$WARN UNSAFE_CODE OFF}
+{$WARN UNSAFE_TYPE OFF}
+
 function ChaCha20_Block(key:TChaChaKey;nonce:TChaChaNonce;counter:cardinal):
   TChaChaMatrix_U32;
 var
