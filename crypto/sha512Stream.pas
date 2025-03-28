@@ -3,8 +3,8 @@
   sha512
   by Stijn Sanders
   http://yoy.be/md5
-  2015
-  v1.0.0
+  2015-2025
+  v1.0.2
 
   based on https://github.com/bitcoin/bitcoin/blob/master/src/crypto/sha512.cpp
 
