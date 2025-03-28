@@ -96,6 +96,7 @@ var
   d:array of UInt64;
   e:array[0..79] of UInt64;
   g,h:array[0..7] of UInt64;
+  aa:array[0..7] of byte absolute a;
 begin
   a:=Length(x);
   dl:=a+9;
@@ -176,8 +177,12 @@ begin
     for j:=0 to 7 do h[j]:=h[j]+g[j];
    end;
   SetLength(Result,64);
-  for j:=0 to 63 do
-    byte(Result[j+1]):=h[j shr 3] shr ((j xor 7) shl 3);
+  for i:=0 to 7 do
+   begin
+    a:=h[i];
+    for j:=0 to 7 do
+      byte(Result[((i shl 3) or j)+1]):=aa[j xor 7];
+   end;
 end;
 
 end.

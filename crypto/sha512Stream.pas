@@ -95,10 +95,11 @@ const
 var
   dl:Int64;
   a,b:UInt64;
-  x,j:integer;
+  x,i,j:integer;
   d:array[0..15] of UInt64;
   e:array[0..79] of UInt64;
   g,h:array[0..7] of UInt64;
+  aa:array[0..7] of byte absolute a;
 begin
   h[0]:=UInt64($6a09e667f3bcc908);
   h[1]:=UInt64($bb67ae8584caa73b);
@@ -208,8 +209,12 @@ begin
     for j:=0 to 7 do h[j]:=h[j]+g[j];
    end;
   SetLength(Result,64);
-  for j:=0 to 63 do
-    byte(Result[j+1]):=h[j shr 3] shr ((j xor 7) shl 3);
+  for i:=0 to 7 do
+   begin
+    a:=h[i];
+    for j:=0 to 7 do
+      byte(Result[((i shl 3) or j)+1]):=aa[j xor 7];
+   end;
 end;
 
 end.
