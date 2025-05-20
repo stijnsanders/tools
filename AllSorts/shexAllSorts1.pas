@@ -1,21 +1,18 @@
 unit shexAllSorts1;
 
-{$MODE Delphi}
-
 interface
 
 uses
   Windows, Classes, ActiveX, ComObj, ShlObj;
 
 type
-  PItemIDList=LPCITEMIDLIST;
-
   TAllSortsHandler=procedure(Sender:TObject;Index:integer) of object;
 
   { TContextMenu }
 
   TContextMenu = class(TComObject, IShellExtInit, IContextMenu)
   private
+    Target:string;
     Files:TStringList;
     Commands:array of record
       Caption,Param:string;
@@ -24,16 +21,16 @@ type
 
     procedure CopyUNC(Sender:TObject;Index:integer);
     procedure CopyContent(Sender:TObject;Index:integer);
+    procedure PasteText(Sender:TObject;Index:integer);
     procedure ReadOnly(Sender:TObject;Index:integer);
     procedure Touch(Sender:TObject;Index:integer);
     procedure OpenURL(Sender:TObject;Index:integer);
     procedure RunExternal(Sender:TObject;Index:integer);
-
   protected
     { IShellExtInit }
-    function IShellExtInit.Initialize = SEIInitialize;
     function SEIInitialize(pidlFolder: PItemIDList; lpdobj: IDataObject;
       hKeyProgID: HKEY): HResult; stdcall;
+    function IShellExtInit.Initialize=SEIInitialize;
     { IContextMenu }
     function QueryContextMenu(Menu: HMENU; indexMenu, idCmdFirst, idCmdLast,
       uFlags: UINT): HResult; stdcall;
@@ -50,7 +47,7 @@ const
 
 implementation
 
-uses ComServ, SysUtils, Registry;
+uses ComServ, SysUtils, Registry, ShellAPI;
 
 procedure TContextMenu.Initialize;
 var
@@ -67,7 +64,7 @@ begin
     if r.OpenKeyReadOnly('SOFTWARE\Double Sigma Programming\AllSorts\External') then
       r.GetValueNames(sl);
 
-    l:=5+sl.Count;
+    l:=6+sl.Count;
     SetLength(Commands,l);
     i:=0;
     Commands[i].Caption:='&Copy UNC';
@@ -77,6 +74,10 @@ begin
     Commands[i].Caption:='Co&py content';
     Commands[i].Param:='';
     Commands[i].Exec:=CopyContent;
+    inc(i);
+    Commands[i].Caption:='Paste te&xt';
+    Commands[i].Param:='';
+    Commands[i].Exec:=PasteText;
     inc(i);
     Commands[i].Caption:='Set &read-only';
     Commands[i].Param:='';
@@ -120,14 +121,27 @@ var
   i,c:integer;
   s:string;
 begin
-  if lpdobj=nil then Result:=E_INVALIDARG else
+  if lpdobj=nil then
    begin
+    SetLength(Target,MAX_PATH+1);
+    if SHGetPathFromIDList(pidlFolder,@Target[1]) then
+     begin
+      i:=1;
+      while (i<MAX_PATH) and (Target[i]<>#0) do inc(i);
+      SetLength(Target,i-1);
+      Result:=NOERROR;
+     end
+    else
+      Result:=E_INVALIDARG;
+   end
+  else
+   begin
+    Target:='';
     FormatEtc.cfFormat:=CF_HDROP;
     FormatEtc.ptd:=nil;
     FormatEtc.dwAspect:=DVASPECT_CONTENT;
     FormatEtc.lindex:=-1;
     FormatEtc.tymed:=TYMED_HGLOBAL;
-
     Result:=lpdobj.GetData(FormatEtc,StgMedium);
     if not(Failed(Result)) then
      begin
@@ -149,21 +163,19 @@ function TContextMenu.QueryContextMenu(Menu: HMENU; indexMenu, idCmdFirst,
   idCmdLast, uFlags: UINT): HResult; stdcall;
 var
   h:HMENU;
-  i:integer;
+  i,f:UINT;
 begin
-  {
-  Result:=0;//MakeResult(SEVERITY_SUCCESS,FACILITY_NULL,0)?
-  InsertMenu(Menu,indexMenu,
-    MF_BYPOSITION or MF_STRING,idCmdFirst,'AllSorts');
-  }
-
   h:=CreatePopupMenu;
   for i:=0 to Length(Commands)-1 do
-    AppendMenu(h,MF_STRING,idCmdFirst+i+1,PChar(Commands[i].Caption));
-
+   begin
+    f:=MF_STRING;
+    if (i=1) and (Files.Count=0) then f:=f or MF_DISABLED;//copy content only on file(s)
+    if (i=2) and not(IsClipboardFormatAvailable(CF_UNICODETEXT) and
+      ((Target<>'') or (Files.Count=1))) then f:=f or MF_DISABLED;//paste only on folder
+    AppendMenu(h,f,idCmdFirst+i+1,PChar(Commands[i].Caption));
+   end;
   InsertMenu(Menu,indexMenu,
     MF_BYPOSITION or MF_POPUP or MF_STRING,h,'All&Sorts');
-
   Result:=Length(Commands)+1;//MakeResult(SEVERITY_SUCCESS,FACILITY_NULL,)?
 end;
 
@@ -201,11 +213,13 @@ end;
 
 function TContextMenu.GetCommandString(idCmd: UINT_Ptr; uType: UINT;
   pwReserved: PUINT; pszName: LPSTR; cchMax: UINT): HResult; stdcall;
+const
+  AName:AnsiString='Perform one of several functions on files'#0;
 begin
   if idCmd=0 then
    begin
     if (uType=GCS_HELPTEXTW) then
-      StrCopy(pszName,'Perform one of several functions on files');
+      Move(AName[1],pszName^,Length(AName));
     Result:=NOERROR;
    end
   else
@@ -235,6 +249,16 @@ begin
     CreateRegKey('Folder\shellex', '', '');
     CreateRegKey('Folder\shellex\ContextMenuHandlers', '', '');
     CreateRegKey('Folder\shellex\ContextMenuHandlers\AllSorts', '', ClassID);
+
+    {
+    CreateRegKey('AllFilesystemObjects\shellex', '', '');
+    CreateRegKey('AllFilesystemObjects\shellex\ContextMenuHandlers', '', '');
+    CreateRegKey('AllFilesystemObjects\shellex\ContextMenuHandlers\AllSorts', '', ClassID);
+    }
+
+    CreateRegKey('Directory\Background\shellex', '', '');
+    CreateRegKey('Directory\Background\shellex\ContextMenuHandlers', '', '');
+    CreateRegKey('Directory\Background\shellex\ContextMenuHandlers\AllSorts', '', ClassID);
 
     if Win32Platform=VER_PLATFORM_WIN32_NT then
      begin
@@ -268,7 +292,7 @@ begin
    end;
 end;
 
-procedure ClipboardAsText(x:AnsiString);
+procedure ClipboardAsText(const x:AnsiString);
 var
   hg:HGLOBAL;
   p:PChar;
@@ -294,6 +318,8 @@ var
 begin
   //clear? open? close?
   CtrlDown:=(GetKeyState(VK_CONTROL) and $8000)<>0;
+  if (Files.Count=0) and (Target<>'') then
+    Files.Add(Target+PathDelim);
   if CtrlDown then
     for i:=Files.Count-1 downto 0 do
      begin
@@ -302,7 +328,7 @@ begin
       while (j<>0) and (s[j]<>'\') do dec(j);
       Files[i]:=Copy(s,j+1,Length(s)-j);
      end;
-  ClipboardAsText(Trim(Files.Text));
+  ClipboardAsText(AnsiString(Trim(Files.Text)));
 end;
 
 procedure TContextMenu.CopyContent(Sender:TObject;Index:integer);
@@ -317,7 +343,6 @@ var
   f:TFileStream;
 begin
   w:='';
-  lw:=0;
   CtrlDown:=(GetKeyState(VK_CONTROL) and $8000)<>0;
   if CtrlDown then
    begin
@@ -337,6 +362,7 @@ begin
       CloseClipboard;
     end;
    end;
+  //assert (Files.Count<>0) and (Target='')
   for i:=Files.Count-1 downto 0 do
    begin
     //TODO: warning large size/binary data?
@@ -361,14 +387,14 @@ begin
         dec(l,3);
         SetLength(t,l);
         f.Read(t[1],l);
-        w:=w+UTF8Decode(t);
+        w:=w+UTF8ToWideString(t);
        end
       else
        begin
         f.Position:=0;
         SetLength(t,l);
         f.Read(t[1],l);
-        w:=w+t;
+        w:=w+WideString(t);
        end;
     finally
       f.Free;
@@ -388,12 +414,104 @@ begin
   end;
 end;
 
+procedure TContextMenu.PasteText(Sender: TObject; Index: integer);
+var
+  l,lw:integer;
+  t:AnsiString;
+  w:WideString;
+  CtrlDown:boolean;
+  hg:HGLOBAL;
+  p:pointer;
+  f:TFileStream;
+  fn:string;
+  fi:PItemIDList;
+  ff:DWORD;
+  procedure StoreData;
+  begin
+    f:=TFileStream.Create(fn,fmCreate);
+    try
+      if CtrlDown then
+        f.Write(t[1],l)
+      else
+       begin
+        //TODO: switch UTF16 (#$FEFF)?
+        t:=#$EF#$BB#$BF+UTF8Encode(w);
+        f.Write(t[1],Length(t));
+       end;
+    finally
+      f.Free;
+    end;
+  end;
+begin
+  CtrlDown:=(GetKeyState(VK_CONTROL) and $8000)<>0;
+  OpenClipboard(0);
+  try
+    if CtrlDown then
+      hg:=GetClipboardData(CF_TEXT)
+    else
+      hg:=GetClipboardData(CF_UNICODETEXT);
+    if hg=0 then
+      raise Exception.Create('Paste: no text content found on clipboard');
+    l:=GlobalSize(hg)-1;
+    p:=GlobalLock(hg);
+    if CtrlDown then
+     begin
+      lw:=l;
+      SetLength(t,l);
+      Move(p^,t[1],l);
+     end
+    else
+     begin
+      lw:=l div 2;
+      SetLength(w,lw);
+      Move(p^,w[1],l);
+     end;
+    GlobalUnlock(hg);
+  finally
+    CloseClipboard;
+  end;
+  if (Target='') then
+   begin
+    if Files.Count=1 then
+     begin
+      fn:=Files[0];
+      if (GetFileAttributes(PChar(fn)) and FILE_ATTRIBUTE_DIRECTORY)<>0 then
+       begin
+        fn:=fn+PathDelim+FormatDateTime('yyyymmddhhnnss',Now)+'.txt';
+        StoreData;
+       end
+      else
+       begin
+        if MessageBox(GetDesktopWindow,PChar(
+          'Are you sure to overwrite this file? (#'+IntToStr(lw)+')'#13#10+fn),
+          'AllSorts: Paste clipboard text',MB_ICONEXCLAMATION or MB_OKCANCEL)=idOk then
+          StoreData;
+       end;
+     end
+    else
+      raise Exception.Create('Paste: unsupported file list count');
+   end
+  else
+   begin
+    //create file
+    fn:=Target+PathDelim+FormatDateTime('yyyymmddhhnnss',Now)+'.txt';
+    StoreData;
+    if Succeeded(SHParseDisplayName(PChar(fn),nil,fi,SFGAO_CANRENAME,ff)) then//SFGAO_FILESYSTEM?
+     begin
+      SHOpenFolderAndSelectItems(fi,0,nil,OFASI_EDIT);
+      CoTaskMemFree(fi);
+     end;
+   end;
+end;
+
 procedure TContextMenu.ReadOnly(Sender:TObject;Index:integer);
 var
   i,a:integer;
   CtrlDown:boolean;
 begin
   CtrlDown:=(GetKeyState(VK_CONTROL) and $8000)<>0;
+  if (Files.Count=0) and (Target<>'') then
+    Files.Add(Target);
   for i:=0 to Files.Count-1 do
    begin
     //if directory then cascade?
@@ -410,6 +528,8 @@ procedure TContextMenu.Touch(Sender:TObject;Index:integer);
 var
   i:integer;
 begin
+  if (Files.Count=0) and (Target<>'') then
+    Files.Add(Target+PathDelim);
   for i:=0 to Files.Count-1 do
     FileSetDate(Files[i],DateTimeToFileDate(Now));
 end;
@@ -422,6 +542,8 @@ var
   url:string;
 begin
   //opzoeken in lijst
+  if (Files.Count=0) and (Target<>'') then
+    Files.Add(Target+PathDelim);
   if Files.Count<>0 then
    begin
     sl:=TStringList.Create;
@@ -451,7 +573,7 @@ begin
           'Select OK to copy the selected path onto the clipboard.',
           'AllSorts: Open URL',MB_ICONEXCLAMATION or MB_OKCANCEL)=idOk then
          begin
-          ClipboardAsText(Files[0]);
+          ClipboardAsText(AnsiString(Files[0]));
          end;
        end;
 
@@ -476,6 +598,8 @@ begin
   SetLength(fn,GetTempPath(MAX_PATH,PChar(fn)));
   fn:=Format('%sAllSorts%.8x%.8x.txt',[fn,GetTickCount,GetCurrentProcessId]);
 
+  if (Files.Count=0) and (Target<>'') then
+    Files.Add(Target+PathDelim);
   Files.SaveToFile(fn);
 
   ShellExecute(0,nil,PChar(Commands[Index].Param),PChar(fn),PChar(s),SW_NORMAL);

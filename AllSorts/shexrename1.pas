@@ -1,11 +1,9 @@
 unit shexRename1;
 
-{$mode objfpc}{$H+}
-
 interface
 
 uses
-  Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, ExtCtrls,
+  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls,
   StdCtrls;
 
 type
@@ -50,7 +48,7 @@ implementation
 
 uses Registry, Windows, ShellAPI;
 
-{$R *.lfm}
+{$R *.dfm}
 
 { TfrmShexRename }
 
@@ -344,13 +342,13 @@ begin
           ' ','c','d','e','g','m','h','y','n','s','z','t','a','p','/':
            begin
             k:=j;
-            while (k<=lr) and (rm[k] in [
+            while (k<=lr) and (AnsiChar(rm[k]) in [
               ' ','c','d','e','g','m','h','y','n','s','z','t','a','p','/'
             ]) do inc(k);
             t:=FormatDateTime(Copy(rm,j,k-j),d);
             j:=k-1;
             for k:=1 to Length(t) do
-              if t[k] in ['\','/',':','*','?','<','>','|'] then t[k]:='_';
+              if AnsiChar(t[k]) in ['\','/',':','*','?','<','>','|'] then t[k]:='_';
             s:=s+t;
            end;
           //'\','/':s:=s+PathDelim;

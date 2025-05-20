@@ -15,8 +15,14 @@ without path.
 
 - Copy content
 Read the content of the selected file(s), and put is as text on the clipboard.
-Be carefull to avoid large or binary files. Hold the Ctrl button to add the
+Be careful to avoid large or binary files. Hold the Ctrl button to add the
 content of the file(s) to the text currently on the clipboard.
+
+- Paste text
+If text is available on the clipboard, paste it into a new file when a folder
+is selected, or overwrite the file if a single file is selected.
+Be careful not to overwrite important files. Hold the Ctrl button to use
+the current system's single byte encoding instead of UTF-8.
 
 - Set read-only
 Sets the read-only flag on the selected file(s) or folder(s). Hold the Ctrl
