@@ -12,7 +12,8 @@ type
 
   TContextMenu = class(TComObject, IShellExtInit, IContextMenu)
   private
-    Target:string;
+    DisplayIcon:integer;
+    DisplayTitle,Target:string;
     Files:TStringList;
     Commands:array of record
       Caption,Param:string;
@@ -49,6 +50,9 @@ implementation
 
 uses ComServ, SysUtils, Registry, ShellAPI;
 
+var
+  LastFolder:string;
+
 procedure TContextMenu.Initialize;
 var
   sl:TStringList;
@@ -56,11 +60,23 @@ var
   i,j,l:integer;
 begin
   inherited;
+  DisplayIcon:=2;//default
+  DisplayTitle:='All&Sorts';//default
+  Target:='';//default
   Files:=TStringList.Create;
   sl:=TStringList.Create;
   r:=TRegistry.Create;
   try
     r.RootKey:=HKEY_CURRENT_USER;
+    if r.OpenKeyReadOnly('SOFTWARE\Double Sigma Programming\AllSorts') then
+     begin
+      if r.ValueExists('DisplayIcon') then
+        DisplayIcon:=r.ReadInteger('DisplayIcon');
+      if r.ValueExists('DisplayTitle') then
+        DisplayTitle:=r.ReadString('DisplayTitle');
+      r.CloseKey;
+     end;
+
     if r.OpenKeyReadOnly('SOFTWARE\Double Sigma Programming\AllSorts\External') then
       r.GetValueNames(sl);
 
@@ -129,7 +145,13 @@ begin
       i:=1;
       while (i<MAX_PATH) and (Target[i]<>#0) do inc(i);
       SetLength(Target,i-1);
-      Result:=NOERROR;
+      if LastFolder=Target then
+       begin
+        LastFolder:='';//already loaded
+        Result:=E_INVALIDARG;
+       end
+      else
+        Result:=NOERROR;
      end
     else
       Result:=E_INVALIDARG;
@@ -154,6 +176,7 @@ begin
         Files.Add(s);
        end;
       ReleaseStgMedium(StgMedium);
+      if Files.Count=1 then LastFolder:=Files[0];
       Result:=NOERROR;
      end;
    end;
@@ -163,6 +186,7 @@ function TContextMenu.QueryContextMenu(Menu: HMENU; indexMenu, idCmdFirst,
   idCmdLast, uFlags: UINT): HResult; stdcall;
 var
   h:HMENU;
+  b:HBITMAP;
   i,f:UINT;
 begin
   h:=CreatePopupMenu;
@@ -175,7 +199,13 @@ begin
     AppendMenu(h,f,idCmdFirst+i+1,PChar(Commands[i].Caption));
    end;
   InsertMenu(Menu,indexMenu,
-    MF_BYPOSITION or MF_POPUP or MF_STRING,h,'All&Sorts');
+    MF_BYPOSITION or MF_POPUP or MF_STRING,h,PChar(DisplayTitle));
+  if DisplayIcon<>0 then
+   begin
+    b:=LoadImage(HInstance,MakeIntResource(DisplayIcon),
+      IMAGE_BITMAP,0,0,LR_LOADTRANSPARENT or LR_LOADMAP3DCOLORS);
+    SetMenuItemBitmaps(Menu,indexMenu,MF_BYPOSITION,b,b);
+   end;
   Result:=Length(Commands)+1;//MakeResult(SEVERITY_SUCCESS,FACILITY_NULL,)?
 end;
 
@@ -606,6 +636,7 @@ begin
 end;
 
 initialization
+  LastFolder:='';
   TContextMenuFactory.Create(ComServer, TContextMenu, Class_ContextMenu,
     '', 'AllSorts Shell Extension', ciMultiInstance, tmApartment);
 end.
