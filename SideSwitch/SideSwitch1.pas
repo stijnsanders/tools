@@ -34,7 +34,7 @@ type
       h:THandle;
       y:integer;
     end;
-    FRender:TBitmap;
+    FRender1,FRender2:TBitmap;
     FCanvas:TCanvas;
     FAppListCount,FCanvasWidth,FCanvasHeight,FListY,FCCounter:integer;
     FActivateTop,FActivateLeft,FActivateBottom,FActivateRight,FActivateHoldCtrl,
@@ -242,13 +242,16 @@ begin
           FCanvasHeight:=r.Bottom-r.Top;//ClientHeight
           if FSpotlight then
            begin
-            FRender.Width:=FCanvasWidth;
-            FRender.Height:=FCanvasHeight;
-            FCanvas:=FRender.Canvas;
+            FRender2.Width:=FCanvasWidth;
+            FRender2.Height:=FCanvasHeight;
+            //FCanvas:=FRender.Canvas;
            end
           else
-            FCanvas:=Canvas;
+            ;//FCanvas:=Canvas;
          end;
+        FRender1.Width:=FCanvasWidth;
+        FRender1.Height:=FCanvasHeight;
+        FCanvas:=FRender1.Canvas;
         FCanvas.Brush.Style:=bsSolid;
         FCanvas.Brush.Color:=Color;
         FCanvas.FillRect(Rect(0,0,FCanvasWidth,FCanvasHeight));
@@ -307,19 +310,25 @@ begin
         FHideTC:=GetTickCount+FKeepShowingMS;
        end;
 
-      if FSpotlight and Visible then
-       begin
-        Canvas.Brush.Style:=bsSolid;
-        Canvas.Brush.Color:=Color;
-        Canvas.FillRect(Rect(0,0,FCanvasWidth,FCanvasHeight));
-        p:=ScreenToClient(p);
-        q:=CreateEllipticRgn(p.X-FSpotlightPx,p.Y-FSpotlightPx,
-          p.X+FSpotlightPx,p.Y+FSpotlightPx);
-        SelectClipRgn(Canvas.Handle,q);
-        BitBlt(Canvas.Handle,0,0,FCanvasWidth,FCanvasHeight,FCanvas.Handle,0,0,SRCCOPY);
-        SelectClipRgn(Canvas.Handle,0);
-        DeleteObject(q);
-       end;
+      if Visible then
+        if FSpotlight then
+         begin
+          FRender2.Canvas.Brush.Style:=bsSolid;
+          FRender2.Canvas.Brush.Color:=Color;
+          FRender2.Canvas.FillRect(Rect(0,0,FCanvasWidth,FCanvasHeight));
+          p:=ScreenToClient(p);
+          q:=CreateEllipticRgn(p.X-FSpotlightPx,p.Y-FSpotlightPx,
+            p.X+FSpotlightPx,p.Y+FSpotlightPx);
+          SelectClipRgn(FRender2.Canvas.Handle,q);
+          BitBlt(FRender2.Canvas.Handle,0,0,FCanvasWidth,FCanvasHeight,FCanvas.Handle,0,0,SRCCOPY);
+          SelectClipRgn(Canvas.Handle,0);
+          DeleteObject(q);
+          BitBlt(Canvas.Handle,0,0,FCanvasWidth,FCanvasHeight,FRender2.Canvas.Handle,0,0,SRCCOPY);
+         end
+        else
+         begin
+          BitBlt(Canvas.Handle,0,0,FCanvasWidth,FCanvasHeight,FCanvas.Handle,0,0,SRCCOPY);
+         end;
 
     except
       //silent (e.g. when workstation is locked)
@@ -491,21 +500,21 @@ begin
           hx:=0;//default
           if FIconHeight<=24 then
            begin
-            if hx=0 then if SendMessageTimeout(h,WM_GETICON,ICON_SMALL2,0,SMTO_ABORTIFHUNG,FIconTimeoutMS,hx)=0 then hx:=0;
-            if hx=0 then if SendMessageTimeout(h,WM_GETICON,ICON_SMALL,0,SMTO_ABORTIFHUNG,FIconTimeoutMS,hx)=0 then hx:=0;
+            if hx=0 then if SendMessageTimeout(h,WM_GETICON,ICON_SMALL2,0,SMTO_ABORTIFHUNG,FIconTimeoutMS,@hx)=0 then hx:=0;
+            if hx=0 then if SendMessageTimeout(h,WM_GETICON,ICON_SMALL,0,SMTO_ABORTIFHUNG,FIconTimeoutMS,@hx)=0 then hx:=0;
             if hx=0 then hx:=GetClassLong(h,GCL_HICONSM);
            end;
-          if hx=0 then if SendMessageTimeout(h,WM_GETICON,ICON_BIG,0,SMTO_ABORTIFHUNG,FIconTimeoutMS,hx)=0 then hx:=0;
+          if hx=0 then if SendMessageTimeout(h,WM_GETICON,ICON_BIG,0,SMTO_ABORTIFHUNG,FIconTimeoutMS,@hx)=0 then hx:=0;
           if hx=0 then hx:=GetClassLong(h,GCL_HICON);
           if (hx=0) and (hp<>0) then
            begin
             if FIconHeight<=24 then
              begin
-              if hx=0 then if SendMessageTimeout(hp,WM_GETICON,ICON_SMALL2,0,SMTO_ABORTIFHUNG,FIconTimeoutMS,hx)=0 then hx:=0;
-              if hx=0 then if SendMessageTimeout(hp,WM_GETICON,ICON_SMALL,0,SMTO_ABORTIFHUNG,FIconTimeoutMS,hx)=0 then hx:=0;
+              if hx=0 then if SendMessageTimeout(hp,WM_GETICON,ICON_SMALL2,0,SMTO_ABORTIFHUNG,FIconTimeoutMS,@hx)=0 then hx:=0;
+              if hx=0 then if SendMessageTimeout(hp,WM_GETICON,ICON_SMALL,0,SMTO_ABORTIFHUNG,FIconTimeoutMS,@hx)=0 then hx:=0;
               if hx=0 then hx:=GetClassLong(hp,GCL_HICONSM);
              end;
-            if hx=0 then if SendMessageTimeout(hp,WM_GETICON,ICON_BIG,0,SMTO_ABORTIFHUNG,FIconTimeoutMS,hx)=0 then hx:=0;
+            if hx=0 then if SendMessageTimeout(hp,WM_GETICON,ICON_BIG,0,SMTO_ABORTIFHUNG,FIconTimeoutMS,@hx)=0 then hx:=0;
             if hx=0 then hx:=GetClassLong(hp,GCL_HICON);
            end;
           if hx=0 then
@@ -711,7 +720,7 @@ begin
     if b then
      begin
       GetWindowThreadProcessId(h,p);
-      SendMessageTimeout(h,WM_SYSCOMMAND,SC_MINIMIZE,0,SMTO_ABORTIFHUNG,FIconTimeoutMS,p);
+      SendMessageTimeout(h,WM_SYSCOMMAND,SC_MINIMIZE,0,SMTO_ABORTIFHUNG,FIconTimeoutMS,@p);
      end;
    end;
   Result:=true;
@@ -804,10 +813,14 @@ begin
     end;
     Free;
    end;
-  FRender:=TBitmap.Create;
-  FRender.Canvas.Brush.Color:=Color;
-  FRender.Canvas.Font.Assign(Font);
-  FRender.PixelFormat:=pf32bit;//TODO copy from screen canvas?
+  FRender1:=TBitmap.Create;
+  FRender1.Canvas.Brush.Color:=Color;
+  FRender1.Canvas.Font.Assign(Font);
+  FRender1.PixelFormat:=pf32bit;//TODO copy from screen canvas?
+  FRender2:=TBitmap.Create;
+  FRender2.Canvas.Brush.Color:=Color;
+  FRender2.Canvas.Font.Assign(Font);
+  FRender2.PixelFormat:=pf32bit;//TODO copy from screen canvas?
 end;
 
 procedure TfrmSideSwitchMain.Settings1Click(Sender: TObject);
@@ -819,7 +832,7 @@ begin
       udIconHeight.Position:=FIconHeight;
       udKeepShowing.Position:=FKeepShowingMS;
       udIconTimeout.Position:=FIconTimeoutMS;
-      FontDialog1.Font:=Self.Font;
+      FontDialog1.Font.Assign(Self.Font);
       panClrMain.Color:=FColorMain;
       panClrVisible.Color:=FColorVisible;
       panClrMinimized.Color:=FColorMinimized;
@@ -850,8 +863,9 @@ begin
       if ShowModal=mrOk then
        begin
         FIconHeight:=udIconHeight.Position;
-        Self.Font:=FontDialog1.Font;
-        FRender.Canvas.Font.Assign(Font);
+        Self.Font.Assign(FontDialog1.Font);
+        FRender1.Canvas.Font.Assign(Self.Font);
+        FRender2.Canvas.Font.Assign(Self.Font);
         FKeepShowingMS:=udKeepShowing.Position;
         FColorMain:=panClrMain.Color;
         FColorVisible:=panClrVisible.Color;

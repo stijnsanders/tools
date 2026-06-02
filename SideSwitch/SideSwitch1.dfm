@@ -14,22 +14,20 @@ object frmSideSwitchMain: TfrmSideSwitchMain
   Font.Name = 'Verdana'
   Font.Style = []
   FormStyle = fsStayOnTop
-  OldCreateOrder = False
   PopupMenu = PopupMenu1
   Position = poScreenCenter
   OnMouseDown = FormMouseDown
   OnMouseMove = FormMouseMove
-  PixelsPerInch = 96
   TextHeight = 16
   object Timer1: TTimer
     Interval = 100
     OnTimer = Timer1Timer
-    Left = 8
+    Left = 24
     Top = 8
   end
   object PopupMenu1: TPopupMenu
     OnPopup = PopupMenu1Popup
-    Left = 40
+    Left = 96
     Top = 8
     object Settings1: TMenuItem
       Caption = '&Settings...'
