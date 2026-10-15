@@ -164,6 +164,7 @@ type
     FClosing,FSkipXML,FSkipNodeCheck,FSkipAppActivate,FAskingUpdate,
     FSomeChecked,
     FDefaultSearchCaseSensitive,FDefaultSearchOnlyDiffLines:boolean;
+    FPathDisplay:string;
     procedure CreateSetUI(d: TDiffData);
     procedure ShowPrefs(bXml: boolean);
     procedure UpdateUI;
@@ -894,6 +895,7 @@ begin
     FQueueFlash:=0;
     c.Brush.Color:=clBtnFace;
     c.Rectangle(x,Rect.Top,Rect.Right,Rect.Bottom);
+    c.TextOut(x,Rect.Top,FPathDisplay+' ');
    end
   else
    begin
@@ -953,6 +955,14 @@ begin
     lbView.Invalidate;
     imgOverview.Picture.Bitmap:=nil;
     FSkipXML:=false;
+    p:='';
+    n:=Node;
+    while (n<>nil) do
+     begin
+      p:=PathDelim+n.Text+p;
+      n:=n.Parent;
+     end;
+    FPathDisplay:=p;
     FDataSet.LoadContent(r,TDiffFileInfo(Node.Data).IsDir,imgOverview.Height);
   finally
     Screen.Cursor:=crDefault;
@@ -1165,6 +1175,7 @@ begin
     SetLength(r,FDataSet.DataCount);
     for i:=0 to FDataSet.DataCount-1 do r[i]:=FDataSet[i].Path;
     FSkipXML:=false;
+    FPathDisplay:='';
     FDataSet.LoadContent(r,false,imgOverview.Height);
   finally
     Screen.Cursor:=crDefault;
@@ -1603,6 +1614,7 @@ begin
     lbView.Invalidate;
     imgOverview.Picture.Bitmap:=nil;
     FSkipXML:=true;
+    //FPathDisplay:='';
     FDataSet.LoadContent(r,false,imgOverview.Height);
   finally
     Screen.Cursor:=crDefault;
